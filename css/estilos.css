@@ -130,7 +130,7 @@ button,input,a{font:inherit;color:inherit}
 }
 .escenario.cargando .tarjeta{visibility:hidden}
 .flotar{transform-style:preserve-3d;-webkit-transform-style:preserve-3d;width:100%;height:100%}
-.escenario[data-estado="cerrada"] .flotar{animation:flotar 6s ease-in-out infinite}
+.escenario[data-estado="cerrada"] .flotar{animation:flotar 5s ease-in-out 1}  /* un solo vaivén: una animación continua impide rasterizar la portada a resolución completa */
 @keyframes flotar{0%,100%{transform:translateY(0) rotateX(0)}50%{transform:translateY(-5px) rotateX(2deg)}}
 .inclinacion{
   width:100%;height:100%;transform-style:preserve-3d;-webkit-transform-style:preserve-3d;
@@ -360,3 +360,203 @@ textarea.campo{font-family:var(--f-texto);font-size:1rem;resize:vertical}
 
 /* Bodoni Moda con el mismo tamaño óptico de las tarjetas (opsz 11): trazos finos firmes, legibles en móvil */
 h1,h2,h3,.saludo-nombre,.pregunta,.nombre-opcion,.opcion-cat b,.momento time,.momento strong,.rsvp-act legend b,.accion b,.aviso-pase p,.adm-tile b,.adm-act h3,.adm-cab h1,.adm-tabla .nom,.rsvp-estado.exito,.campo{font-variation-settings:"opsz" 11}
+
+/* =====================================================================
+   UX v2 · Navegación por vistas y diseño responsive
+   Composición: móvil = una columna (identidad → nombre → tarjeta → acción → barra inferior);
+   escritorio ≥ 900 px = barra superior + invitación en dos columnas editoriales.
+   ===================================================================== */
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+:root{--barra:52px;--nav-inf:60px;--ancho-max:1240px;--terracota:#9c4a2f}
+body.identificado{padding-bottom:calc(var(--nav-inf) + env(safe-area-inset-bottom,0px))}
+
+/* ---------- Barra superior ---------- */
+.barra{position:sticky;top:0;z-index:20;background:rgba(245,231,211,.94);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:1px solid var(--linea);padding-top:env(safe-area-inset-top,0px)}
+.barra-int{max-width:var(--ancho-max);margin:0 auto;min-height:var(--barra);display:flex;align-items:center;gap:16px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.marca{display:flex;align-items:center;gap:10px;text-decoration:none;min-height:44px;min-width:0}
+.marca img{width:28px;height:auto;flex:none}
+.marca span{display:flex;flex-direction:column;line-height:1.1;min-width:0}
+.marca b{font-family:var(--f-display);font-size:1rem;font-variation-settings:"opsz" 11}
+.marca small{font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;color:var(--tinta-suave);white-space:nowrap}
+.barra .cambiar-nombre{margin-left:auto;font-size:.88rem;min-height:44px;padding:.2em .4em;color:var(--tinta-suave)}
+.nav-superior{display:none}
+
+/* ---------- Barra inferior (móviles) ---------- */
+.nav-inferior{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(4,1fr);
+  background:rgba(245,231,211,.97);border-top:1px solid var(--linea);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  padding:0 max(4px,env(safe-area-inset-right,0px)) env(safe-area-inset-bottom,0px) max(4px,env(safe-area-inset-left,0px))}
+.nav-inferior a{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:var(--nav-inf);
+  text-decoration:none;color:var(--tinta-suave);font-size:.78rem;font-weight:600;letter-spacing:.02em;-webkit-tap-highlight-color:transparent}
+.nav-inferior svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.nav-inferior a[aria-current="page"]{color:var(--rojo)}
+.nav-inferior a[aria-current="page"]::before{content:"";position:absolute;top:0;left:28%;right:28%;height:3px;border-radius:0 0 3px 3px;background:var(--rojo)}
+.nav-inferior a[aria-current="page"] span{font-weight:700}
+
+/* ---------- Vistas ---------- */
+.experiencia{max-width:var(--ancho-max);margin:0 auto;padding-top:0;padding-bottom:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.vista{padding-block:16px 28px;animation:aparecer .35s ease-out both}
+.vista-enc{display:flex;flex-direction:column;gap:4px;margin-bottom:18px}
+.vista-enc h2{font-family:var(--f-display);font-weight:700;font-size:clamp(1.55rem,5vw,2.3rem);line-height:1.12;margin:0;text-wrap:balance}
+.vista-enc h2 em{font-style:italic;font-weight:500;color:var(--rojo)}
+.vista-enc p{margin:0;color:var(--tinta-suave)}
+.vista h1:focus,.vista h2:focus{outline:none}
+.vista-pie{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-top:22px}
+.btn-siguiente{border-color:var(--tinta);background:transparent}
+.btn-texto{color:var(--tinta)}
+
+/* ---------- 01 · Invitación ---------- */
+.inv-grid{display:grid;grid-template-columns:minmax(0,1fr);grid-template-areas:"enc" "tarjeta" "acciones" "sec";gap:10px}
+.inv-sec{grid-area:sec;min-width:0}
+.inv-enc{grid-area:enc;text-align:center;display:flex;flex-direction:column;align-items:center;gap:2px}
+.inv-enc .saludo-nombre{font-size:clamp(1.45rem,6.4vw,2.1rem)}
+.inv-enc .saludo-texto{margin:2px 0 0;font-size:.98rem;line-height:1.4;max-width:34em}
+.inv-fecha{display:none;margin:10px 0 0;font-family:var(--f-display);font-weight:600;font-size:1.05rem;font-variation-settings:"opsz" 11}
+.inv-tarjeta{grid-area:tarjeta;min-width:0;display:flex;flex-direction:column;align-items:center}
+.inv-acciones{grid-area:acciones;display:flex;flex-direction:row;align-items:center;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:4px}
+.inv-acciones .btn{flex:1 1 150px;max-width:260px}
+.escenario{--reserva:380px;margin-top:4px}
+.pista{margin:6px 0 0;font-size:.92rem;min-height:1.4em}
+.controles-sec{display:flex;flex-wrap:wrap;justify-content:center;gap:0 2px;margin-top:0}
+.btn-sec{display:inline-flex;align-items:center;gap:.3em;min-height:44px;min-width:44px;padding:.3em .55em;border:0;border-radius:999px;background:transparent;
+  font-family:var(--f-texto);font-size:.88rem;font-weight:600;color:var(--tinta-suave);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.btn-sec:hover{background:rgba(35,27,24,.06);color:var(--tinta)}
+.btn-sec[aria-pressed="true"]{color:var(--rojo)}
+.btn-sec .ico{font-size:.95em}
+
+/* ---------- 02 · Programa (línea cronológica en móvil) ---------- */
+.vista-programa .programa{display:flex;flex-direction:column;gap:0;margin:0;padding:0;list-style:none;position:relative}
+.vista-programa .momento{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;padding:16px 0;border-top:0;border-bottom:1px solid var(--linea);background:none;position:relative}
+.vista-programa .momento time{font-size:1.3rem;padding-top:2px;white-space:nowrap;min-width:5.2em}
+.momento-txt{display:flex;flex-direction:column;gap:2px;min-width:0}
+.momento-txt strong{font-size:1.18rem}
+.momento-txt span{margin:0;color:var(--tinta-suave);font-size:.98rem}
+.etiqueta-social{margin:0 0 2px;font-size:.7rem}
+.vista-programa .momento.social{background:none;color:inherit}
+.vista-programa .momento.social time{color:var(--rojo)}
+.vista-programa .momento.social span{color:var(--tinta-suave)}
+.vista-programa .momento.social .etiqueta-social{color:var(--rojo)}
+.vista-programa .momento.social::before{content:"";position:absolute;left:-10px;top:12px;bottom:12px;width:3px;background:var(--rojo);border-radius:2px}
+.como-llegar{align-self:flex-start;display:inline-flex;align-items:center;gap:.3em;min-height:48px;margin-top:2px;color:var(--terracota);font-weight:600;font-size:.95rem;text-decoration:underline;text-underline-offset:.22em}
+
+/* ---------- 03 · Confirmación ---------- */
+.aviso-no-disponible{margin:0 0 16px;padding:12px 14px;border-left:3px solid var(--terracota);background:rgba(156,74,47,.08);color:var(--tinta);font-size:.98rem}
+.rsvp-campos{border:0;margin:0;padding:0;min-width:0}
+.rsvp-campos[disabled]{opacity:.55}
+#rsvp-actividades{display:flex;flex-direction:column;gap:0;border-top:1px solid var(--linea)}
+.vista-confirmar .rsvp-act{border:0;border-bottom:1px solid var(--linea);border-radius:0;background:none;padding:14px 0;margin:0}
+.vista-confirmar .rsvp-act.social{border-color:var(--linea)}
+.vista-confirmar .rsvp-act legend{flex-direction:row;align-items:baseline;justify-content:space-between;gap:10px}
+.vista-confirmar .rsvp-act legend span{font-family:var(--f-display);font-weight:700;color:var(--rojo);font-variation-settings:"opsz" 11;white-space:nowrap}
+.vista-confirmar .opciones-rsvp{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;margin-top:10px;border:1px solid rgba(35,27,24,.25);border-radius:12px;overflow:hidden;background:#fffaf2}
+.vista-confirmar .opciones-rsvp label{flex:none}
+.vista-confirmar .opciones-rsvp label+label span{border-left:1px solid rgba(35,27,24,.18)}
+.vista-confirmar .opciones-rsvp span{border:0;border-radius:0;background:transparent;min-height:48px;font-size:.9rem;line-height:1.15;padding:.35em .4em}
+.vista-confirmar .opciones-rsvp input:checked+span::before{content:"✓";margin-right:.35em;font-weight:700}
+.rsvp-resumen{font-size:.95rem}
+.rsvp-resumen ul{list-style:none;margin:4px 0 0;padding:0;display:flex;flex-direction:column;gap:2px}
+.rsvp-resumen li{display:flex;justify-content:space-between;gap:10px}
+.rsvp-resumen li b{font-weight:600}
+.etiqueta-mini{margin:12px 0 4px;font-size:.74rem;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--tinta-suave)}
+.vista-confirmar .vista-pie{flex-direction:row-reverse}
+.vista-confirmar .btn-primario{align-self:auto}
+
+/* ---------- 04 · Mi pase ---------- */
+.pase-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+.pase-fig{margin:0;display:flex;flex-direction:column;align-items:center;gap:6px}
+.pase-fig .pase-vista{max-width:min(300px,72vw);height:auto;aspect-ratio:1440/2560}
+.pase-fig figcaption{text-align:center}
+.pase-acciones{display:flex;flex-direction:column;gap:10px;min-width:0}
+.btn-ancho{width:100%}
+.formatos{display:flex;flex-wrap:wrap;justify-content:center;gap:4px}
+.modulos{display:flex;flex-direction:column;border-top:1px solid var(--linea);margin-top:6px}
+.modulo{display:block;border-bottom:1px solid var(--linea);text-decoration:none;color:inherit}
+.modulo>summary,.modulo-enlace{display:flex;flex-direction:column;justify-content:center;min-height:60px;padding:8px 26px 8px 0;cursor:pointer;list-style:none;position:relative}
+.modulo>summary::-webkit-details-marker{display:none}
+.modulo>summary::after,.modulo-enlace::after{content:"+";position:absolute;right:4px;top:50%;transform:translateY(-50%);font-size:1.3rem;color:var(--terracota)}
+.modulo[open]>summary::after{content:"–"}
+.modulo-enlace::after{content:"↓"}
+.modulo b{font-family:var(--f-display);font-size:1.08rem;font-variation-settings:"opsz" 11}
+.modulo span{font-size:.9rem;color:var(--tinta-suave)}
+.modulo .lista-enlaces{padding:4px 0 10px}
+.modulo .nota{margin:0 0 12px}
+.vista-pase .pie{margin-top:30px}
+
+/* ---------- Teléfonos muy pequeños ---------- */
+@media (max-width:359px){
+  .vista-confirmar .opciones-rsvp{grid-template-columns:1fr}
+  .vista-confirmar .opciones-rsvp label+label span{border-left:0;border-top:1px solid rgba(35,27,24,.18)}
+  .marca small{display:none}
+}
+/* ---------- Teléfono en horizontal / ventanas bajas ---------- */
+@media (max-height:500px) and (orientation:landscape){
+  .escenario{--reserva:150px}
+  .inv-enc .saludo-texto{display:none}
+}
+
+/* ---------- Tableta (≥ 640 px) ---------- */
+@media (min-width:640px){
+  .vista-programa .programa{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+  .vista-programa .momento{display:flex;flex-direction:column;gap:8px;padding:20px;border:1px solid var(--linea);border-top:3px solid var(--rojo);background:rgba(255,250,241,.6);border-radius:2px}
+  .vista-programa .momento time{font-size:2rem}
+  .vista-programa .momento.social{background:var(--tinta);color:var(--crema);border-color:var(--tinta);border-top-color:var(--rojo)}
+  .vista-programa .momento.social::before{display:none}
+  .vista-programa .momento.social time,.vista-programa .momento.social .etiqueta-social{color:#ff8a78}
+  .vista-programa .momento.social span{color:#d9c8b2}
+  .vista-programa .momento.social .como-llegar{color:#ffb39f}
+  .momento-txt .como-llegar{margin-top:auto;padding-top:6px}
+  .pase-grid{grid-template-columns:minmax(240px,320px) minmax(0,1fr);align-items:start;gap:32px}
+  .pase-fig .pase-vista{max-width:100%}
+  .formatos{justify-content:flex-start}
+  .escenario{--reserva:360px}
+}
+
+/* ---------- Escritorio (≥ 900 px): barra superior y dos columnas ---------- */
+@media (min-width:900px){
+  :root{--barra:64px}
+  body.identificado{padding-bottom:0}
+  .nav-inferior{display:none!important}
+  .nav-superior{display:flex;gap:4px;margin-left:auto}
+  .nav-superior a{position:relative;display:flex;align-items:center;min-height:44px;padding:0 14px;text-decoration:none;color:var(--tinta-suave);font-weight:600;font-size:.98rem;border-radius:999px}
+  .nav-superior a:hover{color:var(--tinta);background:rgba(35,27,24,.05)}
+  .nav-superior a[aria-current="page"]{color:var(--tinta)}
+  .nav-superior a[aria-current="page"]::after{content:"";position:absolute;left:14px;right:14px;bottom:4px;height:2px;background:var(--rojo)}
+  .barra .cambiar-nombre{margin-left:8px}
+  .marca img{width:34px}
+  .experiencia{padding-left:32px;padding-right:32px}
+  .vista{padding-block:24px 40px}
+  .inv-grid{grid-template-columns:minmax(0,1.75fr) minmax(300px,1fr);grid-template-areas:"tarjeta enc" "tarjeta acciones" "sec .";grid-template-rows:auto 1fr auto;column-gap:48px;row-gap:22px;align-items:start}
+  .inv-enc{text-align:left;align-items:flex-start;align-self:end;padding-top:6vh}
+  .inv-enc .saludo-nombre{font-size:clamp(2rem,3.2vw,2.9rem);text-wrap:balance}
+  .inv-enc .saludo-texto{font-size:1.12rem;max-width:26em}
+  .inv-fecha{display:block}
+  .inv-acciones{justify-content:flex-start;align-self:start;margin-top:0}
+  .inv-acciones .btn{flex:0 0 auto}
+  .escenario{--reserva:196px}
+  .vista-confirmar form{max-width:880px}
+  .vista-confirmar .rsvp-act{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);align-items:center;column-gap:24px}
+  .vista-confirmar .rsvp-act legend{float:none;grid-column:1;justify-content:flex-start;gap:14px}
+  .vista-confirmar .rsvp-act legend+*{clear:none}
+  .vista-confirmar .opciones-rsvp{grid-column:2;margin-top:0}
+  .vista-confirmar .vista-enc,.vista-confirmar .aviso-no-disponible{max-width:880px}
+  .vista-pase .pase-grid{grid-template-columns:340px minmax(0,560px);justify-content:start;gap:48px}
+}
+@media (prefers-reduced-motion:reduce){ .vista{animation:none} }
+/* Margen ante redondeos subpíxel: objetivos táctiles siempre ≥ 44 px reales */
+.btn-texto,.btn-sec,.barra .cambiar-nombre{min-height:46px}
+
+/* Nitidez: el libro se maqueta al tamaño de la tarjeta CERRADA (escala 1) y al abrirse se REDUCE (1/k),
+   en lugar de dibujarse pequeño y ampliarse (lo que difuminaba la portada en móviles).
+   Geometría equivalente a la anterior: la hoja derecha queda centrada al estar cerrada y el pliego
+   abierto ocupa exactamente la caja de la tarjeta (traslación de S/4 con origen en 75 % 50 %). */
+.libro{inset:auto;width:calc(var(--S) * var(--k));height:calc(var(--S) * var(--k) / 1.294);
+  left:calc(var(--S) * (0.5 - 0.75 * var(--k)));top:calc(var(--S) / 1.294 * (0.5 - 0.5 * var(--k)));
+  transform-origin:75% 50%;transform:translateX(0) scale(1) rotateY(0deg)}
+.escenario[data-pose="abierta"] .libro{transform:translateX(calc(var(--S) * 0.25)) scale(calc(1 / var(--k))) rotateY(0deg)}
+.escenario[data-pose="dorso"] .libro{transform:translateX(0) scale(1) rotateY(-180deg)}
+.plano .libro{width:var(--S);height:calc(var(--S) / 1.294);left:0;top:0}
+/* La geometría oculta del libro (mitad interior, sombras al girar) no debe ensanchar la página:
+   en móviles eso provoca un reajuste del zoom. Solo se recorta lo que queda fuera de la columna. */
+.inv-tarjeta{overflow:hidden}
+@supports (overflow:clip){.inv-tarjeta{overflow:clip;overflow-clip-margin:12px}}

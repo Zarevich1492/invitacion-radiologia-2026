@@ -80,93 +80,171 @@
   </div>
 </section>
 
-<main class="experiencia envoltura" id="experiencia" aria-hidden="true">
-  <header class="saludo">
-    <span class="versalita" id="saludo-eyebrow">Invitación especial</span>
-    <p class="saludo-nombre" id="saludo-nombre"></p>
-    <p class="saludo-texto" id="saludo-texto"></p>
-    <button class="btn btn-texto cambiar-nombre" type="button" id="btn-cambiar-nombre">Cambiar nombre o categoría</button>
-  </header>
+<!-- ===================== Navegación permanente ===================== -->
+<header class="barra" id="barra" hidden>
+  <div class="barra-int">
+    <a class="marca" href="#invitacion" data-ir="invitacion" aria-label="Ir a la invitación">
+      <img src="assets/logos/promocion-xxiv-560.jpg" alt="" width="560" height="784">
+      <span><b>XXIV Promoción</b><small>Radiólogos · ULA 2026</small></span>
+    </a>
+    <nav class="nav-vistas nav-superior" aria-label="Secciones de la invitación">
+      <a href="#invitacion" data-ir="invitacion">Invitación</a>
+      <a href="#programa" data-ir="programa">Programa</a>
+      <a href="#confirmar" data-ir="confirmar">Confirmar asistencia</a>
+      <a href="#pase" data-ir="pase">Mi pase</a>
+    </nav>
+    <button class="btn btn-texto cambiar-nombre" type="button" id="btn-cambiar-nombre">Cambiar nombre</button>
+  </div>
+</header>
 
-  <!-- ===================== Escenas 2 a 6 · Tarjeta 3D ===================== -->
-  <div class="escenario cargando" id="escenario" data-pose="cerrada" data-estado="cerrada">
-    <div class="sombra-suelo" aria-hidden="true"></div>
-    <div class="tarjeta" id="tarjeta" tabindex="0" role="group" aria-roledescription="tarjeta" aria-label="Invitación. Portada. Pulse Intro para abrir.">
-      <div class="flotar">
-        <div class="inclinacion" id="inclinacion">
-          <div class="libro" id="libro">
-            <div class="hoja base">
-              <div class="cara frente"><img class="mitad-der" id="img-interior-der" alt="" decoding="async"></div>
-              <div class="cara dorso"><img class="ajustada" id="img-contra" alt="" decoding="async"><span class="luz"></span></div>
-            </div>
-            <div class="hoja tapa" id="tapa">
-              <div class="cara frente"><img class="ajustada" id="img-portada" alt="" fetchpriority="high"><span class="luz"></span></div>
-              <div class="cara dorso"><img class="mitad-izq" id="img-interior-izq" alt="" decoding="async"></div>
+<main class="experiencia" id="experiencia" aria-hidden="true">
+
+  <!-- 01 · Invitación -->
+  <section class="vista vista-invitacion" id="vista-invitacion" data-vista="invitacion" aria-labelledby="saludo-nombre">
+    <div class="inv-grid">
+      <header class="inv-enc saludo">
+        <span class="versalita" id="saludo-eyebrow">Invitación especial</span>
+        <h1 class="saludo-nombre" id="saludo-nombre" tabindex="-1"></h1>
+        <p class="saludo-texto" id="saludo-texto"></p>
+        <p class="inv-fecha" id="inv-fecha"></p>
+      </header>
+
+      <div class="inv-tarjeta">
+        <!-- Escenas 2 a 6 · Tarjeta 3D -->
+        <div class="escenario cargando" id="escenario" data-pose="cerrada" data-estado="cerrada">
+          <div class="sombra-suelo" aria-hidden="true"></div>
+          <div class="tarjeta" id="tarjeta" tabindex="0" role="group" aria-roledescription="tarjeta" aria-label="Invitación. Portada. Pulse Intro para abrir.">
+            <div class="flotar">
+              <div class="inclinacion" id="inclinacion">
+                <div class="libro" id="libro">
+                  <div class="hoja base">
+                    <div class="cara frente"><img class="mitad-der" id="img-interior-der" alt="" decoding="async"></div>
+                    <div class="cara dorso"><img class="ajustada" id="img-contra" alt="" decoding="async"><span class="luz"></span></div>
+                  </div>
+                  <div class="hoja tapa" id="tapa">
+                    <div class="cara frente"><img class="ajustada" id="img-portada" alt="" fetchpriority="high"><span class="luz"></span></div>
+                    <div class="cara dorso"><img class="mitad-izq" id="img-interior-izq" alt="" decoding="async"></div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
+        <p class="pista destacada" id="pista" aria-live="polite">Toca para abrir tu invitación</p>
+      </div>
+
+      <div class="inv-acciones controles">
+        <button class="btn btn-primario" type="button" id="btn-principal">Abrir tarjeta</button>
+        <a class="btn btn-siguiente" href="#programa" data-ir="programa">Ver el programa <span aria-hidden="true">→</span></a>
+      </div>
+
+      <div class="inv-sec">
+        <div class="controles-sec" role="toolbar" aria-label="Más opciones de la tarjeta">
+          <button class="btn-sec" type="button" id="btn-reproducir" aria-pressed="false"><span class="ico" aria-hidden="true">▶</span><span>Reproducir</span></button>
+          <button class="btn-sec" type="button" id="btn-contra">Ver contraportada</button>
+          <button class="btn-sec" type="button" id="btn-ampliar"><span class="ico" aria-hidden="true">⤢</span><span>Ampliar</span></button>
+          <button class="btn-sec" type="button" id="btn-reiniciar"><span class="ico" aria-hidden="true">↺</span><span>Reiniciar</span></button>
+        </div>
       </div>
     </div>
-  </div>
-
-  <p class="pista destacada" id="pista" aria-live="polite">Toca para abrir tu invitación</p>
-
-  <div class="controles" role="toolbar" aria-label="Controles de la tarjeta">
-    <button class="btn btn-primario" type="button" id="btn-principal">Abrir tarjeta</button>
-    <div class="controles-sec">
-      <button class="btn" type="button" id="btn-contra">Ver contraportada</button>
-      <button class="btn" type="button" id="btn-reproducir" aria-pressed="false"><span class="ico" aria-hidden="true">▶</span><span>Reproducir</span></button>
-      <button class="btn" type="button" id="btn-ampliar"><span class="ico" aria-hidden="true">⤢</span><span>Ampliar</span></button>
-      <button class="btn" type="button" id="btn-reiniciar"><span class="ico" aria-hidden="true">↺</span><span>Reiniciar</span></button>
-    </div>
-  </div>
-
-  <!-- ===================== Programa ===================== -->
-  <section class="seccion" aria-labelledby="t-programa">
-    <span class="versalita" id="programa-fecha"></span>
-    <h2 id="t-programa">Tres momentos. <em>Una misma celebración.</em></h2>
-    <ol class="programa" id="programa"></ol>
-    <p class="nota">Hora local de Venezuela (UTC−4).</p>
   </section>
 
-  <!-- ===================== Confirmación de asistencia ===================== -->
-  <section class="seccion rsvp" id="rsvp" aria-labelledby="t-rsvp">
-    <h2 id="t-rsvp">Nos gustaría contar contigo</h2>
-    <p>Tu confirmación nos ayudará a organizar mejor esta jornada de celebración.</p>
+  <!-- 02 · Programa -->
+  <section class="vista vista-programa" id="vista-programa" data-vista="programa" aria-labelledby="t-programa" hidden>
+    <header class="vista-enc">
+      <span class="versalita" id="programa-fecha"></span>
+      <h2 id="t-programa" tabindex="-1">Tres momentos. <em>Una misma celebración.</em></h2>
+      <p class="nota">Hora local de Venezuela (UTC−4).</p>
+    </header>
+    <ol class="programa" id="programa"></ol>
+    <div class="vista-pie">
+      <a class="btn btn-texto" href="#invitacion" data-ir="invitacion"><span aria-hidden="true">←</span> Invitación</a>
+      <a class="btn btn-primario" href="#confirmar" data-ir="confirmar">Confirmar asistencia <span aria-hidden="true">→</span></a>
+    </div>
+  </section>
+
+  <!-- 03 · Confirmación -->
+  <section class="vista vista-confirmar rsvp" id="rsvp" data-vista="confirmar" aria-labelledby="t-rsvp" hidden>
+    <header class="vista-enc">
+      <span class="versalita">Confirmación de asistencia</span>
+      <h2 id="t-rsvp" tabindex="-1">Nos gustaría contar contigo</h2>
+      <p>Tu confirmación nos ayudará a organizar mejor esta jornada de celebración.</p>
+    </header>
+    <p class="aviso-no-disponible" id="rsvp-aviso" role="note" hidden></p>
     <form id="form-rsvp" novalidate>
-      <div id="rsvp-actividades"></div>
+      <fieldset class="rsvp-campos" id="rsvp-campos">
+        <legend class="sr-only">Tu respuesta para cada actividad</legend>
+        <div id="rsvp-actividades"></div>
+      </fieldset>
       <div class="rsvp-nota" id="rsvp-nota-caja" hidden>
         <label class="etiqueta" for="rsvp-nota">Nota para los organizadores (opcional)</label>
         <textarea id="rsvp-nota" class="campo" maxlength="300" rows="2" placeholder="Por ejemplo: soy madrina y no aparezco en el listado."></textarea>
       </div>
       <input class="trampa" type="text" id="rsvp-web" name="web" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <div class="rsvp-resumen" id="rsvp-resumen" aria-live="polite"></div>
       <p class="nota aviso-privacidad">Tu nombre y confirmación serán utilizados exclusivamente para la organización de las actividades de cierre de nuestra promoción.</p>
-      <button class="btn btn-primario" type="submit" id="btn-rsvp">Guardar mi confirmación</button>
+      <div class="vista-pie">
+        <a class="btn btn-texto" href="#pase" data-ir="pase">Continuar sin confirmar</a>
+        <button class="btn btn-primario" type="submit" id="btn-rsvp">Guardar mi confirmación</button>
+      </div>
       <p class="rsvp-estado" id="rsvp-estado" role="status" aria-live="polite"></p>
     </form>
   </section>
 
-  <!-- ===================== Conservar ===================== -->
-  <section class="seccion" aria-labelledby="t-conservar">
-    <h2 id="t-conservar">Conserva tu invitación</h2>
-    <div class="acciones">
-      <button class="accion principal" type="button" data-abrir="dlg-pase"><b>Obtener pase digital</b><span>Personalizado, para guardar en el teléfono</span></button>
-      <button class="accion" type="button" data-abrir="dlg-calendario"><b>Guardar en mi calendario</b><span>Con recordatorios</span></button>
-      <a class="accion" id="descarga-invitacion" download><b>Descargar invitación</b><span>Tarjeta completa en PDF</span></a>
-      <button class="accion" type="button" data-abrir="dlg-mapas"><b>Cómo llegar</b><span>Ubicación de cada actividad</span></button>
-    </div>
-  </section>
+  <!-- 04 · Mi pase -->
+  <section class="vista vista-pase" id="vista-pase" data-vista="pase" aria-labelledby="t-pase" hidden>
+    <header class="vista-enc">
+      <span class="versalita">Para conservar</span>
+      <h2 id="t-pase" tabindex="-1">Mi pase</h2>
+    </header>
+    <div class="pase-grid">
+      <figure class="pase-fig">
+        <img class="pase-vista" id="pase-vista" alt="Vista previa de tu pase de invitado especial" width="720" height="1280">
+        <figcaption class="nota">Recuerdo y guía rápida de la jornada; no es una credencial de acceso.</figcaption>
+      </figure>
+      <div class="pase-acciones">
+        <button class="btn btn-primario btn-ancho" type="button" id="pase-png">Descargar mi pase</button>
+        <div class="formatos">
+          <button class="btn-sec" type="button" id="pase-movil">JPG ligero</button>
+          <button class="btn-sec" type="button" id="pase-pdf">PDF para imprimir</button>
+        </div>
+        <p class="estado-descarga" id="pase-estado" role="status"></p>
+        <p class="nota">Si la descarga no comienza (por ejemplo, dentro de WhatsApp), mantén presionada la imagen y elige «Guardar imagen», o abre el enlace en Safari o Chrome.</p>
 
-  <footer class="pie">
-    <img class="pie-promo" src="assets/logos/promocion-xxiv-560.jpg" alt="XXIV Promoción de Radiólogos" loading="lazy" width="560" height="784">
-    <div class="pie-logos">
-      <img src="assets/logos/ula.jpg" alt="Universidad de Los Andes, Venezuela" loading="lazy" width="1215" height="392">
-      <i aria-hidden="true"></i>
-      <img src="assets/logos/departamento-radiologia.jpg" alt="Departamento de Radiología y Diagnóstico por Imagen" loading="lazy" width="1120" height="392">
+        <div class="modulos">
+          <details class="modulo" id="mod-calendario">
+            <summary><b>Guardar en mi calendario</b><span>Con avisos 24 h y 1 h antes</span></summary>
+            <div class="lista-enlaces" id="cal-ics"></div>
+            <p class="etiqueta-mini">Google Calendar</p>
+            <div class="lista-enlaces" id="cal-google"></div>
+            <p class="nota">Los avisos dependen de la configuración de tu calendario (Google aplica los suyos). Sin hora de finalización: no hay una hora oficial.</p>
+          </details>
+          <a class="modulo modulo-enlace" id="descarga-invitacion" download><b>Descargar invitación completa</b><span>Tarjeta original en PDF</span></a>
+          <details class="modulo" id="mod-mapas">
+            <summary><b>Cómo llegar</b><span>Ubicación de cada actividad</span></summary>
+            <div class="lista-enlaces" id="mapas"></div>
+          </details>
+        </div>
+      </div>
     </div>
-    XXIV Promoción de Radiólogos · Postgrado de Radiología · Universidad de Los Andes · Mérida
-  </footer>
+    <footer class="pie">
+      <div class="pie-logos">
+        <img src="assets/logos/ula.jpg" alt="Universidad de Los Andes, Venezuela" loading="lazy" width="1215" height="392">
+        <i aria-hidden="true"></i>
+        <img src="assets/logos/departamento-radiologia.jpg" alt="Departamento de Radiología y Diagnóstico por Imagen" loading="lazy" width="1120" height="392">
+      </div>
+      XXIV Promoción de Radiólogos · Postgrado de Radiología · Universidad de Los Andes
+    </footer>
+  </section>
 </main>
+
+<!-- Navegación inferior (móviles) -->
+<nav class="nav-vistas nav-inferior" id="nav-inferior" aria-label="Secciones de la invitación" hidden>
+  <a href="#invitacion" data-ir="invitacion"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M3.5 6l8.5 7 8.5-7"/></svg><span>Invitación</span></a>
+  <a href="#programa" data-ir="programa"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span>Programa</span></a>
+  <a href="#confirmar" data-ir="confirmar"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M8 12.3l2.7 2.7L16.2 9.5"/></svg><span>Confirmar</span></a>
+  <a href="#pase" data-ir="pase"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16v3a2 2 0 000 4v3H4v-3a2 2 0 000-4z"/><path d="M14 7v10" stroke-dasharray="1.6 1.8"/></svg><span>Mi pase</span></a>
+</nav>
 
 <!-- Visor ampliado -->
 <dialog class="visor" id="dlg-visor" aria-label="Tarjeta ampliada">
@@ -185,42 +263,6 @@
 </dialog>
 
 <!-- Escena 7 · Pase digital -->
-<dialog id="dlg-pase" aria-labelledby="t-pase">
-  <div class="hoja-modal">
-    <div class="hoja-cab"><h3 id="t-pase">Pase de invitado especial</h3><button class="btn cerrar" type="button" data-cerrar>Cerrar</button></div>
-    <div class="hoja-cuerpo">
-      <img class="pase-vista" id="pase-vista" alt="Vista previa del pase de invitado especial">
-      <p class="nota">Recuerdo y guía rápida de la jornada; no es una credencial de acceso. Si la descarga no comienza (por ejemplo, dentro de WhatsApp), mantén presionada la imagen y elige «Guardar imagen», o abre el enlace en Safari o Chrome.</p>
-      <div class="lista-enlaces">
-        <button class="btn btn-primario" type="button" id="pase-png">Guardar pase · PNG <small style="color:inherit">alta resolución</small></button>
-        <button class="btn" type="button" id="pase-movil">Versión ligera para el teléfono <small>JPG</small></button>
-        <button class="btn" type="button" id="pase-pdf">Pase en PDF <small>para imprimir</small></button>
-      </div>
-      <p class="estado-descarga" id="pase-estado" role="status"></p>
-    </div>
-  </div>
-</dialog>
-
-<dialog id="dlg-calendario" aria-labelledby="t-cal">
-  <div class="hoja-modal">
-    <div class="hoja-cab"><h3 id="t-cal">Guardar en mi calendario</h3><button class="btn cerrar" type="button" data-cerrar>Cerrar</button></div>
-    <div class="hoja-cuerpo">
-      <p><strong>iPhone, Android u Outlook</strong> (archivo de calendario)</p>
-      <div class="lista-enlaces" id="cal-ics"></div>
-      <p><strong>Google Calendar</strong></p>
-      <div class="lista-enlaces" id="cal-google"></div>
-      <p class="nota">Los archivos sugieren avisos 24 horas y 1 hora antes de cada actividad. Los avisos dependen de la configuración y compatibilidad de tu calendario (Google, por ejemplo, aplica los suyos). No se indica hora de finalización porque no hay una hora oficial.</p>
-    </div>
-  </div>
-</dialog>
-
-<dialog id="dlg-mapas" aria-labelledby="t-mapas">
-  <div class="hoja-modal">
-    <div class="hoja-cab"><h3 id="t-mapas">Cómo llegar</h3><button class="btn cerrar" type="button" data-cerrar>Cerrar</button></div>
-    <div class="hoja-cuerpo"><div class="lista-enlaces" id="mapas"></div></div>
-  </div>
-</dialog>
-
 <noscript>
   <div class="envoltura" style="display:grid;gap:16px;padding-block:16px">
     <p>Para ver la invitación animada, active JavaScript en su navegador.</p>

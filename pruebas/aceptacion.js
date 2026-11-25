@@ -38,6 +38,12 @@ async function nuevaPagina(ctx, errores, externos) {
   p.on("request", (r) => { const u = r.url(); if (!u.startsWith(BASE) && !u.startsWith(API) && !/^(blob|data):/.test(u)) externos.push(u); });
   return p;
 }
+async function irVista(p, v) {
+  const nav = p.viewportSize().width >= 900 ? ".nav-superior" : ".nav-inferior";
+  await p.click(`${nav} [data-ir="${v}"]`);
+  await p.waitForFunction((x) => document.body.dataset.vistaActiva === x, v, { timeout: 5000 });
+  await p.waitForTimeout(450); // transición de entrada de la vista (0,35 s)
+}
 async function elegirPadrino(p, id) { await p.goto(BASE, { waitUntil: "networkidle" }); await p.click(`[data-padrino="${id}"]`); await p.waitForTimeout(2300); }
 async function rutaB(p, cat, nombre) {
   await p.goto(BASE, { waitUntil: "networkidle" });
@@ -45,6 +51,7 @@ async function rutaB(p, cat, nombre) {
   await p.click("#form-nombre button[type=submit]"); await p.waitForTimeout(2300);
 }
 async function responder(p, resp) {
+  if (await p.evaluate(() => document.body.dataset.vistaActiva) !== "confirmar") await irVista(p, "confirmar");
   for (const [a, e] of Object.entries(resp)) await p.check(`input[name="r-${a}"][value="${e}"]`, { force: true });
   await p.click("#btn-rsvp");
   await p.waitForFunction(() => /exito|error/.test(document.getElementById("rsvp-estado").className), null, { timeout: 15000 });
@@ -89,6 +96,17 @@ async function responder(p, resp) {
   ok("Programa: recepción 9:00 p. m. destacada como celebración social", (await p.$$("#programa li.social")).length === 1 && /9:00 p\. m\./.test(prog));
   await p.screenshot({ path: `${OUT}/02-portada-variante-A.png` });
 
+  // Navegación por vistas
+  ok("Navegación: 4 apartados, «Invitación» activo al entrar", (await p.$$eval(".nav-inferior [data-ir]", (a) => a.map((x) => x.textContent.trim()).join("|"))) === "Invitación|Programa|Confirmar|Mi pase" && (await p.getAttribute('.nav-inferior [data-ir="invitacion"]', "aria-current")) === "page");
+  await irVista(p, "programa"); await irVista(p, "pase");
+  ok("Navegación: sección activa marcada", (await p.getAttribute('.nav-inferior [data-ir="pase"]', "aria-current")) === "page" && (await p.isHidden("#vista-invitacion")));
+  await p.goBack(); await p.waitForTimeout(400);
+  ok("Botón Atrás del navegador vuelve al apartado anterior", (await p.evaluate(() => document.body.dataset.vistaActiva)) === "programa");
+  ok("Foco en el título del apartado al cambiar", (await p.evaluate(() => document.activeElement && document.activeElement.id)) === "t-programa");
+  const navB = await p.$eval(".nav-inferior", (n) => { const r = n.getBoundingClientRect(); return { alto: Math.round(r.height), abajo: Math.round(innerHeight - r.bottom) }; });
+  ok("Barra inferior fija y compacta (≤ 80 px)", navB.abajo === 0 && navB.alto <= 80, JSON.stringify(navB));
+  await irVista(p, "invitacion");
+
   // Animación
   ok("Portada visible", (await caraVisible(p))[0] === "tapa.frente");
   await p.click("#btn-principal"); await p.waitForTimeout(650);
@@ -106,6 +124,10 @@ async function responder(p, resp) {
   c = await caraVisible(p);
   ok("Cierre y giro: contraportada completa", c[0] === "base.dorso", c.join(","));
   await p.screenshot({ path: `${OUT}/06-contraportada.png` });
+  // Los controles se desplazan a la zona visible (sobre la barra inferior fija), como haría una persona
+  await p.evaluate(() => document.querySelector(".inv-sec").scrollIntoView({ block: "center" }));
+  const cubierto = await p.evaluate(() => { const n = document.querySelector(".nav-inferior").getBoundingClientRect().top; return ["#btn-principal", "#btn-contra"].some((s) => document.querySelector(s).getBoundingClientRect().bottom > n); });
+  ok("Controles alcanzables sin quedar bajo la barra inferior (tras desplazar)", !cubierto);
   for (let i = 0; i < 12; i++) { await p.click(i % 2 ? "#btn-principal" : "#btn-contra", { force: true }); await p.waitForTimeout(40); }
   await p.waitForFunction(() => !window.__invitacion.corriendo, null, { timeout: 15000 });
   let s = await est(p);
@@ -129,16 +151,17 @@ async function responder(p, resp) {
   // RSVP padrino
   const r1 = await responder(p, { clase: "asistira", caravana: "por_confirmar", recepcion: "no_asistira" });
   ok("RSVP padrino: mensaje solo tras guardado real", r1.clase.includes("exito") && r1.texto === "Gracias, Dra. Analy Falcón. Hemos registrado tu respuesta.", r1.texto);
-  await p.evaluate(() => document.getElementById("rsvp").scrollIntoView()); await p.screenshot({ path: `${OUT}/07-confirmacion.png` });
+  await p.screenshot({ path: `${OUT}/07-confirmacion.png` });
   // Persistencia: recargar y volver a elegir el nombre → respuestas recuperadas del servidor
   await elegirPadrino(p, "falcon-analy");
+  await irVista(p, "confirmar");
   const marcadas = await p.$$eval("#rsvp-actividades input:checked", (i) => i.map((x) => x.name + "=" + x.value).join(","));
   ok("RSVP: respuesta persistida y recuperada del servidor", marcadas === "r-clase=asistira,r-caravana=por_confirmar,r-recepcion=no_asistira", marcadas);
   const r2 = await responder(p, { caravana: "asistira" });
   ok("RSVP: modificación segura (mismo registro)", r2.clase.includes("exito"), r2.texto);
 
   // Pase padrino
-  await p.click(".accion.principal");
+  await irVista(p, "pase");
   await p.waitForFunction(() => document.getElementById("pase-vista").naturalWidth > 0, null, { timeout: 15000 });
   await p.waitForTimeout(300); await p.screenshot({ path: `${OUT}/08-pase-web.png` });
   const dl = p.waitForEvent("download"); await p.click("#pase-png"); const d = await dl;
@@ -146,7 +169,6 @@ async function responder(p, resp) {
   ok("Pase PNG descargado", fs.statSync(rutaPase).size > 200000, (fs.statSync(rutaPase).size / 1024).toFixed(0) + " KB");
   const dlp = p.waitForEvent("download"); await p.click("#pase-pdf"); const dp = await dlp; const rp = `${OUT}/pase-padrino.pdf`; await dp.saveAs(rp);
   ok("Pase PDF válido", fs.readFileSync(rp).subarray(0, 8).toString().startsWith("%PDF-1.4"));
-  await p.click("#dlg-pase [data-cerrar]");
 
   // Calendario y descargas según elegibilidad
   const ics = await p.$$eval("#cal-ics a", (a) => a.map((x) => x.getAttribute("href")));
@@ -156,6 +178,7 @@ async function responder(p, resp) {
   const mapas = await p.$$eval("#mapas a", (a) => a.map((x) => decodeURIComponent(new URL(x.href).searchParams.get("query"))));
   ok("Maps clase magistral → Facultad de Medicina (no el hospital)", /Facultad de Medicina, Universidad de Los Andes/.test(mapas[0]) && !/Hospital/.test(mapas[0]), mapas[0]);
   ok("Maps caravana → Hospital Universitario de Los Andes", /Hospital Universitario de Los Andes/.test(mapas[1]), mapas[1]);
+  await irVista(p, "invitacion");
   const portada = await p.evaluate(() => { const i = document.getElementById("img-portada"); const r = { nat: i.naturalWidth / i.naturalHeight, caja: i.offsetWidth / i.offsetHeight }; return { nat: r.nat.toFixed(3), caja: r.caja.toFixed(3) }; });
   ok("Portada vertical que llena la hoja (sin bandas ni recortes)", Math.abs(portada.nat - portada.caja) < 0.005 && portada.nat === (3125 / 4830).toFixed(3), JSON.stringify(portada));
   ok("Descarga de la variante correcta (A, 3 actividades)",(await p.getAttribute("#descarga-invitacion", "href")) === "assets/descargas/invitacion-A-3.pdf");
@@ -171,9 +194,8 @@ async function responder(p, resp) {
   const rb = await responder(p, { clase: "asistira", caravana: "asistira" });
   ok("R1: confirmación guardada", rb.clase.includes("exito"), rb.texto);
   await p.screenshot({ path: `${OUT}/10-residente-R1.png` });
-  await p.click(".accion.principal"); await p.waitForFunction(() => document.getElementById("pase-vista").naturalWidth > 0, null, { timeout: 15000 });
+  await irVista(p, "pase"); await p.waitForFunction(() => document.getElementById("pase-vista").naturalWidth > 0, null, { timeout: 15000 });
   const dlb = p.waitForEvent("download"); await p.click("#pase-png"); const db = await dlb; await db.saveAs(`${OUT}/11-pase-descargado-R1.png`);
-  await p.click("#dlg-pase [data-cerrar]");
   ok("R1: calendario sin recepción", (await p.$$eval("#cal-ics a", (a) => a.map((x) => x.getAttribute("href")).join(","))) === "assets/calendario/jornada-2-actividades.ics,assets/calendario/clase.ics,assets/calendario/caravana.ics");
 
   // Ruta B: otro invitado
@@ -181,6 +203,7 @@ async function responder(p, resp) {
   await rutaB(p, "otro", "Carmen Rivas");
   ok("Otro invitado: variante C", (await p.evaluate(() => window.__flujo.identidad.variante)) === "C");
   ok("Otro invitado: tuteo en el cierre", (await p.textContent("#saludo-texto")).includes("tu presencia"));
+  await irVista(p, "confirmar");
   ok("Otro invitado: puede dejar nota de omisión", !(await p.isHidden("#rsvp-nota-caja")));
   await p.fill("#rsvp-nota", "Soy madrina y no aparezco en el listado.");
   const rc = await responder(p, { clase: "por_confirmar" });
@@ -194,6 +217,30 @@ async function responder(p, resp) {
   const rs = await responder(p, { clase: "asistira" });
   ok("Antispam: no se muestra éxito si el servidor rechaza", rs.clase.includes("error"), rs.texto);
 
+  // Cambio de identidad: no se conservan respuestas sin guardar de otra persona
+  p = await nuevaPagina(ctx, errores, externos);
+  await elegirPadrino(p, "rojas-gustavo"); await irVista(p, "confirmar");
+  await p.check('input[name="r-clase"][value="no_asistira"]', { force: true });
+  ok("Resumen de respuestas se actualiza", /Clase magistral\s*No podré asistir/.test(await p.textContent("#rsvp-resumen")));
+  await p.click("#btn-cambiar-nombre"); await p.click("#btn-no-aparece"); await p.click('[data-cat="r2"]');
+  await p.fill("#campo-nombre", "Persona Distinta"); await p.click("#form-nombre button[type=submit]"); await p.waitForTimeout(1500);
+  await irVista(p, "confirmar");
+  ok("Cambio de identidad: formulario limpio", (await p.$$("#rsvp-actividades input:checked")).length === 0);
+  await p.close();
+  // Acceso directo a un apartado
+  p = await nuevaPagina(ctx, errores, externos);
+  await p.goto(BASE + "#programa", { waitUntil: "networkidle" }); await p.click('[data-padrino="moreno-franklin"]'); await p.waitForTimeout(1500);
+  ok("Acceso directo: #programa abre el apartado tras identificarse", (await p.evaluate(() => document.body.dataset.vistaActiva)) === "programa");
+  await p.close();
+  // Sin base de datos configurada: aviso temprano y formulario deshabilitado (sin simular)
+  const p0 = await ctx.newPage();
+  await p0.goto(BASE, { waitUntil: "networkidle" }); await p0.click('[data-padrino="sosa-angel"]'); await p0.waitForTimeout(1500);
+  await irVista(p0, "confirmar");
+  ok("Sin Supabase: aviso visible antes del formulario y campos deshabilitados", (await p0.isVisible("#rsvp-aviso")) && (await p0.$eval("#rsvp-campos", (f) => f.disabled)) && (await p0.$eval("#btn-rsvp", (b) => b.disabled)));
+  await p0.screenshot({ path: `${OUT}/15-confirmacion-sin-base-de-datos.png` });
+  await p0.close();
+  p = await nuevaPagina(ctx, errores, externos);
+
   // Seguridad: lectura directa
   const directo = await p.evaluate(async (api) => (await fetch(api + "/rest/v1/invitados?select=*", { headers: { apikey: "x" } })).status, API);
   ok("Público no puede leer registros", directo === 403, directo);
@@ -204,6 +251,7 @@ async function responder(p, resp) {
   // Vista general sin personalizar
   p = await nuevaPagina(ctx, errores, externos);
   await p.goto(BASE, { waitUntil: "networkidle" }); await p.click("#btn-general"); await p.waitForTimeout(1500);
+  await irVista(p, "confirmar");
   ok("Invitación general sin personalizar disponible", (await p.isVisible("#rsvp-identificar")) && (await p.getAttribute("#img-portada", "src")) === "assets/img/C-portada-1400.jpg");
   const sw = await p.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth]);
   ok("Móvil: sin desplazamiento horizontal", sw[0] <= sw[1], sw.join(" ≤ "));

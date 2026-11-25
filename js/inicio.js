@@ -145,22 +145,52 @@
     pintarPrograma(acts);
     pintarRSVP(acts);
     pintarConservar(v, n, acts);
-    paseCache = null;
+    paseCache = null; $("#pase-vista").removeAttribute("src");
 
+    $("#inv-fecha").textContent = EV.fecha_texto + " · " + EV.ciudad;
     const bv = $("#bienvenida");
     bv.classList.add("saliendo"); bv.setAttribute("aria-hidden", "true");
     $("#experiencia").removeAttribute("aria-hidden");
+    $("#barra").hidden = false; $("#nav-inferior").hidden = false; document.body.classList.add("identificado");
     setTimeout(() => { bv.hidden = true; }, 650);
-    window.scrollTo(0, 0);
+    mostrarVista(vistaDeHash() || "invitacion", { foco: false });
     window.Tarjeta.mostrar();
   }
   $("#btn-cambiar-nombre").addEventListener("click", () => {
     window.Tarjeta.detener();
+    $("#barra").hidden = true; $("#nav-inferior").hidden = true; document.body.classList.remove("identificado");
     const bv = $("#bienvenida"); bv.hidden = false; bv.removeAttribute("aria-hidden");
     requestAnimationFrame(() => bv.classList.remove("saliendo"));
     $("#experiencia").setAttribute("aria-hidden", "true");
     mostrarPaso("lista"); buscar.value = ""; pintarLista(""); if (ID) marcarPrevio(ID);
   });
+
+  /* ---------- Vistas: Invitación · Programa · Confirmar · Mi pase ----------
+     Navegación con el fragmento (#programa, …): el botón Atrás funciona y se puede entrar
+     directamente a un apartado. El fragmento #t=… (enlace individual) se trata aparte, al inicio. */
+  const VISTAS = ["invitacion", "programa", "confirmar", "pase"];
+  let vistaActual = null;
+  const vistaDeHash = () => { const h = location.hash.slice(1); return VISTAS.includes(h) ? h : null; };
+  function mostrarVista(v, { foco = true } = {}) {
+    if (!VISTAS.includes(v)) v = "invitacion";
+    if (vistaActual === "invitacion" && v !== "invitacion") window.Tarjeta.detener();
+    vistaActual = v;
+    for (const n of VISTAS) document.querySelector(`section[data-vista="${n}"]`).hidden = n !== v;
+    document.querySelectorAll(".nav-vistas [data-ir]").forEach((a) => { if (a.dataset.ir === v) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
+    document.body.dataset.vistaActiva = v;
+    window.scrollTo(0, 0);
+    if (v === "invitacion") requestAnimationFrame(() => window.Tarjeta.medir());
+    if (v === "pase") prepararPase();
+    if (foco) { const t = document.querySelector(`section[data-vista="${v}"] h1, section[data-vista="${v}"] h2`); if (t) t.focus({ preventScroll: true }); }
+  }
+  document.addEventListener("click", (e) => {
+    const a = e.target.closest("[data-ir]");
+    if (!a || !ID) return;
+    e.preventDefault();
+    const v = a.dataset.ir;
+    if (location.hash === "#" + v) mostrarVista(v); else location.hash = v;   // crea entrada en el historial
+  });
+  addEventListener("hashchange", () => { const v = vistaDeHash(); if (ID && v && v !== vistaActual) mostrarVista(v); });
 
   /* ---------- Programa ---------- */
   function pintarPrograma(acts) {
@@ -168,36 +198,53 @@
     $("#programa").innerHTML = acts.map((a) => `
       <li class="momento${a.social ? " social" : ""}">
         <time datetime="${a.inicio}">${esc(a.hora_texto)}</time>
-        <div><strong>${esc(a.titulo)}</strong><span>${esc(a.detalle)}</span>${a.social ? '<em class="etiqueta-social">Celebración social</em>' : ""}</div>
+        <div class="momento-txt">
+          ${a.social ? '<em class="etiqueta-social">Celebración social</em>' : ""}
+          <strong>${esc(a.titulo)}</strong>
+          ${a.lineas_pase.map((l) => `<span>${esc(l)}</span>`).join(" ")}
+          <a class="como-llegar" target="_blank" rel="noopener noreferrer" href="https://www.google.com/maps/search/?api=1&amp;query=${encodeURIComponent(a.mapa)}">Cómo llegar <span aria-hidden="true">↗</span><span class="sr-only"> a ${esc(a.titulo)} (abre Google Maps)</span></a>
+        </div>
       </li>`).join("");
   }
 
   /* ---------- Confirmación (RSVP) ---------- */
   const form = $("#form-rsvp"), estado = $("#rsvp-estado"), btn = $("#btn-rsvp");
   function pintarRSVP(acts) {
-    const caja = $("#rsvp-actividades"), seccion = $("#rsvp");
+    const caja = $("#rsvp-actividades");
     estado.textContent = ""; estado.className = "rsvp-estado";
     if (ID.categoria === "general") {
       caja.innerHTML = `<p class="nota">Para confirmar tu asistencia, identifícate con tu nombre.</p><button class="btn" type="button" id="rsvp-identificar">Identificarme</button>`;
       $("#rsvp-identificar").onclick = () => $("#btn-cambiar-nombre").click();
-      btn.hidden = true; $("#rsvp-nota-caja").hidden = true; return;
+      btn.hidden = true; $("#rsvp-nota-caja").hidden = true; $("#rsvp-resumen").innerHTML = ""; $("#rsvp-aviso").hidden = true; $("#rsvp-campos").disabled = false; return;
     }
     btn.hidden = false;
     const resp = (servidor && servidor.respuestas) || {};
+    // Solo lo necesario para decidir: actividad y hora (los lugares están en «Programa»).
     caja.innerHTML = acts.map((a) => `
       <fieldset class="rsvp-act${a.social ? " social" : ""}">
-        <legend><b>${esc(a.titulo)}</b><span>${esc(EV.fecha_tarjeta)} · ${esc(a.hora_texto)} · ${esc(a.lugar)}</span></legend>
+        <legend><b>${esc(a.titulo)}</b><span>${esc(a.hora_texto)}</span></legend>
         <div class="opciones-rsvp">${ESTADOS.map(([k, t]) => `<label><input type="radio" name="r-${a.codigo}" value="${k}"${resp[a.codigo] === k ? " checked" : ""}><span>${t}</span></label>`).join("")}</div>
       </fieldset>`).join("");
+    resumen();
     $("#rsvp-nota-caja").hidden = ID.categoria !== "otro";
     btn.textContent = servidor && Object.keys(resp).length ? "Actualizar mi confirmación" : "Guardar mi confirmación";
     if (servidor && Object.keys(resp).length) { estado.textContent = `Tu respuesta está registrada (última actualización: ${new Date(servidor.actualizado).toLocaleString("es-VE", { dateStyle: "medium", timeStyle: "short" })}). Puedes modificarla.`; }
+    // Aviso temprano: si no hay base de datos, se advierte ANTES del formulario y no se permite rellenarlo.
+    const aviso = $("#rsvp-aviso");
     if (!window.API.configurado) {
-      estado.textContent = "La confirmación en línea todavía no está habilitada. Puedes ver tu invitación, descargar tu pase y guardar las fechas.";
-      estado.className = "rsvp-estado aviso"; btn.disabled = true;
-    }
-    seccion.hidden = false;
+      aviso.textContent = "La confirmación en línea todavía no está disponible. Mientras tanto, puedes ver tu invitación, descargar tu pase y guardar las fechas en tu calendario.";
+      aviso.hidden = false; $("#rsvp-campos").disabled = true; btn.disabled = true;
+    } else { aviso.hidden = true; $("#rsvp-campos").disabled = false; }
   }
+  const ROT = Object.fromEntries(ESTADOS);
+  function resumen() {
+    const filas = [...document.querySelectorAll("#rsvp-actividades fieldset.rsvp-act")].map((f) => {
+      const r = f.querySelector("input:checked");
+      return `<li><span>${esc(f.querySelector("legend b").textContent)}</span><b>${r ? ROT[r.value] : "Sin responder"}</b></li>`;
+    });
+    $("#rsvp-resumen").innerHTML = filas.length ? `<p class="etiqueta-mini">Resumen de tu respuesta</p><ul>${filas.join("")}</ul>` : "";
+  }
+  $("#rsvp-actividades").addEventListener("change", resumen);
   const MENSAJES = {
     sin_backend: "La confirmación en línea todavía no está habilitada.",
     sin_conexion: "No pudimos conectar con el servidor. Revisa tu conexión e inténtalo de nuevo; tu respuesta no se ha guardado.",
@@ -274,7 +321,7 @@
     } catch (e) { paseEstado.textContent = "No se pudo preparar el pase. Recarga la página e inténtalo de nuevo."; }
     return paseCache;
   }
-  document.addEventListener("dialogo-abierto", (e) => { if (e.detail === "dlg-pase") prepararPase(); });
+
   async function descargarPase(tipo) {
     const c = await prepararPase(); if (!c) return;
     paseEstado.textContent = "Generando archivo…";

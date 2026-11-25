@@ -57,6 +57,13 @@ Cómo se compusieron las variantes:
 - Los originales intactos están en `originales/`.
 - Cada variante existe en versión con recepción y sin recepción, según la elegibilidad de cada persona.
 
+### Navegación
+Tras identificarse, la invitación se organiza en cuatro apartados dentro de la misma página: **Invitación**, **Programa**, **Confirmar** y **Mi pase**.
+
+- En computadoras (≥ 900 px) se navega con la barra superior; en teléfonos, con la barra inferior, que lleva icono y texto.
+- Cada apartado tiene su dirección (`#invitacion`, `#programa`, `#confirmar`, `#pase`). Así, el botón Atrás funciona y se puede entrar directamente a cualquiera.
+- Los enlaces individuales `#t=…` se procesan antes y no interfieren con la navegación.
+
 ## Puesta en marcha de Supabase (una sola vez, unos 10 minutos)
 1. Cree un proyecto gratuito en <https://supabase.com>. Elija una región cercana, por ejemplo `us-east-1`.
 2. Ejecute `supabase/esquema.sql`: *SQL Editor → New query →* pegue el archivo → **Run**.
@@ -122,6 +129,7 @@ El script ejecuta tres suites:
 1. Pruebas SQL de seguridad y lógica sobre PostgreSQL local.
 2. Pruebas unitarias de los indicadores.
 3. Pruebas de aceptación end-to-end con Playwright y Chromium: móvil simulado (iPhone 13) y escritorio.
+4. Pruebas responsive en 13 tamaños, de 320 × 568 a 1920 × 1080, con tableta y horizontal. Comprueban desbordes, tarjeta completa (cerrada, abierta y durante el giro), acción principal en la primera pantalla, objetivos táctiles de al menos 44 px y que la barra inferior no tape contenido.
 
 En las pruebas end-to-end, la capa HTTP de Supabase se emula con `pruebas/servidor_prueba.js`; las reglas reales (RLS, funciones) se ejecutan en PostgreSQL. **Son simulaciones, no pruebas en dispositivos físicos.**
 

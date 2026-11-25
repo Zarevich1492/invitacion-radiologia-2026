@@ -45,9 +45,14 @@
   function mostrar() { medir(); if (tarjetaLista) reproducirEntrada(); else pendienteEntrada = true; setTimeout(() => tarjeta.focus({ preventScroll: true }), 700); }
 
   /* ---------------- Medidas responsive ---------------- */
+  // Tamaño fluido: ancho de la columna de la tarjeta y alto de la ventana menos la «reserva»
+  // (alto de los demás elementos de la vista), definida en CSS por tamaño de pantalla (--reserva).
   function medir() {
-    const anchoDisp = escenario.clientWidth || document.documentElement.clientWidth - 32;
-    const altoDisp = Math.max(320, window.innerHeight - (window.innerWidth < 640 ? 250 : 260));
+    if (!escenario.clientWidth) return;                      // vista oculta: se mide al mostrarla
+    const anchoDisp = escenario.clientWidth;
+    const reserva = parseFloat(getComputedStyle(escenario).getPropertyValue("--reserva")) || 260;
+    const altoVentana = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+    const altoDisp = Math.max(240, altoVentana - reserva);
     const S = Math.min(anchoDisp, 1000, altoDisp * 6250 / 4830);
     const hAbierta = S * 4830 / 6250;
     const k = Math.max(1, Math.min(1.9, altoDisp / hAbierta, (anchoDisp * 0.94) / (S / 2)));
@@ -324,6 +329,7 @@
     configurar, mostrar, reiniciar, abrirDialogo,
     fijarNombre(n) { nombreCorto = n; actualizarUI(); },
     detener: detenerRecorrido,
+    medir,
   };
   actualizarUI();
 })();

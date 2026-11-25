@@ -19,3 +19,5 @@ trap 'kill $API 2>/dev/null || true' EXIT
 sleep 1
 echo "== 4. Aceptación end-to-end (Playwright, Chromium simulado)"
 node pruebas/aceptacion.js http://127.0.0.1:8765/ http://127.0.0.1:8787 "$CAPTURAS"
+echo "== 5. Responsive (13 tamaños, simulación)"
+node pruebas/responsive.js http://127.0.0.1:8765/ "$CAPTURAS/responsive"
