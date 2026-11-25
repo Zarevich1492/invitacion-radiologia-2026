@@ -6,6 +6,7 @@ const { chromium } = require("playwright");
 const fs = require("fs");
 const path = require("path");
 const BASE = process.argv[2] || "http://127.0.0.1:8765/";
+const SOLO_DIR = process.argv[3] || "";
 const RAIZ = path.join(__dirname, "..");
 const EV = JSON.parse(fs.readFileSync(path.join(RAIZ, "datos", "evento.json"), "utf8"));
 const OUT = path.join(RAIZ, "variantes", "exploracion");
@@ -71,24 +72,28 @@ function A(x, fam) {
   </div>`;
 }
 
-/* ---------------- B · Protocolar ---------------- */
+/* ---------------- B · Protocolar (DIRECCIÓN APROBADA, refinada) ----------------
+   Estructura: placa de logotipos institucionales → placa del logotipo de la promoción → distinción
+   (primer nivel, monumental) → «DE PROMOCIÓN» / «2026» entre filetes (segundo nivel) → nombre en cursiva. */
 function B(x, fam) {
   const g = fam === "g", fondo = g ? "var(--crema)" : "var(--carbon)", tinta = g ? "var(--negro)" : "var(--crema)", filete = g ? "#b8231f" : "#b5935c";
-  const ph = 380, pw = Math.round(ph * PROMO_AR), px = (W - pw) / 2;
+  const ph = 372, pw = Math.round(ph * PROMO_AR), px = (W - pw) / 2;
+  const topInst = M + 18, altoInst = 118, topPlaca = topInst + altoInst + 28;
   const palabra = g ? "ESPECIALISTA" : x.denominacion.split(" ")[0];
+  const regla = (c) => `<i style="flex:1;height:2px;background:${c};min-width:28px"></i>`;
   const sub = g
-    ? `<div class="bod" style="display:flex;align-items:center;justify-content:center;gap:18px;color:var(--negro);font-weight:800;font-size:72px;line-height:1;margin-top:10px"><i style="width:64px;height:3px;background:${filete}"></i>2026<i style="width:64px;height:3px;background:${filete}"></i></div>`
-    : `<div style="display:flex;align-items:center;justify-content:center;gap:16px;color:var(--oro2);font-weight:600;font-size:32px;letter-spacing:5px;margin-top:12px"><i style="width:54px;height:2px;background:${filete}"></i>DE PROMOCIÓN<i style="width:54px;height:2px;background:${filete}"></i></div>`;
+    ? `<div class="bod" style="align-self:stretch;display:flex;align-items:center;gap:20px;color:var(--negro);font-weight:800;font-size:74px;line-height:1;margin-top:14px">${regla(filete)}2026${regla(filete)}</div>`
+    : `<div style="align-self:stretch;display:flex;align-items:center;gap:18px;color:var(--oro2);font-weight:600;font-size:38px;letter-spacing:7px;line-height:1;margin-top:16px">${regla(filete)}<span style="margin-right:-7px">DE PROMOCIÓN</span>${regla(filete)}</div>`;
   return `<div class="L" style="background:${fondo};color:${tinta}">
     <div class="abs" style="left:${W / 2 - 72}px;width:144px;top:0;bottom:0;background:var(--rojo)"></div>
     ${g ? "" : `<div class="abs" style="left:${W / 2 - 72}px;width:6px;top:0;bottom:0;background:var(--oro)"></div><div class="abs" style="left:${W / 2 + 66}px;width:6px;top:0;bottom:0;background:var(--oro)"></div>`}
-    <div class="abs" style="left:${M + 24}px;right:${M + 24}px;top:${M + 22}px;height:100px;background:var(--crema);border:2px solid ${filete};display:flex;align-items:center;justify-content:center">${inst(52)}</div>
-    <div class="abs" style="left:${px - 22}px;top:206px;width:${pw + 44}px;height:${ph + 44}px;background:var(--crema);border:3px solid ${filete};outline:2px solid ${filete};outline-offset:6px"></div>
-    <img class="abs" src="${PROMO}" style="left:${px}px;top:228px;height:${ph}px;width:${pw}px">
-    <div class="pila" id="pila" data-limite="${H - V - 96}" style="top:676px;left:${M + 26}px;right:${M + 26}px;align-items:center;text-align:center;padding:22px 10px 26px;background:${fondo}">
-      <div class="bod" data-fit="${W - 2 * M - 92}" style="color:${g ? "var(--rojo)" : "var(--crema)"};font-weight:800;line-height:1">${palabra}</div>
+    <div class="abs" style="left:${M + 20}px;right:${M + 20}px;top:${topInst}px;height:${altoInst}px;background:var(--crema);border:2px solid ${filete};display:flex;align-items:center;justify-content:center">${inst(66)}</div>
+    <div class="abs" style="left:${px - 22}px;top:${topPlaca}px;width:${pw + 44}px;height:${ph + 44}px;background:var(--crema);border:3px solid ${filete};outline:2px solid ${filete};outline-offset:6px"></div>
+    <img class="abs" src="${PROMO}" style="left:${px}px;top:${topPlaca + 22}px;height:${ph}px;width:${pw}px">
+    <div class="pila" id="pila" data-limite="${H - V - 105}" style="top:${topPlaca + ph + 44 + 34}px;left:${M + 16}px;right:${M + 16}px;align-items:center;text-align:center;padding:26px 14px 30px;background:${fondo}">
+      <div class="bod" data-fit="${W - 2 * M - 64}" style="color:${g ? "var(--rojo)" : "var(--crema)"};font-weight:900;line-height:.95;letter-spacing:3px">${palabra}</div>
       ${sub}
-      <div class="nombre bod" id="nom" data-max="88" data-min="62" data-ancho="${W - 2 * M - 92}" style="margin-top:26px;font-style:italic;font-weight:600;line-height:1.05;color:${tinta}"></div>
+      <div class="nombre bod" id="nom" data-max="90" data-min="64" data-ancho="${W - 2 * M - 64}" style="margin-top:32px;font-style:italic;font-weight:600;line-height:1.1;color:${tinta}"></div>
     </div>
     <svg class="ov" viewBox="0 0 ${W} ${H}"><polygon points="${contorno(M)}" fill="none" stroke="${filete}" stroke-width="2.5"/><polygon points="${contorno(M + 12)}" fill="none" stroke="${filete}" stroke-width="1.2"/></svg>
   </div>`;
@@ -126,7 +131,7 @@ const MUESTRAS = [
   const p = await b.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
   await p.goto(BASE + "index.html");
   const informe = [];
-  for (const [d, def] of Object.entries(DIRS)) {
+  for (const [d, def] of Object.entries(DIRS).filter(([k]) => !SOLO_DIR || SOLO_DIR.includes(k))) {
     for (const x of MUESTRAS) {
       await p.setContent(`<!doctype html><html lang="es"><head><meta charset="utf-8"><style>${CSS}</style></head><body>${def.f(x, x.fam)}</body></html>`, { waitUntil: "networkidle" });
       const r = await p.evaluate(async (nombre) => {
@@ -164,12 +169,12 @@ const MUESTRAS = [
         const r = caja.getBoundingClientRect();
         const fuera = [...document.querySelectorAll("#nom span, [data-fit] span")].some((e) => { const q = e.getBoundingClientRect(); return q.left < 46.5 || q.right > 709 - 46.5; });
         return { lineas: mejor.part, tam: mejor.tam, abajo: Math.round(pila.getBoundingClientRect().bottom), limite, fuera };
-      }, x.nombre);
+      }, x.nombre_liston || x.nombre);
       const archivo = `${d}-${x.fam === "g" ? "especialista" : "padrino"}-${x.id}.png`;
       await p.screenshot({ path: path.join(OUT, archivo), omitBackground: true, clip: { x: 0, y: 0, width: W, height: H } });
-      informe.push({ direccion: d, nombre: x.nombre, ...r, archivo });
+      informe.push({ direccion: d, nombre: x.nombre_liston || x.nombre, ...r, archivo });
       if (r.error) throw new Error(`${d} · ${x.nombre}: ${r.error}`);
-      console.log(`${d} · ${x.nombre}: ${r.lineas.join(" / ")} · ${r.tam}px (${(r.tam / MM).toFixed(1)} mm) · pila hasta ${r.abajo}/${r.limite}px${r.fuera ? " ⚠ fuera del margen de 4 mm" : ""}`);
+      console.log(`${d} · ${x.nombre_liston || x.nombre}: ${r.lineas.join(" / ")} · ${r.tam}px (${(r.tam / MM).toFixed(1)} mm) · pila hasta ${r.abajo}/${r.limite}px${r.fuera ? " ⚠ fuera del margen de 4 mm" : ""}`);
     }
   }
   fs.writeFileSync(path.join(OUT, "informe.json"), JSON.stringify({ logo_departamento: DEPTO, informe }, null, 1));
