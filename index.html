@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>XXIV Promoción de Radiólogos | Invitación especial</title>
+<meta name="description" content="Tres momentos. Una misma celebración. Sábado 28 de noviembre de 2026.">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="theme-color" content="#f5e7d3">
+<meta name="referrer" content="no-referrer">
+<link rel="canonical" href="https://zarevich1492.github.io/invitacion-radiologia-2026/">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="es_VE">
+<meta property="og:site_name" content="XXIV Promoción de Radiólogos · ULA">
+<meta property="og:title" content="XXIV Promoción de Radiólogos | Invitación especial">
+<meta property="og:description" content="Tres momentos. Una misma celebración. Sábado 28 de noviembre de 2026.">
+<meta property="og:url" content="https://zarevich1492.github.io/invitacion-radiologia-2026/">
+<meta property="og:image" content="https://zarevich1492.github.io/invitacion-radiologia-2026/assets/og-portada.jpg">
+<meta property="og:image:secure_url" content="https://zarevich1492.github.io/invitacion-radiologia-2026/assets/og-portada.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Portada: Promo XXIV Radiólogos ULA 2026. Invitación especial.">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="assets/logos/promocion-xxiv-560.jpg" type="image/jpeg">
+<link rel="preload" href="assets/fonts/BodoniModa-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/EBGaramond-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/logos/promocion-xxiv-560.jpg" as="image">
+<link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+
+<!-- ===================== Escena 1 · Bienvenida e identificación ===================== -->
+<section class="bienvenida" id="bienvenida" aria-labelledby="bienvenida-titulo">
+  <div class="bienvenida-caja">
+    <div class="logos-inst" aria-label="Universidad de Los Andes · Departamento de Radiología y Diagnóstico por Imagen">
+      <img src="assets/logos/ula.jpg" alt="Universidad de Los Andes, Venezuela" width="1215" height="392">
+      <i aria-hidden="true"></i>
+      <img src="assets/logos/departamento-radiologia.jpg" alt="Departamento de Radiología y Diagnóstico por Imagen" width="1120" height="392">
+    </div>
+    <img class="bienvenida-logo" src="assets/logos/promocion-xxiv-560.jpg" width="560" height="784" alt="Logotipo de la XXIV Promoción de Radiólogos, ULA 2026">
+    <h1 id="bienvenida-titulo">Hay momentos que merecen <em>ser compartidos</em></h1>
+    <p class="bienvenida-sub">Hemos preparado una invitación especial para ti.</p>
+
+    <!-- Paso 1: selector de padrinos -->
+    <div class="paso" id="paso-lista">
+      <label class="etiqueta" for="buscar-nombre">Busca y elige tu nombre</label>
+      <input id="buscar-nombre" class="campo" type="search" placeholder="Nombre o apellido" autocomplete="off" autocapitalize="words" spellcheck="false" aria-controls="lista-nombres">
+      <ul class="lista-nombres" id="lista-nombres" role="listbox" aria-label="Padrinos y madrinas de la promoción"></ul>
+      <button class="btn btn-texto" type="button" id="btn-general">Ver la invitación sin personalizar</button>
+    </div>
+
+    <!-- Paso 2: categoría -->
+    <div class="paso" id="paso-categoria" hidden>
+      <p class="pregunta">¿Cómo nos acompañas en esta celebración?</p>
+      <div class="opciones-cat" role="radiogroup" aria-label="Categoría de invitado">
+        <button class="opcion-cat" type="button" role="radio" aria-checked="false" data-cat="r1"><b>Residente de primer año</b><span>R1 · Postgrado de Radiología</span></button>
+        <button class="opcion-cat" type="button" role="radio" aria-checked="false" data-cat="r2"><b>Residente de segundo año</b><span>R2 · Postgrado de Radiología</span></button>
+        <button class="opcion-cat" type="button" role="radio" aria-checked="false" data-cat="otro"><b>Otro invitado</b><span>Familia, amigos y colegas</span></button>
+      </div>
+      <form class="form-nombre" id="form-nombre" autocomplete="off" hidden>
+        <label class="etiqueta" for="campo-nombre">Tu nombre y apellido</label>
+        <input id="campo-nombre" class="campo" maxlength="80" placeholder="Nombre y apellido" autocapitalize="words" spellcheck="false" enterkeyhint="go" required minlength="2">
+        <button class="btn btn-primario" type="submit">Abrir mi invitación</button>
+      </form>
+      <details class="omision">
+        <summary>¿Eres padrino o madrina y no apareces en el listado?</summary>
+        <p>Elige «Otro invitado» y continúa; al confirmar tu asistencia podrás dejar una nota para los organizadores.</p>
+      </details>
+      <button class="btn btn-texto" type="button" id="btn-volver-lista">← Volver al listado</button>
+    </div>
+
+    <!-- Paso alterno: enlace individual reconocido -->
+    <div class="paso" id="paso-token" hidden>
+      <p class="pregunta" id="token-saludo"></p>
+      <button class="btn btn-primario" type="button" id="btn-token-continuar">Abrir mi invitación</button>
+      <button class="btn btn-texto" type="button" id="btn-token-otro">No soy yo</button>
+    </div>
+    <p class="nota nota-privacidad">La selección del nombre personaliza la invitación; no requiere cuenta ni contraseña.</p>
+  </div>
+</section>
+
+<main class="experiencia envoltura" id="experiencia" aria-hidden="true">
+  <header class="saludo">
+    <span class="versalita" id="saludo-eyebrow">Invitación especial</span>
+    <p class="saludo-nombre" id="saludo-nombre"></p>
+    <p class="saludo-texto" id="saludo-texto"></p>
+    <button class="btn btn-texto cambiar-nombre" type="button" id="btn-cambiar-nombre">Cambiar nombre o categoría</button>
+  </header>
+
+  <!-- ===================== Escenas 2 a 6 · Tarjeta 3D ===================== -->
+  <div class="escenario cargando" id="escenario" data-pose="cerrada" data-estado="cerrada">
+    <div class="sombra-suelo" aria-hidden="true"></div>
+    <div class="tarjeta" id="tarjeta" tabindex="0" role="group" aria-roledescription="tarjeta" aria-label="Invitación. Portada. Pulse Intro para abrir.">
+      <div class="flotar">
+        <div class="inclinacion" id="inclinacion">
+          <div class="libro" id="libro">
+            <div class="hoja base">
+              <div class="cara frente"><img class="mitad-der" id="img-interior-der" alt="" decoding="async"></div>
+              <div class="cara dorso"><img class="ajustada" id="img-contra" alt="" decoding="async"><span class="luz"></span></div>
+            </div>
+            <div class="hoja tapa" id="tapa">
+              <div class="cara frente"><img class="ajustada" id="img-portada" alt="" fetchpriority="high"><span class="luz"></span></div>
+              <div class="cara dorso"><img class="mitad-izq" id="img-interior-izq" alt="" decoding="async"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="pista destacada" id="pista" aria-live="polite">Toca para abrir tu invitación</p>
+
+  <div class="controles" role="toolbar" aria-label="Controles de la tarjeta">
+    <button class="btn btn-primario" type="button" id="btn-principal">Abrir tarjeta</button>
+    <div class="controles-sec">
+      <button class="btn" type="button" id="btn-contra">Ver contraportada</button>
+      <button class="btn" type="button" id="btn-reproducir" aria-pressed="false"><span class="ico" aria-hidden="true">▶</span><span>Reproducir</span></button>
+      <button class="btn" type="button" id="btn-ampliar"><span class="ico" aria-hidden="true">⤢</span><span>Ampliar</span></button>
+      <button class="btn" type="button" id="btn-reiniciar"><span class="ico" aria-hidden="true">↺</span><span>Reiniciar</span></button>
+    </div>
+  </div>
+
+  <!-- ===================== Programa ===================== -->
+  <section class="seccion" aria-labelledby="t-programa">
+    <span class="versalita" id="programa-fecha"></span>
+    <h2 id="t-programa">Tres momentos. <em>Una misma celebración.</em></h2>
+    <ol class="programa" id="programa"></ol>
+    <p class="nota">Hora local de Venezuela (UTC−4).</p>
+  </section>
+
+  <!-- ===================== Confirmación de asistencia ===================== -->
+  <section class="seccion rsvp" id="rsvp" aria-labelledby="t-rsvp">
+    <h2 id="t-rsvp">Nos gustaría contar contigo</h2>
+    <p>Tu confirmación nos ayudará a organizar mejor esta jornada de celebración.</p>
+    <form id="form-rsvp" novalidate>
+      <div id="rsvp-actividades"></div>
+      <div class="rsvp-nota" id="rsvp-nota-caja" hidden>
+        <label class="etiqueta" for="rsvp-nota">Nota para los organizadores (opcional)</label>
+        <textarea id="rsvp-nota" class="campo" maxlength="300" rows="2" placeholder="Por ejemplo: soy madrina y no aparezco en el listado."></textarea>
+      </div>
+      <input class="trampa" type="text" id="rsvp-web" name="web" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <p class="nota aviso-privacidad">Tu nombre y confirmación serán utilizados exclusivamente para la organización de las actividades de cierre de nuestra promoción.</p>
+      <button class="btn btn-primario" type="submit" id="btn-rsvp">Guardar mi confirmación</button>
+      <p class="rsvp-estado" id="rsvp-estado" role="status" aria-live="polite"></p>
+    </form>
+  </section>
+
+  <!-- ===================== Conservar ===================== -->
+  <section class="seccion" aria-labelledby="t-conservar">
+    <h2 id="t-conservar">Conserva tu invitación</h2>
+    <div class="acciones">
+      <button class="accion principal" type="button" data-abrir="dlg-pase"><b>Obtener pase digital</b><span>Personalizado, para guardar en el teléfono</span></button>
+      <button class="accion" type="button" data-abrir="dlg-calendario"><b>Guardar en mi calendario</b><span>Con recordatorios</span></button>
+      <a class="accion" id="descarga-invitacion" download><b>Descargar invitación</b><span>Tarjeta completa en PDF</span></a>
+      <button class="accion" type="button" data-abrir="dlg-mapas"><b>Cómo llegar</b><span>Ubicación de cada actividad</span></button>
+    </div>
+  </section>
+
+  <footer class="pie">
+    <img class="pie-promo" src="assets/logos/promocion-xxiv-560.jpg" alt="XXIV Promoción de Radiólogos" loading="lazy" width="560" height="784">
+    <div class="pie-logos">
+      <img src="assets/logos/ula.jpg" alt="Universidad de Los Andes, Venezuela" loading="lazy" width="1215" height="392">
+      <i aria-hidden="true"></i>
+      <img src="assets/logos/departamento-radiologia.jpg" alt="Departamento de Radiología y Diagnóstico por Imagen" loading="lazy" width="1120" height="392">
+    </div>
+    XXIV Promoción de Radiólogos · Postgrado de Radiología · Universidad de Los Andes · Mérida
+  </footer>
+</main>
+
+<!-- Visor ampliado -->
+<dialog class="visor" id="dlg-visor" aria-label="Tarjeta ampliada">
+  <div class="visor-marco">
+    <div class="visor-barra">
+      <p id="visor-titulo">Interior · Pellizque o toque dos veces para acercar</p>
+      <div class="visor-botones">
+        <button class="btn" type="button" id="zoom-menos" aria-label="Alejar">−</button>
+        <button class="btn" type="button" id="zoom-mas" aria-label="Acercar">+</button>
+        <button class="btn" type="button" id="zoom-ajustar">Ver completa</button>
+        <button class="btn btn-primario" type="button" data-cerrar>Cerrar</button>
+      </div>
+    </div>
+    <div class="lienzo" id="lienzo"><img id="visor-img" alt=""></div>
+  </div>
+</dialog>
+
+<!-- Escena 7 · Pase digital -->
+<dialog id="dlg-pase" aria-labelledby="t-pase">
+  <div class="hoja-modal">
+    <div class="hoja-cab"><h3 id="t-pase">Pase de invitado especial</h3><button class="btn cerrar" type="button" data-cerrar>Cerrar</button></div>
+    <div class="hoja-cuerpo">
+      <img class="pase-vista" id="pase-vista" alt="Vista previa del pase de invitado especial">
+      <p class="nota">Recuerdo y guía rápida de la jornada; no es una credencial de acceso. Si la descarga no comienza (por ejemplo, dentro de WhatsApp), mantén presionada la imagen y elige «Guardar imagen», o abre el enlace en Safari o Chrome.</p>
+      <div class="lista-enlaces">
+        <button class="btn btn-primario" type="button" id="pase-png">Guardar pase · PNG <small style="color:inherit">alta resolución</small></button>
+        <button class="btn" type="button" id="pase-movil">Versión ligera para el teléfono <small>JPG</small></button>
+        <button class="btn" type="button" id="pase-pdf">Pase en PDF <small>para imprimir</small></button>
+      </div>
+      <p class="estado-descarga" id="pase-estado" role="status"></p>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="dlg-calendario" aria-labelledby="t-cal">
+  <div class="hoja-modal">
+    <div class="hoja-cab"><h3 id="t-cal">Guardar en mi calendario</h3><button class="btn cerrar" type="button" data-cerrar>Cerrar</button></div>
+    <div class="hoja-cuerpo">
+      <p><strong>iPhone, Android u Outlook</strong> (archivo de calendario)</p>
+      <div class="lista-enlaces" id="cal-ics"></div>
+      <p><strong>Google Calendar</strong></p>
+      <div class="lista-enlaces" id="cal-google"></div>
+      <p class="nota">Los archivos sugieren avisos 24 horas y 1 hora antes de cada actividad. Los avisos dependen de la configuración y compatibilidad de tu calendario (Google, por ejemplo, aplica los suyos). No se indica hora de finalización porque no hay una hora oficial.</p>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="dlg-mapas" aria-labelledby="t-mapas">
+  <div class="hoja-modal">
+    <div class="hoja-cab"><h3 id="t-mapas">Cómo llegar</h3><button class="btn cerrar" type="button" data-cerrar>Cerrar</button></div>
+    <div class="hoja-cuerpo"><div class="lista-enlaces" id="mapas"></div></div>
+  </div>
+</dialog>
+
+<noscript>
+  <div class="envoltura" style="display:grid;gap:16px;padding-block:16px">
+    <p>Para ver la invitación animada, active JavaScript en su navegador.</p>
+    <img src="assets/img/A-portada-1400.jpg" alt="Portada de la invitación">
+  </div>
+  <style>.bienvenida{display:none!important}</style>
+</noscript>
+
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/pase.js"></script>
+<script src="js/app.js"></script>
+<script src="js/inicio.js"></script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Panel de confirmaciones · XXIV Promoción</title>
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="referrer" content="no-referrer">
+<link rel="icon" href="../assets/logos/promocion-xxiv-560.jpg" type="image/jpeg">
+<link rel="stylesheet" href="../css/estilos.css">
+<link rel="stylesheet" href="../css/admin.css">
+</head>
+<body class="admin">
+<main class="envoltura">
+  <header class="adm-cab">
+    <img src="../assets/logos/promocion-xxiv-560.jpg" alt="" width="56" height="78">
+    <div><span class="versalita">XXIV Promoción de Radiólogos</span><h1>Panel de confirmaciones</h1></div>
+    <button class="btn" type="button" id="salir" hidden>Cerrar sesión</button>
+  </header>
+
+  <!-- Acceso -->
+  <section id="acceso" class="adm-tarjeta adm-acceso">
+    <h2>Acceso de organizadores</h2>
+    <p id="acceso-aviso" class="nota"></p>
+    <form id="form-acceso">
+      <label class="etiqueta" for="correo">Correo</label>
+      <input class="campo" id="correo" type="email" autocomplete="username" required>
+      <label class="etiqueta" for="clave">Contraseña</label>
+      <input class="campo" id="clave" type="password" autocomplete="current-password" required>
+      <button class="btn btn-primario" type="submit">Entrar</button>
+      <p class="rsvp-estado" id="acceso-estado" role="status"></p>
+    </form>
+  </section>
+
+  <div id="panel" hidden>
+    <p class="nota" id="actualizado"></p>
+    <section class="adm-indicadores" id="indicadores" aria-label="Indicadores generales"></section>
+    <h2 class="adm-h2">Por actividad</h2>
+    <p class="nota">«Total previsto» = invitados confirmados + <span id="n-grad"></span> graduandos. Es una previsión, no un registro de presencia. «Habilitados» se refiere a las personas conocidas por el sistema (padrinos y registrados).</p>
+    <section class="adm-actividades" id="actividades"></section>
+
+    <h2 class="adm-h2">Registros</h2>
+    <div class="adm-filtros">
+      <input class="campo" id="f-buscar" type="search" placeholder="Buscar por nombre">
+      <select class="campo" id="f-cat"><option value="">Todas las categorías</option><option value="padrino">Padrinos y madrinas</option><option value="r1">R1</option><option value="r2">R2</option><option value="otro">Otros invitados</option></select>
+      <select class="campo" id="f-act"><option value="">Cualquier actividad</option></select>
+      <select class="campo" id="f-estado"><option value="">Cualquier estado</option><option value="asistira">Asistirá</option><option value="no_asistira">No asistirá</option><option value="por_confirmar">Por confirmar</option><option value="sin_responder">Sin responder</option><option value="no_aplica">No aplica</option></select>
+      <button class="btn" type="button" id="exportar">Exportar CSV (Excel)</button>
+      <button class="btn" type="button" id="recargar">Actualizar</button>
+    </div>
+    <div class="adm-tabla-caja"><table class="adm-tabla" id="tabla"></table></div>
+
+    <details class="adm-tarjeta">
+      <summary><h2 class="adm-h2">Recepción: elegibilidad por categoría</h2></summary>
+      <p class="nota">Define quiénes reciben la invitación a la recepción. Las excepciones individuales se ajustan en cada registro (columna «Recepción»). Si no está habilitada para una persona, no se le ofrece confirmar, no aparece en su pase ni en su calendario.</p>
+      <div id="reglas"></div>
+    </details>
+
+    <details class="adm-tarjeta">
+      <summary><h2 class="adm-h2">Listado de padrinos y madrinas</h2></summary>
+      <div id="padrinos"></div>
+      <form id="form-padrino" class="adm-fila">
+        <input class="campo" id="np-nombre" placeholder="Nombre con tratamiento (Dra. Nombre Apellido)" required>
+        <input class="campo" id="np-apellido" placeholder="Apellido (para ordenar)" required>
+        <button class="btn" type="submit">Añadir</button>
+      </form>
+    </details>
+
+    <details class="adm-tarjeta">
+      <summary><h2 class="adm-h2">Enlaces individuales</h2></summary>
+      <p class="nota">Cree un registro para un residente u otro invitado y genere su enlace personal. Para padrinos, use el botón «Enlace» de su fila. Las respuestas enviadas desde un enlace individual quedan como verificadas. Cada enlace se muestra una sola vez: generar otro invalida el anterior.</p>
+      <form id="form-invitado" class="adm-fila">
+        <input class="campo" id="ni-nombre" placeholder="Nombre y apellido" required>
+        <select class="campo" id="ni-cat"><option value="r1">R1</option><option value="r2">R2</option><option value="otro">Otro invitado</option></select>
+        <button class="btn" type="submit">Crear y generar enlace</button>
+      </form>
+    </details>
+
+    <details class="adm-tarjeta peligro">
+      <summary><h2 class="adm-h2">Después del evento</h2></summary>
+      <p class="nota">Exporte primero el CSV. Esta acción elimina todos los registros personales y confirmaciones (conserva el listado de padrinos y las actividades). Escriba <b>ELIMINAR TODO</b> para confirmar.</p>
+      <form id="form-borrar" class="adm-fila"><input class="campo" id="borrar-confirmacion" autocomplete="off"><button class="btn" type="submit">Eliminar registros</button></form>
+    </details>
+  </div>
+</main>
+
+<dialog id="dlg-enlace" aria-labelledby="t-enlace">
+  <div class="hoja-modal">
+    <div class="hoja-cab"><h3 id="t-enlace">Enlace individual</h3><button class="btn cerrar" type="button" data-cerrar>Cerrar</button></div>
+    <div class="hoja-cuerpo">
+      <p id="enlace-para"></p>
+      <input class="campo" id="enlace-url" readonly>
+      <button class="btn btn-primario" type="button" id="copiar-enlace">Copiar enlace</button>
+      <p class="nota">Guárdelo o envíelo ahora: por seguridad no se puede volver a consultar. Si lo pierde, genere uno nuevo.</p>
+    </div>
+  </div>
+</dialog>
+
+<p class="nota adm-toast" id="toast" role="status" aria-live="polite"></p>
+<script src="../js/config.js"></script>
+<script src="../js/metricas.js"></script>
+<script src="../js/admin.js"></script>
+</body>
+</html>

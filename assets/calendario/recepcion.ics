@@ -1,0 +1,40 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//XXIV Promocion Radiologia ULA//Invitacion//ES
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-TIMEZONE:America/Caracas
+BEGIN:VTIMEZONE
+TZID:America/Caracas
+BEGIN:STANDARD
+DTSTART:19700101T000000
+TZOFFSETFROM:-0400
+TZOFFSETTO:-0400
+TZNAME:-04
+END:STANDARD
+END:VTIMEZONE
+BEGIN:VEVENT
+UID:recepcion-20261128@invitacion-radiologia-2026
+DTSTAMP:20261125T212332Z
+DTSTART;TZID=America/Caracas:20261128T210000
+SUMMARY:Recepción de los nuevos especialistas · XXIV Promoción de Radió
+ logos ULA
+LOCATION:Centro de Convenciones Mucumbarila\, Mérida\, Venezuela
+DESCRIPTION:Centro de Convenciones Mucumbarila. Celebración social de los 
+ graduandos.\nInicio: 9:00 p. m. (hora de Venezuela).\nTres momentos. Una m
+ isma celebración.\nSin hora oficial de finalización.
+URL:https://zarevich1492.github.io/invitacion-radiologia-2026/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-P1D
+DESCRIPTION:Mañana: Recepción de los nuevos especialistas · XXIV Promoci
+ ón de Radiólogos ULA
+END:VALARM
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:En una hora: Recepción de los nuevos especialistas · XXIV Pro
+ moción de Radiólogos ULA
+END:VALARM
+END:VEVENT
+END:VCALENDAR

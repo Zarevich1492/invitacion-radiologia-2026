@@ -1,0 +1,41 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//XXIV Promocion Radiologia ULA//Invitacion//ES
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-TIMEZONE:America/Caracas
+BEGIN:VTIMEZONE
+TZID:America/Caracas
+BEGIN:STANDARD
+DTSTART:19700101T000000
+TZOFFSETFROM:-0400
+TZOFFSETTO:-0400
+TZNAME:-04
+END:STANDARD
+END:VTIMEZONE
+BEGIN:VEVENT
+UID:caravana-20261128@invitacion-radiologia-2026
+DTSTAMP:20261125T212332Z
+DTSTART;TZID=America/Caracas:20261128T140000
+SUMMARY:Caravana de graduandos · XXIV Promoción de Radiólogos ULA
+LOCATION:Estacionamiento del Hospital Universitario de Los Andes\, Mérida\
+ , Venezuela
+DESCRIPTION:Concentración en el estacionamiento del Hospital Universitario
+  de Los Andes y posterior recorrido por las calles de Mérida.\nInicio: 2:
+ 00 p. m. (hora de Venezuela).\nTres momentos. Una misma celebración.\nSin
+  hora oficial de finalización.
+URL:https://zarevich1492.github.io/invitacion-radiologia-2026/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-P1D
+DESCRIPTION:Mañana: Caravana de graduandos · XXIV Promoción de Radiólog
+ os ULA
+END:VALARM
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:En una hora: Caravana de graduandos · XXIV Promoción de Radi
+ ólogos ULA
+END:VALARM
+END:VEVENT
+END:VCALENDAR

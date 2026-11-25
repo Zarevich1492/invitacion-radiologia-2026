@@ -1,0 +1,39 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//XXIV Promocion Radiologia ULA//Invitacion//ES
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-TIMEZONE:America/Caracas
+BEGIN:VTIMEZONE
+TZID:America/Caracas
+BEGIN:STANDARD
+DTSTART:19700101T000000
+TZOFFSETFROM:-0400
+TZOFFSETTO:-0400
+TZNAME:-04
+END:STANDARD
+END:VTIMEZONE
+BEGIN:VEVENT
+UID:clase-20261128@invitacion-radiologia-2026
+DTSTAMP:20261125T212332Z
+DTSTART;TZID=America/Caracas:20261128T083000
+SUMMARY:Clase magistral · XXIV Promoción de Radiólogos ULA
+LOCATION:Auditorio A\, Facultad de Medicina\, Universidad de Los Andes\, M
+ érida\, Venezuela
+DESCRIPTION:Auditorio A\, Facultad de Medicina\, Universidad de Los Andes.\
+ nInicio: 8:30 a. m. (hora de Venezuela).\nTres momentos. Una misma celebra
+ ción.\nSin hora oficial de finalización.
+URL:https://zarevich1492.github.io/invitacion-radiologia-2026/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-P1D
+DESCRIPTION:Mañana: Clase magistral · XXIV Promoción de Radiólogos ULA
+END:VALARM
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:En una hora: Clase magistral · XXIV Promoción de Radiólogos 
+ ULA
+END:VALARM
+END:VEVENT
+END:VCALENDAR

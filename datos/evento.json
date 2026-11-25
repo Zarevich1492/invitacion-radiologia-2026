@@ -1,0 +1,92 @@
+{
+  "_nota": "FUENTE ÚNICA de datos del evento. Tras modificarla, ejecute: bash herramientas/construir.sh  (regenera tarjetas, PDF, ICS y la semilla SQL).",
+  "promocion": "XXIV Promoción de Radiólogos",
+  "institucion": "Universidad de Los Andes",
+  "ciudad": "Mérida, Venezuela",
+  "anio": 2026,
+  "zona_horaria": "America/Caracas",
+  "fecha": "2026-11-28",
+  "fecha_texto": "Sábado 28 de noviembre de 2026",
+  "fecha_tarjeta": "Sábado 28 de noviembre",
+  "fecha_corta": "28 NOV 2026",
+  "lema": "Tres momentos. Una misma celebración.",
+  "graduandos": 7,
+  "url_publica": "https://zarevich1492.github.io/invitacion-radiologia-2026/",
+  "actividades": [
+    {
+      "codigo": "clase",
+      "orden": 1,
+      "titulo": "Clase magistral",
+      "hora_texto": "8:30 a. m.",
+      "inicio": "2026-11-28T08:30:00-04:00",
+      "lugar": "Auditorio A, Facultad de Medicina, Universidad de Los Andes",
+      "detalle": "Auditorio A, Facultad de Medicina, Universidad de Los Andes.",
+      "lineas_tarjeta": ["Clase magistral", "Auditorio A, Facultad de Medicina,", "Universidad de Los Andes"],
+      "lineas_pase": ["Auditorio A, Facultad de Medicina,", "Universidad de Los Andes."],
+      "mapa": "Facultad de Medicina, Universidad de Los Andes, Mérida, Venezuela",
+      "social": false
+    },
+    {
+      "codigo": "caravana",
+      "orden": 2,
+      "titulo": "Caravana de graduandos",
+      "hora_texto": "2:00 p. m.",
+      "inicio": "2026-11-28T14:00:00-04:00",
+      "lugar": "Estacionamiento del Hospital Universitario de Los Andes",
+      "detalle": "Concentración en el estacionamiento del Hospital Universitario de Los Andes y posterior recorrido por las calles de Mérida.",
+      "lineas_tarjeta": ["Caravana de graduandos", "Concentración: estacionamiento del hospital.", "Recorrido por las calles de Mérida."],
+      "lineas_pase": ["Concentración en el estacionamiento del hospital.", "Recorrido por las calles de Mérida."],
+      "mapa": "Hospital Universitario de Los Andes, Mérida, Venezuela",
+      "social": false
+    },
+    {
+      "codigo": "recepcion",
+      "orden": 3,
+      "titulo": "Recepción de los nuevos especialistas",
+      "hora_texto": "9:00 p. m.",
+      "inicio": "2026-11-28T21:00:00-04:00",
+      "lugar": "Centro de Convenciones Mucumbarila",
+      "detalle": "Centro de Convenciones Mucumbarila. Celebración social de los graduandos.",
+      "lineas_tarjeta": ["Recepción de los nuevos especialistas", "Centro de Convenciones Mucumbarila"],
+      "lineas_pase": ["Centro de Convenciones Mucumbarila."],
+      "mapa": "Centro de Convenciones Mucumbarila, Mérida, Venezuela",
+      "social": true
+    }
+  ],
+  "categorias": {
+    "padrino": { "etiqueta": "Padrino o madrina de promoción", "pase": "PADRINO O MADRINA DE PROMOCIÓN", "variante": "A" },
+    "r1": { "etiqueta": "Residente de primer año (R1)", "pase": "RESIDENTE DE RADIOLOGÍA · R1", "variante": "B" },
+    "r2": { "etiqueta": "Residente de segundo año (R2)", "pase": "RESIDENTE DE RADIOLOGÍA · R2", "variante": "B" },
+    "otro": { "etiqueta": "Otro invitado", "pase": "INVITADO ESPECIAL", "variante": "C" }
+  },
+  "variantes": {
+    "A": {
+      "saludo": "{nombre}, gracias por haber sido parte de nuestro camino. Será un honor compartir con usted la culminación de esta etapa.",
+      "saludo_general": "Gracias por haber sido parte de nuestro camino. Será un honor compartir con ustedes la culminación de esta etapa.",
+      "tratamiento": "usted"
+    },
+    "B": {
+      "saludo": "{nombre}, distintas etapas, una misma vocación. Nos alegrará contar con su presencia.",
+      "saludo_general": "Distintas etapas, una misma vocación.",
+      "tratamiento": "usted"
+    },
+    "C": {
+      "saludo": "{nombre}, hay momentos que merecen ser compartidos. Nos alegrará contar con tu presencia.",
+      "saludo_general": "Hay momentos que merecen ser compartidos.",
+      "tratamiento": "tu"
+    }
+  },
+  "padrinos": [
+    { "id": "berrio-omaira", "nombre": "Dra. Omaira Berrio", "apellido": "Berrio" },
+    { "id": "falcon-analy", "nombre": "Dra. Analy Falcón", "apellido": "Falcón" },
+    { "id": "gutierrez-maria-del-carmen", "nombre": "Dra. María del Carmen Gutiérrez", "apellido": "Gutiérrez" },
+    { "id": "moreno-franklin", "nombre": "Dr. Franklin Moreno", "apellido": "Moreno" },
+    { "id": "rojas-gustavo", "nombre": "Dr. Gustavo Rojas", "apellido": "Rojas" },
+    { "id": "sosa-angel", "nombre": "Dr. Ángel Sosa", "apellido": "Sosa" },
+    { "id": "sosa-jenny", "nombre": "Dra. Jenny Sosa", "apellido": "Sosa" },
+    { "id": "torres-jose-daniel", "nombre": "Dr. José Daniel Torres", "apellido": "Torres" },
+    { "id": "uzcategui-reyna", "nombre": "Dra. Reyna Uzcátegui", "apellido": "Uzcátegui" },
+    { "id": "vina-daniel", "nombre": "Dr. Daniel Viña", "apellido": "Viña" }
+  ],
+  "recepcion_por_defecto": { "padrino": true, "r1": false, "r2": false, "otro": false }
+}

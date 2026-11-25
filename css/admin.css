@@ -1,0 +1,61 @@
+/* Panel administrativo: herramienta de consulta (resumen antes que detalle). */
+body.admin{background:var(--crema);background-image:none}
+.admin main{padding-block:calc(env(safe-area-inset-top,0px) + 16px) 60px;max-width:1280px}
+.adm-cab{display:flex;align-items:center;gap:14px;padding-bottom:14px;border-bottom:1px solid var(--linea)}
+.adm-cab img{width:44px;height:auto}
+.adm-cab div{flex:1;min-width:0}
+.adm-cab h1{margin:0;font-family:var(--f-display);font-size:clamp(1.3rem,4vw,1.8rem);line-height:1.1}
+.adm-h2{font-family:var(--f-display);font-size:1.3rem;margin:28px 0 8px;display:inline}
+h2.adm-h2{display:block}
+.adm-tarjeta{margin-top:22px;padding:14px 16px;border:1px solid var(--linea);border-radius:12px;background:#fffaf2}
+.adm-tarjeta summary{cursor:pointer;list-style-position:outside}
+.adm-tarjeta summary .adm-h2{margin:0}
+.adm-tarjeta.peligro{border-color:rgba(184,35,31,.45)}
+.adm-acceso{max-width:420px;margin:30px auto}
+.adm-acceso form{display:flex;flex-direction:column;gap:8px}
+.adm-indicadores{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:14px}
+.adm-tile{padding:12px 14px;border-radius:10px;background:#fffaf2;border:1px solid var(--linea);display:flex;flex-direction:column;gap:2px;min-width:0}
+.adm-tile b{font-family:var(--f-display);font-size:2rem;line-height:1;font-variant-numeric:tabular-nums}
+.adm-tile span{font-weight:600;font-size:.92rem}
+.adm-tile small{color:var(--tinta-suave);font-size:.8rem}
+.adm-actividades{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.adm-act{padding:14px;border-radius:12px;background:#fffaf2;border-top:3px solid var(--rojo);min-width:0}
+.adm-act.social{background:var(--tinta);color:var(--crema)}
+.adm-act.social .nota{color:#d9c8b2}
+.adm-act h3{margin:0;font-family:var(--f-display);font-size:1.15rem}
+.adm-act dl{display:grid;grid-template-columns:1fr auto;gap:4px 12px;margin:10px 0 0}
+.adm-act dt{font-size:.95rem}
+.adm-act dd{margin:0;font-weight:600;font-variant-numeric:tabular-nums;text-align:right}
+.adm-act .total{font-family:var(--f-display);font-size:1.2rem;border-top:1px solid currentColor;padding-top:6px;margin-top:4px}
+.adm-filtros{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.adm-filtros .campo{width:auto;flex:1 1 170px;min-height:44px;font-family:var(--f-texto);font-size:1rem}
+.adm-tabla-caja{overflow-x:auto;border:1px solid var(--linea);border-radius:10px;background:#fffaf2}
+.adm-tabla{border-collapse:collapse;width:100%;font-size:.95rem;min-width:980px}
+.adm-tabla th,.adm-tabla td{padding:8px 10px;border-bottom:1px solid var(--linea);text-align:left;vertical-align:top}
+.adm-tabla thead th{position:sticky;top:0;background:#f3e4cd;font-size:.85rem;text-transform:uppercase;letter-spacing:.06em}
+.adm-tabla tbody th{font-weight:600;min-width:200px}
+.adm-tabla .nom{font-family:var(--f-display)}
+.adm-tabla select{font:inherit;font-size:.9rem;padding:.3em .4em;border-radius:8px;border:1px solid var(--linea);background:#fff}
+.estado,.estado-sel{font-weight:600}
+.estado.asistira,.estado-sel.asistira{color:#1f5d2c}
+.estado.no_asistira,.estado-sel.no_asistira{color:var(--rojo-osc)}
+.estado.por_confirmar,.estado-sel.por_confirmar{color:#8a5a00}
+.estado.sin_responder,.estado-sel.sin_responder{color:var(--tinta-suave)}
+.estado.no_aplica{color:#a8998b;font-weight:400;font-style:italic}
+.sello{display:inline-block;font-size:.72rem;font-weight:600;padding:.1em .5em;border-radius:999px;border:1px solid var(--linea);white-space:nowrap}
+.sello.ok{border-color:#1f5d2c;color:#1f5d2c}
+.sello.aviso{border-color:#8a5a00;color:#8a5a00}
+.nota-reg{display:block;font-weight:400;color:var(--tinta-suave);font-size:.85rem}
+.btn.mini{min-height:34px;padding:.2em .7em;font-size:.82rem;margin:2px}
+.acc{white-space:nowrap}
+.adm-fila{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.adm-fila .campo{flex:1 1 200px;width:auto;font-size:1rem}
+.adm-edit{display:flex;flex-wrap:wrap;gap:6px}
+.adm-edit .campo{min-height:38px;font-size:.95rem;width:auto}
+.adm-regla{display:flex;align-items:center;gap:10px;min-height:44px;font-weight:600}
+.adm-regla input{width:22px;height:22px;accent-color:var(--rojo)}
+.adm-padrinos{list-style:none;padding:0;margin:8px 0;display:flex;flex-direction:column}
+.adm-padrinos li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--linea)}
+.adm-padrinos .inactivo{text-decoration:line-through;color:var(--tinta-suave)}
+.adm-toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);transform:translate(-50%,20px);opacity:0;background:var(--tinta);color:var(--crema)!important;padding:.6em 1.1em;border-radius:999px;transition:opacity .25s,transform .25s;pointer-events:none;z-index:50;max-width:calc(100vw - 32px)}
+.adm-toast.visible{opacity:1;transform:translate(-50%,0)}

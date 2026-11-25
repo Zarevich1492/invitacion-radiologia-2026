@@ -1,0 +1,7 @@
+# Intermedios de composición (se regeneran con herramientas/construir.sh)
+variantes/
+# Evidencias de pruebas locales (no se publican)
+pruebas/capturas/
+node_modules/
+__pycache__/
+.DS_Store
