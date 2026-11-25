@@ -241,6 +241,12 @@ async function responder(p, resp) {
   await p0.close();
   p = await nuevaPagina(ctx, errores, externos);
 
+  if (!(EV.modulos && EV.modulos.listones)) {
+    p = await nuevaPagina(ctx, errores, externos);
+    await elegirPadrino(p, "rojas-gustavo"); await irVista(p, "pase");
+    ok("Módulo de listones no publicado: acceso y pestañas ocultos (sin funciones incompletas)", (await p.isHidden("#pestanas-pase")) && (await p.isVisible("#panel-pase")) && (await p.evaluate(() => document.getElementById("btn-integrante").hidden)));
+    await p.close();
+  } else {
   // Integrantes de la promoción: acceso directo al listón, sin confirmación
   p = await nuevaPagina(ctx, errores, externos);
   await p.goto(BASE, { waitUntil: "networkidle" });
@@ -274,6 +280,7 @@ async function responder(p, resp) {
   await rutaB(p, "r2", "Residente Prueba"); await irVista(p, "pase");
   ok("Residente: solo pase digital (sin listón)", (await p.isHidden("#pestanas-pase")) && (await p.isVisible("#panel-pase")));
   await p.close();
+  }
   p = await nuevaPagina(ctx, errores, externos);
 
   // Seguridad: lectura directa

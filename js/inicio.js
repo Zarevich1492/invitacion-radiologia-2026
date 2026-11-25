@@ -23,6 +23,7 @@
   /* ---------- Arranque ---------- */
   async function iniciar() {
     EV = await window.API.evento();
+    $("#btn-integrante").hidden = !(EV.modulos && EV.modulos.listones);   // módulo de listones: visible solo cuando está publicado
     CFG = { padrinos: EV.padrinos, recepcion: EV.recepcion_por_defecto, recepcion_padrinos: {}, remoto: false };
     pintarLista("");
     if (window.API.configurado) {
@@ -319,7 +320,9 @@
 
   /* ---------- Listón conmemorativo (graduandos y padrinos del listado oficial) ---------- */
   let pestanaActual = "pase";
+  const listonesActivos = () => !!(EV.modulos && EV.modulos.listones);   // interruptor de publicación (datos/evento.json)
   function listonDe(id) {
+    if (!listonesActivos()) return null;
     if (id.categoria === "graduando") return id.graduandoId;
     if (id.categoria === "padrino" && EV.padrinos.some((p) => p.id === id.padrinoId)) return id.padrinoId;
     return null;   // R1, R2 y otros invitados no tienen listón

@@ -235,5 +235,9 @@
     "ppp": 300,
     "profundidad_v_mm": 15,
     "nota": "Listón conmemorativo: sin actividades, horarios ni direcciones."
+  },
+  "modulos": {
+    "_nota": "Interruptores de publicación: un módulo solo se muestra en la web pública cuando está completo y verificado.",
+    "listones": false
   }
 }
