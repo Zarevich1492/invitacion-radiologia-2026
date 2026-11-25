@@ -153,7 +153,12 @@ async function responder(p, resp) {
   ok("Calendario padrino: 3 eventos + archivo conjunto", JSON.stringify(ics) === JSON.stringify(["assets/calendario/jornada-3-actividades.ics", "assets/calendario/clase.ics", "assets/calendario/caravana.ics", "assets/calendario/recepcion.ics"]), ics.join(","));
   const g1 = new URL(await p.getAttribute("#cal-google a", "href")).searchParams;
   ok("Google Calendar: 8:30 hora de Caracas, Auditorio A", g1.get("dates") === "20261128T083000/20261128T083000" && g1.get("ctz") === "America/Caracas" && g1.get("location").startsWith("Auditorio A, Facultad de Medicina"), g1.get("dates") + " · " + g1.get("location"));
-  ok("Descarga de la variante correcta (A, 3 actividades)", (await p.getAttribute("#descarga-invitacion", "href")) === "assets/descargas/invitacion-A-3.pdf");
+  const mapas = await p.$$eval("#mapas a", (a) => a.map((x) => decodeURIComponent(new URL(x.href).searchParams.get("query"))));
+  ok("Maps clase magistral → Facultad de Medicina (no el hospital)", /Facultad de Medicina, Universidad de Los Andes/.test(mapas[0]) && !/Hospital/.test(mapas[0]), mapas[0]);
+  ok("Maps caravana → Hospital Universitario de Los Andes", /Hospital Universitario de Los Andes/.test(mapas[1]), mapas[1]);
+  const portada = await p.evaluate(() => { const i = document.getElementById("img-portada"); const r = { nat: i.naturalWidth / i.naturalHeight, caja: i.offsetWidth / i.offsetHeight }; return { nat: r.nat.toFixed(3), caja: r.caja.toFixed(3) }; });
+  ok("Portada vertical que llena la hoja (sin bandas ni recortes)", Math.abs(portada.nat - portada.caja) < 0.005 && portada.nat === (3125 / 4830).toFixed(3), JSON.stringify(portada));
+  ok("Descarga de la variante correcta (A, 3 actividades)",(await p.getAttribute("#descarga-invitacion", "href")) === "assets/descargas/invitacion-A-3.pdf");
 
   // Ruta B: R1
   p = await nuevaPagina(ctx, errores, externos);

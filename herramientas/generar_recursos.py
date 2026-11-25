@@ -42,10 +42,11 @@ def imagenes():
 
     # Caras por variante. A usa portada y contraportada originales; su interior se recompone
     # (columna de programa actualizada desde datos/evento.json).
+    # Portadas: composición vertical a la medida de la hoja (herramientas/componer_portadas.py)
     caras = {
-        "A": {"portada": portada, "contraportada": contra},
-        "B": {"portada": Image.open(VAR / "B-portada.png").convert("RGB"), "contraportada": Image.open(VAR / "B-contraportada.png").convert("RGB")},
-        "C": {"portada": Image.open(VAR / "C-portada.png").convert("RGB"), "contraportada": Image.open(VAR / "C-contraportada.png").convert("RGB")},
+        "A": {"portada": Image.open(VAR / "A-portada-vertical.png").convert("RGB"), "contraportada": contra},
+        "B": {"portada": Image.open(VAR / "B-portada-vertical.png").convert("RGB"), "contraportada": Image.open(VAR / "B-contraportada.png").convert("RGB")},
+        "C": {"portada": Image.open(VAR / "C-portada-vertical.png").convert("RGB"), "contraportada": Image.open(VAR / "C-contraportada.png").convert("RGB")},
     }
     (A / "descargas").mkdir(exist_ok=True)
     for v, c in caras.items():
@@ -56,7 +57,7 @@ def imagenes():
             guardar_jpg(ancho(inter, 2000), A / f"img/{v}-interior-{n}-2000.jpg")
             guardar_jpg(ancho(inter, 3600), A / f"img/{v}-interior-{n}-3600.jpg", 82)
             # Invitación completa descargable (3 páginas, 3125 px de ancho, calidad alta)
-            paginas = [ancho(c["portada"], 3125), ancho(inter, 3125), ancho(c["contraportada"], 3125)]
+            paginas = [c["portada"], ancho(inter, 3125), ancho(c["contraportada"], 3125)]
             paginas[0].save(A / f"descargas/invitacion-{v}-{n}.pdf", save_all=True, append_images=paginas[1:], resolution=150, quality=90)
 
     # Banda de montañas y hospital (parte inferior del interior original) para el pase.

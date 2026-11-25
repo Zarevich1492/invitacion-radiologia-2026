@@ -74,9 +74,9 @@ function portada(v) {
   const t = TEXTOS[v].portada;
   return `${img("3-portada.png")}
   <div class="tapar" style="left:0;top:3250px;width:${W}px;height:880px"></div>
-  <div class="t bod c" style="top:3250px;font-size:214px;line-height:260px;letter-spacing:-7px">${t[0]}</div>
-  <div class="t bod c" style="top:3568px;font-size:214px;line-height:260px;letter-spacing:-7px">${t[1]}</div>
-  <div class="t bod c rojo" style="top:3885px;font-size:158px;line-height:210px;letter-spacing:-4px">${t[2]}</div>`;
+  <div class="t bod c" style="top:3290px;font-size:214px;line-height:260px;letter-spacing:-7px">${t[0]}</div>
+  <div class="t bod c" style="top:3590px;font-size:214px;line-height:260px;letter-spacing:-7px">${t[1]}</div>
+  <div class="t bod c rojo" style="top:3893px;font-size:158px;line-height:210px;letter-spacing:-4px">${t[2]}</div>`;
   // La fecha «28 de noviembre de 2026» (y 4161–4338) se conserva del original.
 }
 
