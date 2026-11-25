@@ -18,7 +18,7 @@
 
   const leerID = () => { try { return JSON.parse(localStorage.getItem(CLAVE_ID) || "null"); } catch (e) { return null; } };
   const guardarID = (v) => { try { localStorage.setItem(CLAVE_ID, JSON.stringify(v)); } catch (e) {} };
-  const claveIdentidad = (id) => (id.categoria === "padrino" ? "padrino:" + id.padrinoId : id.categoria + ":" + normal(id.nombre));
+  const claveIdentidad = (id) => (id.categoria === "padrino" ? "padrino:" + id.padrinoId : id.categoria === "graduando" ? "graduando:" + id.graduandoId : id.categoria + ":" + normal(id.nombre));
 
   /* ---------- Arranque ---------- */
   async function iniciar() {
@@ -66,9 +66,21 @@
     else if (prev.categoria !== "general") { $("#campo-nombre").value = prev.nombre || ""; }
   }
 
+  /* ---------- Integrantes de la XXIV Promoción (graduandos): acceso directo al listón, sin confirmación ---------- */
+  $("#btn-integrante").addEventListener("click", () => {
+    $("#lista-graduandos").innerHTML = EV.graduandos_lista.map((g) => `<li><button type="button" role="option" class="nombre-opcion" data-graduando="${esc(g.id)}">${esc(g.nombre)}</button></li>`).join("");
+    mostrarPaso("graduando");
+  });
+  $("#lista-graduandos").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-graduando]"); if (!b) return;
+    const g = EV.graduandos_lista.find((x) => x.id === b.dataset.graduando);
+    if (g) entrar({ categoria: "graduando", graduandoId: g.id, nombre: g.nombre });
+  });
+  $("#btn-volver-lista-2").addEventListener("click", () => mostrarPaso("lista"));
+
   let categoriaElegida = null;
   function mostrarPaso(p) {
-    $("#paso-lista").hidden = p !== "lista"; $("#paso-categoria").hidden = p !== "categoria"; $("#paso-token").hidden = p !== "token";
+    $("#paso-lista").hidden = p !== "lista"; $("#paso-categoria").hidden = p !== "categoria"; $("#paso-token").hidden = p !== "token"; $("#paso-graduando").hidden = p !== "graduando";
     if (p === "categoria") { const prev = leerID(); if (prev && ["r1", "r2", "otro"].includes(prev.categoria)) elegirCategoria(prev.categoria); }
   }
   function elegirCategoria(c) {
@@ -105,6 +117,7 @@
 
   /* ---------- Elegibilidad y variante ---------- */
   function actividadesDe(id) {
+    if (id.categoria === "graduando") return EV.actividades.slice();
     if (servidor && servidor.actividades && id.categoria !== "general") return EV.actividades.filter((a) => servidor.actividades.includes(a.codigo));
     let rec;
     if (id.categoria === "padrino") rec = id.padrinoId in CFG.recepcion_padrinos ? CFG.recepcion_padrinos[id.padrinoId] : CFG.recepcion.padrino;
@@ -125,6 +138,7 @@
     }
     const acts = actividadesDe(id);
     const v = varianteDe(id), n = acts.some((a) => a.codigo === "recepcion") ? 3 : 2;
+    document.body.classList.toggle("rol-graduando", id.categoria === "graduando");
 
     // Textos alternativos accesibles de la tarjeta, desde la fuente única
     window.__ALT = {
@@ -132,7 +146,7 @@
       interior: "Interior de la invitación. " + EV.fecha_tarjeta + ". " + acts.map((a) => `${a.hora_texto}, ${a.titulo}, ${a.lugar}`).join(". ") + ".",
       contra: "Contraportada de la invitación. XXIV Promoción de Radiólogos, Universidad de Los Andes, 2026.",
     };
-    window.Tarjeta.configurar(v, n);
+    if (id.categoria !== "graduando") window.Tarjeta.configurar(v, n);   // los graduandos van directo a su listón
 
     // Saludo
     const corto = id.nombre ? id.nombre.split(" ").slice(0, id.categoria === "padrino" ? 3 : 2).join(" ") : "";
@@ -145,6 +159,7 @@
     pintarPrograma(acts);
     pintarRSVP(acts);
     pintarConservar(v, n, acts);
+    pintarListon(id);
     paseCache = null; $("#pase-vista").removeAttribute("src");
 
     $("#inv-fecha").textContent = EV.fecha_texto + " · " + EV.ciudad;
@@ -153,12 +168,12 @@
     $("#experiencia").removeAttribute("aria-hidden");
     $("#barra").hidden = false; $("#nav-inferior").hidden = false; document.body.classList.add("identificado");
     setTimeout(() => { bv.hidden = true; }, 650);
-    mostrarVista(vistaDeHash() || "invitacion", { foco: false });
-    window.Tarjeta.mostrar();
+    mostrarVista(vistaDeHash() || (id.categoria === "graduando" ? "pase" : "invitacion"), { foco: false });
+    if (id.categoria !== "graduando") window.Tarjeta.mostrar();
   }
   $("#btn-cambiar-nombre").addEventListener("click", () => {
     window.Tarjeta.detener();
-    $("#barra").hidden = true; $("#nav-inferior").hidden = true; document.body.classList.remove("identificado");
+    $("#barra").hidden = true; $("#nav-inferior").hidden = true; document.body.classList.remove("identificado", "rol-graduando");
     const bv = $("#bienvenida"); bv.hidden = false; bv.removeAttribute("aria-hidden");
     requestAnimationFrame(() => bv.classList.remove("saliendo"));
     $("#experiencia").setAttribute("aria-hidden", "true");
@@ -171,8 +186,11 @@
   const VISTAS = ["invitacion", "programa", "confirmar", "pase"];
   let vistaActual = null;
   const vistaDeHash = () => { const h = location.hash.slice(1); return VISTAS.includes(h) ? h : null; };
+  const esGraduando = () => ID && ID.categoria === "graduando";
+  const permitida = (v) => !esGraduando() || v === "programa" || v === "pase";
   function mostrarVista(v, { foco = true } = {}) {
-    if (!VISTAS.includes(v)) v = "invitacion";
+    if (!VISTAS.includes(v)) v = esGraduando() ? "pase" : "invitacion";
+    if (!permitida(v)) v = "pase";
     if (vistaActual === "invitacion" && v !== "invitacion") window.Tarjeta.detener();
     vistaActual = v;
     for (const n of VISTAS) document.querySelector(`section[data-vista="${n}"]`).hidden = n !== v;
@@ -180,7 +198,7 @@
     document.body.dataset.vistaActiva = v;
     window.scrollTo(0, 0);
     if (v === "invitacion") requestAnimationFrame(() => window.Tarjeta.medir());
-    if (v === "pase") prepararPase();
+    if (v === "pase" && !esGraduando() && pestanaActual === "pase") prepararPase();
     if (foco) { const t = document.querySelector(`section[data-vista="${v}"] h1, section[data-vista="${v}"] h2`); if (t) t.focus({ preventScroll: true }); }
   }
   document.addEventListener("click", (e) => {
@@ -212,6 +230,7 @@
   function pintarRSVP(acts) {
     const caja = $("#rsvp-actividades");
     estado.textContent = ""; estado.className = "rsvp-estado";
+    if (ID.categoria === "graduando") { caja.innerHTML = ""; btn.hidden = true; $("#rsvp-resumen").innerHTML = ""; $("#rsvp-aviso").hidden = true; return; }
     if (ID.categoria === "general") {
       caja.innerHTML = `<p class="nota">Para confirmar tu asistencia, identifícate con tu nombre.</p><button class="btn" type="button" id="rsvp-identificar">Identificarme</button>`;
       $("#rsvp-identificar").onclick = () => $("#btn-cambiar-nombre").click();
@@ -297,6 +316,45 @@
     }).join("");
     $("#mapas").innerHTML = acts.map((a) => `<a class="btn" target="_blank" rel="noopener noreferrer" href="https://www.google.com/maps/search/?api=1&amp;query=${encodeURIComponent(a.mapa)}">${esc(a.titulo)} <small>${esc(a.lugar)}</small></a>`).join("");
   }
+
+  /* ---------- Listón conmemorativo (graduandos y padrinos del listado oficial) ---------- */
+  let pestanaActual = "pase";
+  function listonDe(id) {
+    if (id.categoria === "graduando") return id.graduandoId;
+    if (id.categoria === "padrino" && EV.padrinos.some((p) => p.id === id.padrinoId)) return id.padrinoId;
+    return null;   // R1, R2 y otros invitados no tienen listón
+  }
+  function pintarListon(id) {
+    const lid = listonDe(id), grad = id.categoria === "graduando";
+    $("#pestanas-pase").hidden = !lid || grad;
+    $("#liston-colectivos").hidden = !grad;
+    document.querySelectorAll('.nav-vistas [data-ir="pase"] span, .nav-superior [data-ir="pase"]').forEach((el) => {
+      if (el.tagName === "SPAN" || !el.querySelector("span")) el.textContent = grad ? "Mi listón" : "Mi pase";
+    });
+    $("#t-pase").textContent = grad ? "Mi listón" : "Mi pase";
+    if (lid) {
+      const img = $("#liston-vista"), x = [...EV.graduandos_lista, ...EV.padrinos].find((p) => p.id === lid);
+      img.src = `assets/listones/${lid}.png`;
+      img.alt = `Listón conmemorativo: ${x.denominacion}, ${x.nombre}. XXIV Promoción de Radiólogos, Universidad de Los Andes, Mérida, 2026.`;
+      $("#liston-png").href = `assets/listones/${lid}.png`; $("#liston-png").setAttribute("download", `liston-${lid}.png`);
+      $("#liston-pdf").href = `assets/listones/${lid}.pdf`; $("#liston-pdf").setAttribute("download", `liston-${lid}.pdf`);
+    }
+    elegirPestana(grad ? "liston" : "pase", false);
+  }
+  function elegirPestana(t, foco = true) {
+    pestanaActual = t;
+    $("#panel-pase").hidden = t !== "pase"; $("#panel-liston").hidden = t !== "liston";
+    for (const [b, n] of [["#tab-pase", "pase"], ["#tab-liston", "liston"]]) {
+      $(b).setAttribute("aria-selected", String(n === t)); $(b).tabIndex = n === t ? 0 : -1;
+    }
+    if (t === "pase" && vistaActual === "pase") prepararPase();
+    if (foco) $(t === "pase" ? "#tab-pase" : "#tab-liston").focus();
+  }
+  $("#tab-pase").addEventListener("click", () => elegirPestana("pase"));
+  $("#tab-liston").addEventListener("click", () => elegirPestana("liston"));
+  $("#pestanas-pase").addEventListener("keydown", (e) => {
+    if (e.key === "ArrowRight" || e.key === "ArrowLeft") { e.preventDefault(); elegirPestana(pestanaActual === "pase" ? "liston" : "pase"); }
+  });
 
   /* ---------- Pase digital ---------- */
   let paseCache = null, paseURL = null;

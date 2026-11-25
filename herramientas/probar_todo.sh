@@ -7,6 +7,7 @@ export PGHOST=${PGHOST:-/tmp} PGPORT=${PGPORT:-5499}
 CAPTURAS=${1:-pruebas/capturas}
 echo "== 1. Pruebas SQL de seguridad y lógica"; bash herramientas/probar_sql.sh | tail -3
 echo "== 2. Indicadores del panel"; node pruebas/metricas.test.js
+echo "== 2b. Listones conmemorativos"; python3 pruebas/verificar_listones.py | tail -1
 echo "== 3. Base limpia para la prueba end-to-end"
 psql -U postgres -q -c "drop database if exists invitacion_e2e" -c "create database invitacion_e2e"
 psql -U postgres -q -d invitacion_e2e -v ON_ERROR_STOP=1 -c "create schema auth; create function auth.uid() returns uuid language sql stable as \$\$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid \$\$; grant usage on schema auth to anon, authenticated; create schema extensions; grant usage on schema extensions to anon, authenticated;"

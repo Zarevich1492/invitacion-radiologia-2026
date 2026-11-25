@@ -6,3 +6,6 @@ node_modules/
 __pycache__/
 .DS_Store
 *.whl
+
+# Listones: pendientes de aprobación de dirección artística (se versionan al aprobarse)
+assets/listones/

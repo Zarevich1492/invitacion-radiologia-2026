@@ -241,6 +241,41 @@ async function responder(p, resp) {
   await p0.close();
   p = await nuevaPagina(ctx, errores, externos);
 
+  // Integrantes de la promoción: acceso directo al listón, sin confirmación
+  p = await nuevaPagina(ctx, errores, externos);
+  await p.goto(BASE, { waitUntil: "networkidle" });
+  ok("Inicio: acceso «Soy integrante de la XXIV Promoción»", await p.isVisible("#btn-integrante"));
+  await p.click("#btn-integrante");
+  const grads = await p.$$eval("#lista-graduandos [data-graduando]", (e) => e.map((x) => x.textContent));
+  ok("Integrantes: los 7 graduandos", grads.join("|") === "Dr. Jorge Arrieta|Dr. Nelson Páez|Dr. Diego Guillén|Dr. José Sánchez|Dra. Andrea Montes|Dra. Francia Méndez|Dra. Oriana Hernández", grads.join("|"));
+  await p.click('[data-graduando="arrieta-jorge"]'); await p.waitForTimeout(1500);
+  ok("Graduando: entra directamente a su listón", (await p.evaluate(() => document.body.dataset.vistaActiva)) === "pase" && (await p.isVisible("#panel-liston")) && (await p.getAttribute("#liston-vista", "src")) === "assets/listones/arrieta-jorge.png");
+  const navG = await p.$$eval(".nav-inferior a", (a) => a.filter((x) => getComputedStyle(x).display !== "none").map((x) => x.textContent.trim()).join("|"));
+  ok("Graduando: sin confirmación de asistencia (solo Programa y Mi listón)", navG === "Programa|Mi listón", navG);
+  await p.evaluate(() => { location.hash = "confirmar"; }); await p.waitForTimeout(400);
+  ok("Graduando: la ruta #confirmar no está disponible", (await p.evaluate(() => document.body.dataset.vistaActiva)) === "pase");
+  ok("Graduando: PDF colectivos A4 disponibles", await p.isVisible("#liston-colectivos"));
+  for (const [sel, tipo] of [["#liston-png", "image/png"], ["#liston-pdf", "application/pdf"]]) {
+    const r = await p.request.get(BASE + (await p.getAttribute(sel, "href")));
+    ok(`Listón descargable (${tipo})`, r.ok() && (r.headers()["content-type"] || "").startsWith(tipo), r.status());
+  }
+  await p.screenshot({ path: `${OUT}/16-graduando-liston.png` });
+  await p.close();
+  // Padrino: dos opciones en Mi pase
+  p = await nuevaPagina(ctx, errores, externos);
+  await elegirPadrino(p, "rojas-gustavo"); await irVista(p, "pase");
+  ok("Padrino: pestañas «Mi pase digital» y «Mi listón conmemorativo»", (await p.isVisible("#pestanas-pase")) && (await p.textContent("#pestanas-pase")).replace(/\s+/g, " ").trim() === "Mi pase digital Mi listón conmemorativo");
+  await p.click("#tab-liston"); await p.waitForTimeout(300);
+  ok("Padrino: listón personalizado", (await p.getAttribute("#liston-vista", "src")) === "assets/listones/rojas-gustavo.png" && (await p.isHidden("#panel-pase")) && (await p.isHidden("#liston-colectivos")));
+  await p.screenshot({ path: `${OUT}/17-padrino-liston.png` });
+  await p.close();
+  // Residente: sin listón
+  p = await nuevaPagina(ctx, errores, externos);
+  await rutaB(p, "r2", "Residente Prueba"); await irVista(p, "pase");
+  ok("Residente: solo pase digital (sin listón)", (await p.isHidden("#pestanas-pase")) && (await p.isVisible("#panel-pase")));
+  await p.close();
+  p = await nuevaPagina(ctx, errores, externos);
+
   // Seguridad: lectura directa
   const directo = await p.evaluate(async (api) => (await fetch(api + "/rest/v1/invitados?select=*", { headers: { apikey: "x" } })).status, API);
   ok("Público no puede leer registros", directo === 403, directo);

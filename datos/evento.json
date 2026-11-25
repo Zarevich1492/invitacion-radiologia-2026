@@ -21,8 +21,15 @@
       "inicio": "2026-11-28T08:30:00-04:00",
       "lugar": "Auditorio A, Facultad de Medicina, Universidad de Los Andes",
       "detalle": "Auditorio A, Facultad de Medicina, Universidad de Los Andes.",
-      "lineas_tarjeta": ["Clase magistral", "Auditorio A, Facultad de Medicina,", "Universidad de Los Andes"],
-      "lineas_pase": ["Auditorio A, Facultad de Medicina,", "Universidad de Los Andes."],
+      "lineas_tarjeta": [
+        "Clase magistral",
+        "Auditorio A, Facultad de Medicina,",
+        "Universidad de Los Andes"
+      ],
+      "lineas_pase": [
+        "Auditorio A, Facultad de Medicina,",
+        "Universidad de Los Andes."
+      ],
       "mapa": "Facultad de Medicina, Universidad de Los Andes, Av. 16 de Septiembre, Campo de Oro, Mérida, Venezuela",
       "social": false
     },
@@ -34,8 +41,15 @@
       "inicio": "2026-11-28T14:00:00-04:00",
       "lugar": "Estacionamiento del Hospital Universitario de Los Andes",
       "detalle": "Concentración en el estacionamiento del Hospital Universitario de Los Andes y posterior recorrido por las calles de Mérida.",
-      "lineas_tarjeta": ["Caravana de graduandos", "Concentración: estacionamiento del hospital.", "Recorrido por las calles de Mérida."],
-      "lineas_pase": ["Concentración en el estacionamiento del hospital.", "Recorrido por las calles de Mérida."],
+      "lineas_tarjeta": [
+        "Caravana de graduandos",
+        "Concentración: estacionamiento del hospital.",
+        "Recorrido por las calles de Mérida."
+      ],
+      "lineas_pase": [
+        "Concentración en el estacionamiento del hospital.",
+        "Recorrido por las calles de Mérida."
+      ],
       "mapa": "Hospital Universitario de Los Andes, Mérida, Venezuela",
       "social": false
     },
@@ -47,17 +61,43 @@
       "inicio": "2026-11-28T21:00:00-04:00",
       "lugar": "Centro de Convenciones Mucumbarila",
       "detalle": "Centro de Convenciones Mucumbarila. Celebración social de los graduandos.",
-      "lineas_tarjeta": ["Recepción de los nuevos especialistas", "Centro de Convenciones Mucumbarila"],
-      "lineas_pase": ["Centro de Convenciones Mucumbarila."],
+      "lineas_tarjeta": [
+        "Recepción de los nuevos especialistas",
+        "Centro de Convenciones Mucumbarila"
+      ],
+      "lineas_pase": [
+        "Centro de Convenciones Mucumbarila."
+      ],
       "mapa": "Centro de Convenciones Mucumbarila, Mérida, Venezuela",
       "social": true
     }
   ],
   "categorias": {
-    "padrino": { "etiqueta": "Padrino o madrina de promoción", "pase": "PADRINO O MADRINA DE PROMOCIÓN", "variante": "A" },
-    "r1": { "etiqueta": "Residente de primer año (R1)", "pase": "RESIDENTE DE RADIOLOGÍA · R1", "variante": "B" },
-    "r2": { "etiqueta": "Residente de segundo año (R2)", "pase": "RESIDENTE DE RADIOLOGÍA · R2", "variante": "B" },
-    "otro": { "etiqueta": "Otro invitado", "pase": "INVITADO ESPECIAL", "variante": "C" }
+    "padrino": {
+      "etiqueta": "Padrino o madrina de promoción",
+      "pase": "PADRINO O MADRINA DE PROMOCIÓN",
+      "variante": "A"
+    },
+    "r1": {
+      "etiqueta": "Residente de primer año (R1)",
+      "pase": "RESIDENTE DE RADIOLOGÍA · R1",
+      "variante": "B"
+    },
+    "r2": {
+      "etiqueta": "Residente de segundo año (R2)",
+      "pase": "RESIDENTE DE RADIOLOGÍA · R2",
+      "variante": "B"
+    },
+    "otro": {
+      "etiqueta": "Otro invitado",
+      "pase": "INVITADO ESPECIAL",
+      "variante": "C"
+    },
+    "graduando": {
+      "etiqueta": "Integrante de la XXIV Promoción",
+      "pase": "ESPECIALISTA 2026",
+      "variante": "A"
+    }
   },
   "variantes": {
     "A": {
@@ -77,16 +117,122 @@
     }
   },
   "padrinos": [
-    { "id": "berrio-omaira", "nombre": "Dra. Omaira Berrio", "apellido": "Berrio" },
-    { "id": "falcon-analy", "nombre": "Dra. Analy Falcón", "apellido": "Falcón" },
-    { "id": "gutierrez-maria-del-carmen", "nombre": "Dra. María del Carmen Gutiérrez", "apellido": "Gutiérrez" },
-    { "id": "moreno-franklin", "nombre": "Dr. Franklin Moreno", "apellido": "Moreno" },
-    { "id": "rojas-gustavo", "nombre": "Dr. Gustavo Rojas", "apellido": "Rojas" },
-    { "id": "sosa-angel", "nombre": "Dr. Ángel Sosa", "apellido": "Sosa" },
-    { "id": "sosa-jenny", "nombre": "Dra. Jenny Sosa", "apellido": "Sosa" },
-    { "id": "torres-jose-daniel", "nombre": "Dr. José Daniel Torres", "apellido": "Torres" },
-    { "id": "uzcategui-reyna", "nombre": "Dra. Reyna Uzcátegui", "apellido": "Uzcátegui" },
-    { "id": "vina-daniel", "nombre": "Dr. Daniel Viña", "apellido": "Viña" }
+    {
+      "id": "berrio-omaira",
+      "nombre": "Dra. Omaira Berrio",
+      "apellido": "Berrio",
+      "denominacion": "MADRINA DE PROMOCIÓN"
+    },
+    {
+      "id": "falcon-analy",
+      "nombre": "Dra. Analy Falcón",
+      "apellido": "Falcón",
+      "denominacion": "MADRINA DE PROMOCIÓN"
+    },
+    {
+      "id": "gutierrez-maria-del-carmen",
+      "nombre": "Dra. María del Carmen Gutiérrez",
+      "apellido": "Gutiérrez",
+      "denominacion": "MADRINA DE PROMOCIÓN"
+    },
+    {
+      "id": "moreno-franklin",
+      "nombre": "Dr. Franklin Moreno",
+      "apellido": "Moreno",
+      "denominacion": "PADRINO DE PROMOCIÓN"
+    },
+    {
+      "id": "rojas-gustavo",
+      "nombre": "Dr. Gustavo Rojas",
+      "apellido": "Rojas",
+      "denominacion": "PADRINO DE PROMOCIÓN"
+    },
+    {
+      "id": "sosa-angel",
+      "nombre": "Dr. Ángel Sosa",
+      "apellido": "Sosa",
+      "denominacion": "PADRINO DE PROMOCIÓN"
+    },
+    {
+      "id": "sosa-jenny",
+      "nombre": "Dra. Jenny Sosa",
+      "apellido": "Sosa",
+      "denominacion": "MADRINA DE PROMOCIÓN"
+    },
+    {
+      "id": "torres-jose-daniel",
+      "nombre": "Dr. José Daniel Torres",
+      "apellido": "Torres",
+      "denominacion": "PADRINO DE PROMOCIÓN"
+    },
+    {
+      "id": "uzcategui-reyna",
+      "nombre": "Dra. Reyna Uzcátegui",
+      "apellido": "Uzcátegui",
+      "denominacion": "MADRINA DE PROMOCIÓN"
+    },
+    {
+      "id": "vina-daniel",
+      "nombre": "Dr. Daniel Viña",
+      "apellido": "Viña",
+      "denominacion": "PADRINO DE PROMOCIÓN"
+    }
   ],
-  "recepcion_por_defecto": { "padrino": true, "r1": false, "r2": false, "otro": false }
+  "recepcion_por_defecto": {
+    "padrino": true,
+    "r1": false,
+    "r2": false,
+    "otro": false
+  },
+  "graduandos_lista": [
+    {
+      "id": "arrieta-jorge",
+      "nombre": "Dr. Jorge Arrieta",
+      "apellido": "Arrieta",
+      "denominacion": "ESPECIALISTA 2026"
+    },
+    {
+      "id": "paez-nelson",
+      "nombre": "Dr. Nelson Páez",
+      "apellido": "Páez",
+      "denominacion": "ESPECIALISTA 2026"
+    },
+    {
+      "id": "guillen-diego",
+      "nombre": "Dr. Diego Guillén",
+      "apellido": "Guillén",
+      "denominacion": "ESPECIALISTA 2026"
+    },
+    {
+      "id": "sanchez-jose",
+      "nombre": "Dr. José Sánchez",
+      "apellido": "Sánchez",
+      "denominacion": "ESPECIALISTA 2026"
+    },
+    {
+      "id": "montes-andrea",
+      "nombre": "Dra. Andrea Montes",
+      "apellido": "Montes",
+      "denominacion": "ESPECIALISTA 2026"
+    },
+    {
+      "id": "mendez-francia",
+      "nombre": "Dra. Francia Méndez",
+      "apellido": "Méndez",
+      "denominacion": "ESPECIALISTA 2026"
+    },
+    {
+      "id": "hernandez-oriana",
+      "nombre": "Dra. Oriana Hernández",
+      "apellido": "Hernández",
+      "denominacion": "ESPECIALISTA 2026"
+    }
+  ],
+  "liston": {
+    "ancho_mm": 60,
+    "alto_mm": 120,
+    "ppp": 300,
+    "profundidad_v_mm": 15,
+    "nota": "Listón conmemorativo: sin actividades, horarios ni direcciones."
+  }
 }

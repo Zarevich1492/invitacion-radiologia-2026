@@ -560,3 +560,18 @@ body.identificado{padding-bottom:calc(var(--nav-inf) + env(safe-area-inset-botto
    en móviles eso provoca un reajuste del zoom. Solo se recorta lo que queda fuera de la columna. */
 .inv-tarjeta{overflow:hidden}
 @supports (overflow:clip){.inv-tarjeta{overflow:clip;overflow-clip-margin:12px}}
+
+/* ---------- Listones conmemorativos y acceso de integrantes ---------- */
+.btn-integrante{margin-top:4px;border-color:var(--tinta);background:transparent;width:100%}
+.pestanas{display:inline-grid;grid-template-columns:1fr 1fr;margin:0 0 18px;border:1px solid rgba(35,27,24,.25);border-radius:999px;overflow:hidden;background:#fffaf2;max-width:520px;width:100%}
+.pestanas button{min-height:46px;padding:.3em .9em;border:0;background:transparent;font-family:var(--f-texto);font-weight:600;font-size:.95rem;color:var(--tinta-suave);cursor:pointer}
+.pestanas button+button{border-left:1px solid rgba(35,27,24,.18)}
+.pestanas button[aria-selected="true"]{background:var(--tinta);color:var(--crema)}
+.pestanas button:focus-visible{outline:2px solid var(--rojo);outline-offset:-3px}
+.liston-fig .liston-vista{display:block;width:auto;height:auto;max-height:min(62svh,520px);max-width:min(260px,62vw);aspect-ratio:709/1417;filter:drop-shadow(0 12px 18px rgba(50,28,15,.28))}
+@supports not (height:1svh){.liston-fig .liston-vista{max-height:min(62vh,520px)}}
+a.btn-sec{text-decoration:underline;text-underline-offset:.2em}
+/* Graduandos: solo «Programa» y «Mi listón» */
+body.rol-graduando .nav-vistas [data-ir="invitacion"]:not(.marca),body.rol-graduando .nav-vistas [data-ir="confirmar"]{display:none!important}
+body.rol-graduando .nav-inferior{grid-template-columns:repeat(2,1fr)}
+@media (min-width:640px){ .liston-fig .liston-vista{max-width:100%} }

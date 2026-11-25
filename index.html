@@ -48,6 +48,15 @@
       <input id="buscar-nombre" class="campo" type="search" placeholder="Nombre o apellido" autocomplete="off" autocapitalize="words" spellcheck="false" aria-controls="lista-nombres">
       <ul class="lista-nombres" id="lista-nombres" role="listbox" aria-label="Padrinos y madrinas de la promoción"></ul>
       <button class="btn btn-texto" type="button" id="btn-general">Ver la invitación sin personalizar</button>
+      <button class="btn btn-integrante" type="button" id="btn-integrante">Soy integrante de la XXIV Promoción</button>
+    </div>
+
+    <!-- Paso alterno: integrantes de la promoción (graduandos) -->
+    <div class="paso" id="paso-graduando" hidden>
+      <p class="pregunta">Integrantes de la XXIV Promoción</p>
+      <p class="nota" style="text-align:center;margin:0">Elige tu nombre para obtener tu listón conmemorativo.</p>
+      <ul class="lista-nombres" id="lista-graduandos" role="listbox" aria-label="Integrantes de la XXIV Promoción"></ul>
+      <button class="btn btn-texto" type="button" id="btn-volver-lista-2">← Volver al listado de padrinos</button>
     </div>
 
     <!-- Paso 2: categoría -->
@@ -197,7 +206,11 @@
       <span class="versalita">Para conservar</span>
       <h2 id="t-pase" tabindex="-1">Mi pase</h2>
     </header>
-    <div class="pase-grid">
+    <div class="pestanas" id="pestanas-pase" role="tablist" aria-label="Recuerdos para conservar" hidden>
+      <button type="button" role="tab" id="tab-pase" aria-controls="panel-pase" aria-selected="true">Mi pase digital</button>
+      <button type="button" role="tab" id="tab-liston" aria-controls="panel-liston" aria-selected="false" tabindex="-1">Mi listón conmemorativo</button>
+    </div>
+    <div class="pase-grid" id="panel-pase" role="tabpanel" aria-labelledby="tab-pase">
       <figure class="pase-fig">
         <img class="pase-vista" id="pase-vista" alt="Vista previa de tu pase de invitado especial" width="720" height="1280">
         <figcaption class="nota">Recuerdo y guía rápida de la jornada; no es una credencial de acceso.</figcaption>
@@ -224,6 +237,21 @@
             <summary><b>Cómo llegar</b><span>Ubicación de cada actividad</span></summary>
             <div class="lista-enlaces" id="mapas"></div>
           </details>
+        </div>
+      </div>
+    </div>
+    <div class="pase-grid liston-grid" id="panel-liston" role="tabpanel" aria-labelledby="tab-liston" hidden>
+      <figure class="pase-fig liston-fig">
+        <img class="liston-vista" id="liston-vista" alt="" width="709" height="1417" loading="lazy">
+        <figcaption class="nota">Listón conmemorativo · 60 × 120 mm con terminación en V. Sin actividades ni horarios.</figcaption>
+      </figure>
+      <div class="pase-acciones">
+        <a class="btn btn-primario btn-ancho" id="liston-png" download>Descargar mi listón · PNG 300 ppp</a>
+        <div class="formatos"><a class="btn-sec" id="liston-pdf" download>PDF a tamaño real (60 × 120 mm)</a></div>
+        <p class="nota">Para imprimir: PDF al 100 % (sin «ajustar a la página»). Si la descarga no comienza dentro de WhatsApp, mantén presionada la imagen y elige «Guardar imagen».</p>
+        <div class="modulos" id="liston-colectivos" hidden>
+          <a class="modulo modulo-enlace" href="assets/listones/listones-especialistas-2026-A4.pdf" download><b>Listones de los especialistas</b><span>PDF A4 para imprimir · 7 listones con marcas de corte</span></a>
+          <a class="modulo modulo-enlace" href="assets/listones/listones-padrinos-madrinas-A4.pdf" download><b>Listones de padrinos y madrinas</b><span>PDF A4 para imprimir · 10 listones con marcas de corte</span></a>
         </div>
       </div>
     </div>
