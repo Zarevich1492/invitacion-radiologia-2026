@@ -575,3 +575,40 @@ a.btn-sec{text-decoration:underline;text-underline-offset:.2em}
 body.rol-graduando .nav-vistas [data-ir="invitacion"]:not(.marca),body.rol-graduando .nav-vistas [data-ir="confirmar"]{display:none!important}
 body.rol-graduando .nav-inferior{grid-template-columns:repeat(2,1fr)}
 @media (min-width:640px){ .liston-fig .liston-vista{max-width:100%} }
+
+
+/* =====================================================================
+   Contraste y legibilidad (WCAG AA) · solo modo claro
+   Nombre #231B15 · mensaje #594638 · categoría #B91C1C · fondo superior #F4E6D1
+   ===================================================================== */
+:root{color-scheme:light only;--tinta:#231b15;--tinta-suave:#594638;--rojo:#b91c1c;--rojo-osc:#8f1616;--papel:#f4e6d1;--fondo-sup:#f4e6d1}
+html,body{background:#f4e6d1}
+body{background-image:linear-gradient(#f4e6d1 0,#f4e6d1 55%,#efdfc6 100%);background-attachment:scroll}
+.barra{background:#f4e6d1;-webkit-backdrop-filter:none;backdrop-filter:none}
+.nav-inferior{background:#f4e6d1;-webkit-backdrop-filter:none;backdrop-filter:none}
+.saludo-nombre{color:#231b15}
+.saludo-texto,.inv-enc .saludo-texto{color:#594638;font-style:italic}
+#saludo-eyebrow,.inv-enc .versalita{color:#b91c1c;font-weight:700;letter-spacing:.14em;font-size:.8rem}
+.inv-fecha{color:#231b15}
+.pista{color:#594638}
+.nota,.versalita{color:#594638}
+.btn-sec{color:#594638}
+.nav-inferior a{color:#594638}
+.nav-superior a{color:#594638}
+.marca small{color:#594638}
+/* Sin efectos de iluminación sobre la tarjeta; sombra del pliegue más suave en todas las fases */
+.luz{display:none}
+.hoja.tapa .frente::after{background:linear-gradient(90deg,rgba(40,22,12,.06),rgba(40,22,12,.32))}
+.hoja.tapa .dorso::after{background:linear-gradient(270deg,rgba(40,22,12,.30),rgba(40,22,12,.06))}
+.hoja.base .frente::after{background:linear-gradient(90deg,rgba(40,22,12,.28),rgba(40,22,12,0) 70%)}
+.escenario.cargando::after{color:#594638}
+/* Estado deshabilitado sin transparencia (la opacidad reducía el contraste del texto) */
+.rsvp-campos[disabled]{opacity:1}
+.rsvp-campos[disabled] .opciones-rsvp{background:#efe3cf;border-style:dashed}
+.rsvp-campos[disabled] .opciones-rsvp span{color:#594638;cursor:not-allowed}
+.btn[disabled]{opacity:1;background:#6b5d52;border-color:#6b5d52;color:#fff;cursor:not-allowed}
+/* Superficie de la tarjeta: la iluminación y las sombras rodean la tarjeta, nunca invaden su cara gráfica.
+   (Se retiran los sombreados de pliegue y reflejos sobre las caras; la sombra queda en .sombra-suelo.) */
+.cara::after,.cara::before,.hoja.base .frente::before,.hoja.tapa .dorso::before{display:none!important;content:none!important}
+.cara{background:#f5e7d3}
+.cara img.ajustada{object-fit:contain}   /* proporción de la imagen = proporción de la cara: sin franjas y sin deformar */

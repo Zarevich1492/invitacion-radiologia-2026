@@ -74,8 +74,36 @@ def componer(origen: Path, destino: Path):
             "margen_lat_min_%": round(100 * min(min(c[0], W - c[2]) for c in cajas) / W, 1)}
 
 
+# ---------- Contraportadas verticales (mismo criterio: solo escala y posición) ----------
+REG_ARTE = (0, 400, 6250, 2928)      # ilustración (montañas y sol)
+REG_TEXTO_C = (0, 2928, 6250, 4100)  # textos de contraportada
+REG_LOGOS_C = (0, 4150, 6250, 4650)  # logotipos institucionales
+
+
+def componer_contra(origen: Path, destino: Path):
+    src = Image.open(origen).convert("RGB")
+    orig = Image.open(RAIZ / "originales" / "5-contraportada.png").convert("RGB")
+    crema = orig.getpixel((20, 20))
+    arte = escalar(recorte_ajustado(orig, REG_ARTE), ESCALA)
+    texto = recorte_ajustado(src, REG_TEXTO_C)
+    texto = escalar(texto, min(ESCALA, ANCHO_UTIL / texto.width))
+    logos = escalar(recorte_ajustado(orig, REG_LOGOS_C), ESCALA)
+    gaps = (230, 300)
+    total = arte.height + gaps[0] + texto.height + gaps[1] + logos.height
+    y = round((H - total) * 0.46)
+    lienzo = Image.new("RGB", (W, H), crema); cajas = []
+    for el, g in ((arte, gaps[0]), (texto, gaps[1]), (logos, 0)):
+        x = (W - el.width) // 2; lienzo.paste(el, (x, y)); cajas.append((x, y, x + el.width, y + el.height)); y += el.height + g
+    lienzo.save(destino, optimize=True)
+    for (x0, y0, x1, y1) in cajas:
+        assert x0 >= MARGEN_X - 30 and x1 <= W - MARGEN_X + 30 and y0 >= 0.08 * H and y1 <= 0.92 * H, (destino.name, (x0, y0, x1, y1))
+    return {"archivo": destino.name, "margen_sup_%": round(100 * cajas[0][1] / H, 1), "margen_inf_%": round(100 * (H - cajas[-1][3]) / H, 1)}
+
+
 if __name__ == "__main__":
     VAR = RAIZ / "variantes"; VAR.mkdir(exist_ok=True)
     fuentes = {"A": RAIZ / "originales" / "3-portada.png", "B": VAR / "B-portada.png", "C": VAR / "C-portada.png"}
     informe = {v: componer(f, VAR / f"{v}-portada-vertical.png") for v, f in fuentes.items()}
+    contras = {"A": RAIZ / "originales" / "5-contraportada.png", "B": VAR / "B-contraportada.png", "C": VAR / "C-contraportada.png"}
+    informe.update({v + "-contra": componer_contra(f, VAR / f"{v}-contraportada-vertical.png") for v, f in contras.items()})
     print(json.dumps(informe, indent=1, ensure_ascii=False))

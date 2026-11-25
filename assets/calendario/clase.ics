@@ -15,7 +15,7 @@ END:STANDARD
 END:VTIMEZONE
 BEGIN:VEVENT
 UID:clase-20261128@invitacion-radiologia-2026
-DTSTAMP:20261125T221508Z
+DTSTAMP:20261125T234001Z
 DTSTART;TZID=America/Caracas:20261128T083000
 SUMMARY:Clase magistral · XXIV Promoción de Radiólogos ULA
 LOCATION:Auditorio A\, Facultad de Medicina\, Universidad de Los Andes\, M

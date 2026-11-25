@@ -126,6 +126,13 @@
     else rec = !!CFG.recepcion[id.categoria];
     return EV.actividades.filter((a) => a.codigo !== "recepcion" || rec);
   }
+  // Denominación personalizada: «Madrina de promoción» o «Padrino de promoción» (nunca ambas)
+  function denominacionPadrino(id) { const p = EV.padrinos.find((x) => x.id === id.padrinoId); return p && p.denominacion ? p.denominacion : (/^Dra\./.test(id.nombre || "") ? "MADRINA DE PROMOCIÓN" : "PADRINO DE PROMOCIÓN"); }
+  function etiquetaCategoria(id) {
+    if (id.categoria === "general") return "Invitación especial";
+    if (id.categoria === "padrino") { const d = denominacionPadrino(id).toLowerCase(); return d.charAt(0).toUpperCase() + d.slice(1); }
+    return EV.categorias[id.categoria].etiqueta;
+  }
   const varianteDe = (id) => (id.categoria === "general" ? "C" : EV.categorias[id.categoria].variante);
 
   /* ---------- Escena 2 en adelante ---------- */
@@ -151,7 +158,7 @@
 
     // Saludo
     const corto = id.nombre ? id.nombre.split(" ").slice(0, id.categoria === "padrino" ? 3 : 2).join(" ") : "";
-    $("#saludo-eyebrow").textContent = id.categoria === "general" ? "Invitación especial" : EV.categorias[id.categoria].etiqueta;
+    $("#saludo-eyebrow").textContent = etiquetaCategoria(id);
     $("#saludo-nombre").textContent = id.nombre || EV.promocion;
     const plantilla = EV.variantes[v];
     $("#saludo-texto").textContent = id.nombre ? plantilla.saludo.replace("{nombre}", id.nombre) : plantilla.saludo_general;
@@ -366,7 +373,7 @@
     const acts = actividadesDe(ID);
     return {
       nombre: ID.categoria === "general" ? "" : (servidor && servidor.nombre) || ID.nombre,
-      categoria: ID.categoria === "general" ? "INVITADO ESPECIAL" : EV.categorias[ID.categoria].pase,
+      categoria: ID.categoria === "general" ? "INVITADO ESPECIAL" : ID.categoria === "padrino" ? denominacionPadrino(ID) : EV.categorias[ID.categoria].pase,
       actividades: acts, fecha_corta: EV.fecha_corta, ciudad: EV.ciudad,
     };
   }

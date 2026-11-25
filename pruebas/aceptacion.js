@@ -32,7 +32,7 @@ async function caraVisible(p) {
 }
 async function nuevaPagina(ctx, errores, externos) {
   const p = await ctx.newPage();
-  await p.route("**/js/config.js", (r) => r.fulfill({ contentType: "application/javascript", body: `window.CONFIG={supabaseUrl:${JSON.stringify(API)},supabaseAnonKey:"clave-publica-de-prueba"};` }));
+  await p.route(/\/js\/config\.js(\?.*)?$/, (r) => r.fulfill({ contentType: "application/javascript", body: `window.CONFIG={supabaseUrl:${JSON.stringify(API)},supabaseAnonKey:"clave-publica-de-prueba"};` }));
   p.on("pageerror", (e) => errores.push(e.message));
   p.on("console", (m) => { if (m.type() === "error") errores.push(m.text()); });
   p.on("request", (r) => { const u = r.url(); if (!u.startsWith(BASE) && !u.startsWith(API) && !/^(blob|data):/.test(u)) externos.push(u); });
@@ -88,7 +88,7 @@ async function responder(p, resp) {
   const idA = await p.evaluate(() => window.__flujo.identidad);
   ok("Ruta A: categoría padrino → variante A", idA.categoria === "padrino" && idA.variante === "A", JSON.stringify(idA));
   ok("Ruta A: saludo personalizado", (await p.textContent("#saludo-texto")).startsWith("Dra. Analy Falcón, gracias por haber sido parte de nuestro camino."));
-  ok("Ruta A: tarjeta de padrinos con programa de 3 actividades", (await p.getAttribute("#img-interior-izq", "src")) === "assets/img/A-interior-3-2000.jpg");
+  ok("Ruta A: tarjeta de padrinos con programa de 3 actividades", (await p.getAttribute("#img-interior-izq", "src")).split("?")[0] === "assets/img/A-interior-3-2000.jpg");
   const prog = await p.textContent("#programa");
   ok("Programa: 3 actividades", (await p.$$("#programa li")).length === 3);
   ok("Programa: clase 8:30 a. m. en Auditorio A, Facultad de Medicina", /8:30 a\. m\.\s*Clase magistral\s*Auditorio A, Facultad de Medicina, Universidad de Los Andes/.test(prog.replace(/\s+/g, " ")), prog.replace(/\s+/g, " ").slice(0, 120));
@@ -180,6 +180,12 @@ async function responder(p, resp) {
   ok("Maps caravana → Hospital Universitario de Los Andes", /Hospital Universitario de Los Andes/.test(mapas[1]), mapas[1]);
   await irVista(p, "invitacion");
   const portada = await p.evaluate(() => { const i = document.getElementById("img-portada"); const r = { nat: i.naturalWidth / i.naturalHeight, caja: i.offsetWidth / i.offsetHeight }; return { nat: r.nat.toFixed(3), caja: r.caja.toFixed(3) }; });
+  const caras = await p.evaluate(() => [["img-portada", 1], ["img-contra", 1], ["img-interior-izq", 2], ["img-interior-der", 2]].map(([id, mitades]) => {
+    const i = document.getElementById(id), cara = i.closest(".cara");
+    return { id, imagen: (i.naturalWidth / mitades / i.naturalHeight).toFixed(3), cara: (cara.offsetWidth / cara.offsetHeight).toFixed(3) };
+  }));
+  ok("Las cuatro caras: proporción de la imagen = proporción de la cara (sin franjas)", caras.every((c) => Math.abs(c.imagen - c.cara) < 0.006), JSON.stringify(caras));
+  ok("Solo modo claro declarado (evita la inversión automática de colores)", (await p.evaluate(() => getComputedStyle(document.documentElement).colorScheme)).includes("only") && (await p.getAttribute('meta[name="color-scheme"]', "content")) === "light only");
   ok("Portada vertical que llena la hoja (sin bandas ni recortes)", Math.abs(portada.nat - portada.caja) < 0.005 && portada.nat === (3125 / 4830).toFixed(3), JSON.stringify(portada));
   ok("Descarga de la variante correcta (A, 3 actividades)",(await p.getAttribute("#descarga-invitacion", "href")) === "assets/descargas/invitacion-A-3.pdf");
 
@@ -190,7 +196,7 @@ async function responder(p, resp) {
   ok("Ruta B R1: variante B sin recepción (regla por defecto)", idB[0].variante === "B" && idB[1].join() === "clase,caravana", JSON.stringify(idB));
   ok("R1: nombre limpiado y con caracteres especiales", (await p.textContent("#saludo-nombre")) === "José Ñáñez D’Alessandro");
   ok("R1: RSVP solo de actividades habilitadas", (await p.$$("#rsvp-actividades fieldset")).length === 2);
-  ok("R1: tarjeta de residentes", (await p.getAttribute("#img-portada", "src")) === "assets/img/B-portada-1400.jpg");
+  ok("R1: tarjeta de residentes", (await p.getAttribute("#img-portada", "src")).split("?")[0] === "assets/img/B-portada-1400.jpg");
   const rb = await responder(p, { clase: "asistira", caravana: "asistira" });
   ok("R1: confirmación guardada", rb.clase.includes("exito"), rb.texto);
   await p.screenshot({ path: `${OUT}/10-residente-R1.png` });
@@ -255,7 +261,7 @@ async function responder(p, resp) {
   const grads = await p.$$eval("#lista-graduandos [data-graduando]", (e) => e.map((x) => x.textContent));
   ok("Integrantes: los 7 graduandos", grads.join("|") === "Dr. Jorge Arrieta|Dr. Nelson Páez|Dr. Diego Guillén|Dr. José Sánchez|Dra. Andrea Montes|Dra. Francia Méndez|Dra. Oriana Hernández", grads.join("|"));
   await p.click('[data-graduando="arrieta-jorge"]'); await p.waitForTimeout(1500);
-  ok("Graduando: entra directamente a su listón", (await p.evaluate(() => document.body.dataset.vistaActiva)) === "pase" && (await p.isVisible("#panel-liston")) && (await p.getAttribute("#liston-vista", "src")) === "assets/listones/arrieta-jorge.png");
+  ok("Graduando: entra directamente a su listón", (await p.evaluate(() => document.body.dataset.vistaActiva)) === "pase" && (await p.isVisible("#panel-liston")) && (await p.getAttribute("#liston-vista", "src")).split("?")[0] === "assets/listones/arrieta-jorge.png");
   const navG = await p.$$eval(".nav-inferior a", (a) => a.filter((x) => getComputedStyle(x).display !== "none").map((x) => x.textContent.trim()).join("|"));
   ok("Graduando: sin confirmación de asistencia (solo Programa y Mi listón)", navG === "Programa|Mi listón", navG);
   await p.evaluate(() => { location.hash = "confirmar"; }); await p.waitForTimeout(400);
@@ -272,7 +278,7 @@ async function responder(p, resp) {
   await elegirPadrino(p, "rojas-gustavo"); await irVista(p, "pase");
   ok("Padrino: pestañas «Mi pase digital» y «Mi listón conmemorativo»", (await p.isVisible("#pestanas-pase")) && (await p.textContent("#pestanas-pase")).replace(/\s+/g, " ").trim() === "Mi pase digital Mi listón conmemorativo");
   await p.click("#tab-liston"); await p.waitForTimeout(300);
-  ok("Padrino: listón personalizado", (await p.getAttribute("#liston-vista", "src")) === "assets/listones/rojas-gustavo.png" && (await p.isHidden("#panel-pase")) && (await p.isHidden("#liston-colectivos")));
+  ok("Padrino: listón personalizado", (await p.getAttribute("#liston-vista", "src")).split("?")[0] === "assets/listones/rojas-gustavo.png" && (await p.isHidden("#panel-pase")) && (await p.isHidden("#liston-colectivos")));
   await p.screenshot({ path: `${OUT}/17-padrino-liston.png` });
   await p.close();
   // Residente: sin listón
@@ -294,7 +300,7 @@ async function responder(p, resp) {
   p = await nuevaPagina(ctx, errores, externos);
   await p.goto(BASE, { waitUntil: "networkidle" }); await p.click("#btn-general"); await p.waitForTimeout(1500);
   await irVista(p, "confirmar");
-  ok("Invitación general sin personalizar disponible", (await p.isVisible("#rsvp-identificar")) && (await p.getAttribute("#img-portada", "src")) === "assets/img/C-portada-1400.jpg");
+  ok("Invitación general sin personalizar disponible", (await p.isVisible("#rsvp-identificar")) && (await p.getAttribute("#img-portada", "src")).split("?")[0] === "assets/img/C-portada-1400.jpg");
   const sw = await p.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth]);
   ok("Móvil: sin desplazamiento horizontal", sw[0] <= sw[1], sw.join(" ≤ "));
   await p.close();

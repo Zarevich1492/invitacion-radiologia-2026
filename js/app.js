@@ -23,16 +23,19 @@
   let nombreCorto = "";
   let tarjetaLista = false, pendienteEntrada = false;
   let variante = "A", conRecepcion = true;
+  // Versión de recursos (herramientas/versionar.py): evita que el navegador muestre imágenes antiguas en caché
+  const VER = (document.querySelector('meta[name="version-recursos"]') || {}).content || "";
+  const conVer = (u) => (VER ? `${u}?v=${VER}` : u);
   const img = (id) => document.getElementById(id);
 
   // Carga las caras de la variante (A padrinos · B residentes · C otros) y del programa (2 o 3 actividades).
   function configurar(v, n) {
     variante = v; conRecepcion = n === 3;
-    const interior = `assets/img/${v}-interior-${n}-2000.jpg`;
+    const interior = conVer(`assets/img/${v}-interior-${n}-2000.jpg`);
     const ALT = window.__ALT || {};
-    img("img-portada").src = `assets/img/${v}-portada-1400.jpg`;
+    img("img-portada").src = conVer(`assets/img/${v}-portada-1400.jpg`);
     img("img-portada").alt = ALT.portada || "Portada de la invitación";
-    img("img-contra").src = `assets/img/${v}-contraportada-1400.jpg`;
+    img("img-contra").src = conVer(`assets/img/${v}-contraportada-1400.jpg`);
     img("img-contra").alt = ALT.contra || "Contraportada de la invitación";
     img("img-interior-izq").src = interior; img("img-interior-izq").alt = ALT.interior || "Interior de la invitación";
     img("img-interior-der").src = interior;
@@ -262,9 +265,9 @@
   const dlgVisor = $("#dlg-visor"), lienzo = $("#lienzo"), vImg = $("#visor-img");
   const V = { s: 1, x: 0, y: 0, ajuste: 1 };
   const fuentes = () => ({
-    abierta: [`assets/img/${variante}-interior-${conRecepcion ? 3 : 2}-3600.jpg`, "Interior"],
-    cerrada: [`assets/img/${variante}-portada-1400.jpg`, "Portada"],
-    dorso: [`assets/img/${variante}-contraportada-1400.jpg`, "Contraportada"],
+    abierta: [conVer(`assets/img/${variante}-interior-${conRecepcion ? 3 : 2}-3600.jpg`), "Interior"],
+    cerrada: [conVer(`assets/img/${variante}-portada-1400.jpg`), "Portada"],
+    dorso: [conVer(`assets/img/${variante}-contraportada-1400.jpg`), "Contraportada"],
   });
   function aplicar() { vImg.style.transform = `translate(${V.x}px,${V.y}px) scale(${V.s})`; }
   function limitar() {
