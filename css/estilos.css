@@ -337,7 +337,8 @@ textarea.campo{font-family:var(--f-texto);font-size:1rem;resize:vertical}
 .rsvp form{display:flex;flex-direction:column;gap:14px;margin-top:14px}
 .rsvp-act{border:1px solid var(--linea);border-radius:12px;padding:12px 14px 14px;margin:0;background:rgba(255,250,241,.55);min-width:0}
 .rsvp-act.social{border-color:rgba(184,35,31,.45)}
-.rsvp-act legend{padding:0 6px;display:flex;flex-direction:column}
+.rsvp-act legend{float:left;width:100%;padding:0;display:flex;flex-direction:column}
+.rsvp-act legend+*{clear:both}
 .rsvp-act legend b{font-family:var(--f-display);font-size:1.15rem}
 .rsvp-act legend span{font-size:.92rem;color:var(--tinta-suave)}
 .opciones-rsvp{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
