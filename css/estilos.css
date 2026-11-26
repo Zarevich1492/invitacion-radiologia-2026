@@ -750,6 +750,8 @@ body{background-image:linear-gradient(#f4e6d1 0,#f4e6d1 55%,#efdfc6 100%);backgr
 .costo-valor{font-family:var(--f-display);font-size:2.1rem;line-height:1;color:var(--rojo-osc);font-weight:800}
 .costo-det{font-weight:600;font-size:1.02rem}
 .costo-aviso{flex-basis:100%;margin-top:3px;font-size:.98rem;font-weight:600;line-height:1.3}
+.momento .costo span,.momento.social .costo span,.vista-programa .momento.social .costo span{color:var(--tinta)}
+.momento .costo .costo-valor,.momento.social .costo .costo-valor,.vista-programa .momento.social .costo .costo-valor{color:var(--rojo-osc)}
 .costo-nota{margin:4px 0 10px;font-size:.95rem;font-weight:600;color:var(--tinta)}
 /* ---------- «Celebra este logro con nosotros» (mobile-first) y página «Aportes y dedicatorias» ---------- */
 .celebra{max-width:var(--ancho-max);margin:22px auto 10px}

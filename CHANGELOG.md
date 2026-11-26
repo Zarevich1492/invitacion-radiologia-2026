@@ -19,7 +19,8 @@ Reversión: `git revert <commit>` o volver a una etiqueta: `git checkout -B main
 - **Aportes y dedicatorias:** bajo la tarjeta, sección «Celebra este logro con nosotros» con dos opciones diferenciadas: «Aportes voluntarios» (botón principal «Realizar un aporte») y «Dedicatorias» (botón secundario «Dejar una dedicatoria»). La opción de aportes solo aparece si la organización la activó.
 - Menú: «Desde la distancia» pasa a **«Aportes y dedicatorias»** (barra inferior fija, sin menú desplegable). Esa página muestra los datos de Pago Móvil a la vista, sin montos ni condicionamientos, y aclara que el aporte es independiente de la entrada.
 - Sin ventanas emergentes, recordatorios, montos sugeridos ni condicionamientos de asistencia. Enlaces, confirmaciones, permisos y registros sin cambios.
-- Pruebas: aceptación 227, responsive 244, móvil 360/390/430 (30), contraste.
+- Corrección de contraste: el aviso de la entrada en la tarjeta oscura de la recepción (Programa, escritorio) tenía 1,43:1; ahora usa tinta oscura sobre fondo claro (535/535 textos cumplen WCAG AA).
+- Pruebas: aceptación 227, responsive 244, móvil 360/390/430 (30), contraste 535/535.
 
 ## v2.16 · «Otros invitados» pasa a «Invitados especiales»
 - Cambio exclusivamente de denominación en bienvenida, menú, tarjetas, formularios, panel (filtros, indicadores, solicitudes, mensajes de acceso y de WhatsApp), documentación y pruebas. Identificadores internos (`otro`, `otros`), enlaces, permisos y registros sin cambios; no requiere migración SQL.
