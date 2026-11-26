@@ -8,20 +8,21 @@
 @font-face{font-family:"EB Garamond";font-style:italic;font-weight:400 600;font-display:swap;src:url("../assets/fonts/EBGaramond-italic.woff2") format("woff2")}
 
 :root{
-  --crema:#f5e7d3;        /* fondo exacto de las composiciones */
-  --papel:#eee0c9;        /* mesa sobre la que reposa la tarjeta */
-  --papel-2:#e3d1b4;
-  --tinta:#231b18;
-  --tinta-suave:#6a584b;
-  --rojo:#b8231f;         /* rojo medido en la tarjeta */
-  --rojo-osc:#8e1a17;
+  --crema:#f5e7d3;        /* superficie de la tarjeta (crema original) */
+  --fondo:#f4e6d1;        /* fondo principal de la aplicación */
+  --papel:#f4e6d1;
+  --papel-2:#efdfc6;
+  --tinta:#231b15;        /* títulos y nombres */
+  --tinta-suave:#594638;  /* textos secundarios */
+  --rojo:#b91c1c;         /* rojo institucional */
+  --rojo-osc:#8f1616;
   --linea:rgba(35,27,24,.18);
   --f-display:"Bodoni Moda","Bodoni 72","Didot",Georgia,serif;
   --f-texto:"EB Garamond",Garamond,"Times New Roman",Georgia,serif;
   --d-abrir:1400ms;
   --d-giro:1200ms;
   --curva:cubic-bezier(.45,.05,.2,1);
-  color-scheme:light;
+  color-scheme:only light;
 }
 
 *,*::before,*::after{box-sizing:border-box}
@@ -268,18 +269,8 @@ dialog::backdrop{background:rgba(32,22,16,.62)}
 .pase-nombre input{display:block;width:100%;min-height:46px;margin-top:4px;padding:.5em .8em;border-radius:10px;border:1px solid rgba(35,27,24,.3);background:#fffaf2;font-family:var(--f-display);font-size:1.05rem}
 .estado-descarga{min-height:1.4em;font-size:.9rem;color:var(--tinta-suave)}
 
-/* Visor ampliado */
-dialog.visor{width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;border-radius:0;background:#1d1613;color:var(--crema)}
-.visor-marco{display:flex;flex-direction:column;height:100%;
+
   padding:calc(env(safe-area-inset-top,0px) + 8px) max(10px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 8px) max(10px,env(safe-area-inset-left,0px))}
-.visor-barra{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding-bottom:8px}
-.visor-barra p{margin:0;font-size:.9rem;color:#cdbba5;min-width:0}
-.visor-botones{display:flex;gap:6px}
-.visor .btn{background:rgba(245,231,211,.1);border-color:rgba(245,231,211,.3);color:var(--crema);min-height:42px;padding:.35em .85em}
-.visor .btn-primario{background:var(--crema);color:var(--tinta);border-color:var(--crema)}
-.lienzo{position:relative;flex:1;overflow:hidden;touch-action:none;border-radius:8px;background:#120d0b;cursor:grab}
-.lienzo img{position:absolute;left:0;top:0;transform-origin:0 0;max-width:none;user-select:none;-webkit-user-drag:none;will-change:transform}
-.lienzo.arrastrando{cursor:grabbing}
 
 @media (max-width:640px){
   body{font-size:17px}
@@ -581,8 +572,8 @@ body.rol-graduando .nav-inferior{grid-template-columns:repeat(2,1fr)}
    Contraste y legibilidad (WCAG AA) · solo modo claro
    Nombre #231B15 · mensaje #594638 · categoría #B91C1C · fondo superior #F4E6D1
    ===================================================================== */
-:root{color-scheme:light only;--tinta:#231b15;--tinta-suave:#594638;--rojo:#b91c1c;--rojo-osc:#8f1616;--papel:#f4e6d1;--fondo-sup:#f4e6d1}
-html,body{background:#f4e6d1}
+:root{color-scheme:only light}
+html,body{background:var(--fondo)}
 body{background-image:linear-gradient(#f4e6d1 0,#f4e6d1 55%,#efdfc6 100%);background-attachment:scroll}
 .barra{background:#f4e6d1;-webkit-backdrop-filter:none;backdrop-filter:none}
 .nav-inferior{background:#f4e6d1;-webkit-backdrop-filter:none;backdrop-filter:none}

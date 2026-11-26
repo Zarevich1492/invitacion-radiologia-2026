@@ -2,13 +2,15 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="version-recursos" content="202611260000">
+<meta name="version-recursos" content="202611260112">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>XXIV Promoción de Radiólogos | Invitación especial</title>
 <meta name="description" content="Tres momentos. Una misma celebración. Sábado 28 de noviembre de 2026.">
 <meta name="robots" content="noindex,nofollow,noarchive">
 <meta name="theme-color" content="#f4e6d1">
-<meta name="color-scheme" content="light only">
+<meta name="color-scheme" content="only light">
+<meta name="supported-color-schemes" content="light">
+<meta name="darkreader-lock">
 <meta name="referrer" content="no-referrer">
 <link rel="canonical" href="https://zarevich1492.github.io/invitacion-radiologia-2026/">
 <meta property="og:type" content="website">
@@ -28,7 +30,7 @@
 <link rel="preload" href="assets/fonts/BodoniModa-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/EBGaramond-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/logos/promocion-xxiv-560.jpg" as="image">
-<link rel="stylesheet" href="css/estilos.css?v=202611260000">
+<link rel="stylesheet" href="css/estilos.css?v=202611260112">
 </head>
 <body>
 
@@ -146,14 +148,13 @@
 
       <div class="inv-acciones controles">
         <button class="btn btn-primario" type="button" id="btn-principal">Abrir tarjeta</button>
-        <a class="btn btn-siguiente" href="#programa" data-ir="programa">Ver el programa <span aria-hidden="true">→</span></a>
+        <button class="btn btn-siguiente" type="button" id="btn-contra" hidden>Ver contraportada <span aria-hidden="true">→</span></button>
+        <a class="btn btn-siguiente" id="btn-ir-programa" href="#programa" data-ir="programa">Ver el programa <span aria-hidden="true">→</span></a>
       </div>
 
       <div class="inv-sec">
         <div class="controles-sec" role="toolbar" aria-label="Más opciones de la tarjeta">
           <button class="btn-sec" type="button" id="btn-reproducir" aria-pressed="false"><span class="ico" aria-hidden="true">▶</span><span>Reproducir</span></button>
-          <button class="btn-sec" type="button" id="btn-contra">Ver contraportada</button>
-          <button class="btn-sec" type="button" id="btn-ampliar"><span class="ico" aria-hidden="true">⤢</span><span>Ampliar</span></button>
           <button class="btn-sec" type="button" id="btn-reiniciar"><span class="ico" aria-hidden="true">↺</span><span>Reiniciar</span></button>
         </div>
       </div>
@@ -276,22 +277,6 @@
   <a href="#pase" data-ir="pase"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16v3a2 2 0 000 4v3H4v-3a2 2 0 000-4z"/><path d="M14 7v10" stroke-dasharray="1.6 1.8"/></svg><span>Mi pase</span></a>
 </nav>
 
-<!-- Visor ampliado -->
-<dialog class="visor" id="dlg-visor" aria-label="Tarjeta ampliada">
-  <div class="visor-marco">
-    <div class="visor-barra">
-      <p id="visor-titulo">Interior · Pellizque o toque dos veces para acercar</p>
-      <div class="visor-botones">
-        <button class="btn" type="button" id="zoom-menos" aria-label="Alejar">−</button>
-        <button class="btn" type="button" id="zoom-mas" aria-label="Acercar">+</button>
-        <button class="btn" type="button" id="zoom-ajustar">Ver completa</button>
-        <button class="btn btn-primario" type="button" data-cerrar>Cerrar</button>
-      </div>
-    </div>
-    <div class="lienzo" id="lienzo"><img id="visor-img" alt=""></div>
-  </div>
-</dialog>
-
 <!-- Escena 7 · Pase digital -->
 <noscript>
   <div class="envoltura" style="display:grid;gap:16px;padding-block:16px">
@@ -301,10 +286,10 @@
   <style>.bienvenida{display:none!important}</style>
 </noscript>
 
-<script src="js/config.js?v=202611260000"></script>
-<script src="js/api.js?v=202611260000"></script>
-<script src="js/pase.js?v=202611260000"></script>
-<script src="js/app.js?v=202611260000"></script>
-<script src="js/inicio.js?v=202611260000"></script>
+<script src="js/config.js?v=202611260112"></script>
+<script src="js/api.js?v=202611260112"></script>
+<script src="js/pase.js?v=202611260112"></script>
+<script src="js/app.js?v=202611260112"></script>
+<script src="js/inicio.js?v=202611260112"></script>
 </body>
 </html>

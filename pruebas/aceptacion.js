@@ -115,20 +115,23 @@ async function responder(p, resp) {
   let c = await caraVisible(p);
   ok("Apertura completa: interior visible en ambas caras", c[1] === "base.frente" && c[2] === "tapa.dorso", c.join(","));
   await p.screenshot({ path: `${OUT}/04-interior.png` });
-  await p.click("#btn-ampliar"); await p.waitForTimeout(1500);
-  ok("Ampliación del interior en alta resolución", (await p.evaluate(() => document.getElementById("visor-img").naturalWidth)) === 3600);
-  await p.click("#zoom-mas"); await p.click("#zoom-mas"); await p.waitForTimeout(300);
-  await p.screenshot({ path: `${OUT}/05-interior-ampliado.png` });
-  await p.click("#dlg-visor [data-cerrar]");
+  // La función de ampliación no existe: ni botón, ni visor, ni textos, ni activación al tocar
+  const sinAmpliar = await p.evaluate(() => ({ btn: !!document.getElementById("btn-ampliar"), visor: !!document.getElementById("dlg-visor"), dialogos: document.querySelectorAll("dialog").length, texto: /ampliar|ampliado/i.test(document.body.innerText) }));
+  ok("Sin función Ampliar (botón, visor, diálogos ni textos)", !sinAmpliar.btn && !sinAmpliar.visor && sinAmpliar.dialogos === 0 && !sinAmpliar.texto, JSON.stringify(sinAmpliar));
+  await p.click("#tarjeta", { force: true }); await p.waitForTimeout(500);
+  ok("Tocar el interior no abre ningún visor ni cambia de estado", (await p.evaluate(() => document.querySelectorAll("dialog[open]").length)) === 0 && (await est(p)).e === "abierta");
+  const botones = async () => p.evaluate(() => [...document.querySelectorAll(".inv-acciones .btn")].filter((b) => !b.hidden && b.getBoundingClientRect().width > 0).map((b) => b.textContent.replace(/[→\s]+$/, "").trim()).join(" | "));
+  ok("Botones del interior: Cerrar tarjeta | Ver contraportada", (await botones()) === "Cerrar tarjeta | Ver contraportada", await botones());
   await p.click("#btn-contra"); await esperarEstado(p, "dorso", 12000);
+  ok("Botones de la contraportada: Volver a la portada | Ver el programa", (await botones()) === "Volver a la portada | Ver el programa", await botones());
   c = await caraVisible(p);
   ok("Cierre y giro: contraportada completa", c[0] === "base.dorso", c.join(","));
   await p.screenshot({ path: `${OUT}/06-contraportada.png` });
   // Los controles se desplazan a la zona visible (sobre la barra inferior fija), como haría una persona
   await p.evaluate(() => document.querySelector(".inv-sec").scrollIntoView({ block: "center" }));
-  const cubierto = await p.evaluate(() => { const n = document.querySelector(".nav-inferior").getBoundingClientRect().top; return ["#btn-principal", "#btn-contra"].some((s) => document.querySelector(s).getBoundingClientRect().bottom > n); });
+  const cubierto = await p.evaluate(() => { const n = document.querySelector(".nav-inferior").getBoundingClientRect().top; return ["#btn-principal"].some((s) => document.querySelector(s).getBoundingClientRect().bottom > n); });
   ok("Controles alcanzables sin quedar bajo la barra inferior (tras desplazar)", !cubierto);
-  for (let i = 0; i < 12; i++) { await p.click(i % 2 ? "#btn-principal" : "#btn-contra", { force: true }); await p.waitForTimeout(40); }
+  for (let i = 0; i < 12; i++) { await p.click(i % 2 ? "#btn-principal" : ((await est(p)).e === "abierta" ? "#btn-contra" : "#btn-principal"), { force: true }); await p.waitForTimeout(40); }
   await p.waitForFunction(() => !window.__invitacion.corriendo, null, { timeout: 15000 });
   let s = await est(p);
   ok("Pulsaciones repetidas: estado válido", s.e === s.o && ["cerrada", "abierta", "dorso"].includes(s.e), JSON.stringify(s));
@@ -185,7 +188,7 @@ async function responder(p, resp) {
     return { id, imagen: (i.naturalWidth / mitades / i.naturalHeight).toFixed(3), cara: (cara.offsetWidth / cara.offsetHeight).toFixed(3) };
   }));
   ok("Las cuatro caras: proporción de la imagen = proporción de la cara (sin franjas)", caras.every((c) => Math.abs(c.imagen - c.cara) < 0.006), JSON.stringify(caras));
-  ok("Solo modo claro declarado (evita la inversión automática de colores)", (await p.evaluate(() => getComputedStyle(document.documentElement).colorScheme)).includes("only") && (await p.getAttribute('meta[name="color-scheme"]', "content")) === "light only");
+  ok("Apariencia clara declarada (only light) y fondo #F4E6D1", (await p.getAttribute('meta[name="color-scheme"]', "content")) === "only light" && (await p.evaluate(() => getComputedStyle(document.body).backgroundColor)) === "rgb(244, 230, 209)");
   ok("Portada vertical que llena la hoja (sin bandas ni recortes)", Math.abs(portada.nat - portada.caja) < 0.005 && portada.nat === (3125 / 4830).toFixed(3), JSON.stringify(portada));
   ok("Descarga de la variante correcta (A, 3 actividades)",(await p.getAttribute("#descarga-invitacion", "href")) === "assets/descargas/invitacion-A-3.pdf");
 

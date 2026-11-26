@@ -61,11 +61,11 @@ const ok = (n, c, d = "") => { res.push({ n, ok: !!c, d }); if (!c) console.log(
     const dorso = await p.evaluate(() => { const c = document.querySelector(".hoja.base .dorso").getBoundingClientRect(); return { izq: Math.round(c.left), der: Math.round(c.right), vw: innerWidth, sw: document.documentElement.scrollWidth, vv: Math.round(visualViewport.width) }; });
     ok(`${et} giro y contraportada sin ensanchar la página`, maxSW <= dorso.vw && dorso.sw <= dorso.vw && dorso.vv === w, JSON.stringify({ maxSW, ...dorso }));
     ok(`${et} contraportada completa dentro de la pantalla`, dorso.izq >= 0 && dorso.der <= dorso.vw, JSON.stringify(dorso));
-    await p.click("#btn-contra");
-    await p.waitForFunction(() => window.__invitacion.estado === "abierta" && !window.__invitacion.corriendo, null, { timeout: 12000 });
+    await p.click("#btn-principal");   // «Volver a la portada»
+    await p.waitForFunction(() => window.__invitacion.estado === "cerrada" && !window.__invitacion.corriendo, null, { timeout: 12000 });
 
     // Objetivos táctiles ≥ 44 × 44 en controles visibles
-    const pequenos = await p.evaluate(() => [...document.querySelectorAll(".nav-vistas a, .btn, .btn-sec, .como-llegar")]
+    const pequenos = await p.evaluate(() => [...document.querySelectorAll(".nav-vistas a, .btn:not([hidden]), .btn-sec, .como-llegar")]
       .filter((e) => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0 && getComputedStyle(e).visibility !== "hidden"; })
       .map((e) => { const r = e.getBoundingClientRect(); return [e.id || e.textContent.trim().slice(0, 20), Math.round(r.width), Math.round(r.height)]; })
       .filter(([, ww, hh]) => ww < 44 || hh < 44));

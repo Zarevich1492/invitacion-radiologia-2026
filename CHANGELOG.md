@@ -5,6 +5,13 @@ https://zarevich1492.github.io/invitacion-radiologia-2026/ (misma dirección sie
 Reversión: `git revert <commit>` o volver a una etiqueta: `git checkout -B main <etiqueta> && git push -f origin main`
 (solo con autorización expresa).
 
+## v2.3 · Sin función Ampliar, controles por estado y apariencia clara explícita
+- Eliminada por completo la función «Ampliar» (botón, visor, diálogos, eventos y textos); el zoom nativo se conserva.
+- Controles por estado: portada «Abrir tarjeta | Ver el programa»; interior «Cerrar tarjeta | Ver contraportada»;
+  contraportada «Volver a la portada | Ver el programa». Reproducir y Reiniciar como acciones secundarias.
+- `color-scheme: only light` (meta y CSS), paleta en variables (#F4E6D1 fondo, #231B15, #594638, #B91C1C).
+- Pruebas: 95 aceptación, 244 responsive, 297 contraste, 6 de apariencia (claro/oscuro/oscurecimiento forzado).
+
 ## v2.2 · Portada y contraportada ampliadas
 - Recomposición vertical desde los originales: ocupación del 85 % del alto, márgenes del 7,5–8 %.
 - Portada A: logotipo de la promoción +27 %, logotipos institucionales +20 %, texto al ancho máximo.

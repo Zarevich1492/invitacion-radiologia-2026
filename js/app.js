@@ -13,7 +13,7 @@
 
   const escenario = $("#escenario"), tarjeta = $("#tarjeta"), tapa = $("#tapa"), libro = $("#libro"), inclinacion = $("#inclinacion");
   const pista = $("#pista"), btnPrincipal = $("#btn-principal"), btnContra = $("#btn-contra"), btnReproducir = $("#btn-reproducir"),
-        btnAmpliar = $("#btn-ampliar"), btnReiniciar = $("#btn-reiniciar");
+        btnReiniciar = $("#btn-reiniciar"), btnIrPrograma = $("#btn-ir-programa");
 
   const reducido = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const soporta3D = window.CSS && CSS.supports && (CSS.supports("transform-style", "preserve-3d") || CSS.supports("-webkit-transform-style", "preserve-3d"));
@@ -43,7 +43,6 @@
     const p = img("img-portada");
     const lista = () => { escenario.classList.remove("cargando"); tarjetaLista = true; if (pendienteEntrada) { pendienteEntrada = false; reproducirEntrada(); } };
     (p.decode ? p.decode() : Promise.resolve()).then(lista, lista);
-    vImg.removeAttribute("src");
   }
   function mostrar() { medir(); if (tarjetaLista) reproducirEntrada(); else pendienteEntrada = true; setTimeout(() => tarjeta.focus({ preventScroll: true }), 700); }
 
@@ -163,34 +162,31 @@
   function actualizarUI() {
     const o = objetivo;
     btnPrincipal.textContent = o === "cerrada" ? "Abrir tarjeta" : o === "abierta" ? "Cerrar tarjeta" : "Volver a la portada";
-    btnContra.textContent = o === "dorso" ? "Abrir de nuevo" : "Ver contraportada";
+    btnContra.hidden = o !== "abierta";            // «Ver contraportada» solo con la tarjeta abierta
+    btnIrPrograma.hidden = o === "abierta";        // «Ver el programa» en portada y contraportada
     const ico = btnReproducir.querySelector(".ico"), txt = btnReproducir.querySelector("span:last-child");
     if (!recorrido) { ico.textContent = "▶"; txt.textContent = "Reproducir"; btnReproducir.setAttribute("aria-pressed", "false"); }
     else if (recorrido.pausado) { ico.textContent = "▶"; txt.textContent = "Continuar"; btnReproducir.setAttribute("aria-pressed", "true"); }
     else { ico.textContent = "❚❚"; txt.textContent = "Pausar"; btnReproducir.setAttribute("aria-pressed", "true"); }
-    btnAmpliar.querySelector("span:last-child").textContent = o === "abierta" ? "Ampliar interior" : "Ampliar";
 
     let t = "";
     if (corriendo) t = "";
     else if (estado === "cerrada") t = "Toca para abrir tu invitación";
-    else if (estado === "abierta") t = "Toca el interior para leerlo ampliado";
+    else if (estado === "abierta") t = "Invitación abierta";
     else t = "Gracias por acompañarnos" + (nombreCorto ? ", " + nombreCorto : "");
     if (t) pista.textContent = t;
     pista.style.opacity = corriendo ? "0" : "1";
     pista.classList.toggle("destacada", !corriendo && estado === "cerrada");
     tarjeta.setAttribute("aria-label", `Invitación. ${ROTULO[estado]}. ` +
-      (estado === "cerrada" ? "Pulse Intro para abrir." : estado === "abierta" ? "Pulse Intro para ampliar. Flechas para cambiar de cara." : "Flechas para cambiar de cara."));
+      (estado === "cerrada" ? "Pulse Intro para abrir." : estado === "abierta" ? "Flechas para cambiar de cara." : "Flechas para cambiar de cara."));
   }
 
   btnPrincipal.addEventListener("click", () => manual(objetivo === "cerrada" ? "abierta" : "cerrada"));
-  btnContra.addEventListener("click", () => manual(objetivo === "dorso" ? "abierta" : "dorso"));
-  btnAmpliar.addEventListener("click", () => { detenerRecorrido(); abrirVisor(); });
+  btnContra.addEventListener("click", () => manual("dorso"));
   btnReiniciar.addEventListener("click", reiniciar);
 
   async function reiniciar() {
     detenerRecorrido();
-    document.querySelectorAll("dialog[open]").forEach((d) => d.close());
-    window.scrollTo({ top: 0, behavior: reducido ? "auto" : "smooth" });
     await irA("cerrada");
     reproducirEntrada();
   }
@@ -215,7 +211,7 @@
   function tocar() {
     if (corriendo && !recorrido) return; // ignora toques durante un movimiento manual (el objetivo ya está fijado)
     if (estado === "cerrada" || objetivo === "cerrada") manual("abierta");
-    else if (estado === "abierta") { detenerRecorrido(); abrirVisor(); }
+    // Interior y contraportada: el toque no abre nada; se navega con los botones, las flechas o deslizando.
     // En la contraportada el toque no hace nada: la tarjeta permanece hasta que el usuario elija.
   }
   const ORDEN = ["cerrada", "abierta", "dorso"];
@@ -243,93 +239,11 @@
     tarjeta.classList.remove("entrada"); void tarjeta.offsetWidth; tarjeta.classList.add("entrada");
   }
 
-  /* ---------------- Hojas modales ---------------- */
-  function abrirDialogo(id) {
-    const d = document.getElementById(id);
-    if (!d || d.open) return;
-    detenerRecorrido();
-    if (typeof d.showModal === "function") d.showModal(); else d.setAttribute("open", "");
-    document.documentElement.style.overflow = "hidden";
-    document.dispatchEvent(new CustomEvent("dialogo-abierto", { detail: id }));
-  }
-  document.querySelectorAll("dialog").forEach((d) => {
-    d.addEventListener("close", () => { if (!document.querySelector("dialog[open]")) document.documentElement.style.overflow = ""; });
-    d.addEventListener("click", (e) => { if (e.target === d && !d.classList.contains("visor")) d.close(); });
-  });
-  document.addEventListener("click", (e) => {
-    const a = e.target.closest("[data-abrir]"); if (a) { abrirDialogo(a.dataset.abrir); return; }
-    const c = e.target.closest("[data-cerrar]"); if (c) { const d = c.closest("dialog"); if (d) d.close(); }
-  });
-
-  /* ---------------- Visor ampliado (pellizco, doble toque, rueda) ---------------- */
-  const dlgVisor = $("#dlg-visor"), lienzo = $("#lienzo"), vImg = $("#visor-img");
-  const V = { s: 1, x: 0, y: 0, ajuste: 1 };
-  const fuentes = () => ({
-    abierta: [conVer(`assets/img/${variante}-interior-${conRecepcion ? 3 : 2}-3600.jpg`), "Interior"],
-    cerrada: [conVer(`assets/img/${variante}-portada-1400.jpg`), "Portada"],
-    dorso: [conVer(`assets/img/${variante}-contraportada-1400.jpg`), "Contraportada"],
-  });
-  function aplicar() { vImg.style.transform = `translate(${V.x}px,${V.y}px) scale(${V.s})`; }
-  function limitar() {
-    const cw = lienzo.clientWidth, ch = lienzo.clientHeight, w = vImg.naturalWidth * V.s, h = vImg.naturalHeight * V.s;
-    V.x = w <= cw ? (cw - w) / 2 : Math.min(0, Math.max(cw - w, V.x));
-    V.y = h <= ch ? (ch - h) / 2 : Math.min(0, Math.max(ch - h, V.y));
-  }
-  function ajustar() {
-    if (!vImg.naturalWidth) return;
-    V.ajuste = Math.min(lienzo.clientWidth / vImg.naturalWidth, lienzo.clientHeight / vImg.naturalHeight);
-    V.s = V.ajuste; limitar(); aplicar();
-  }
-  function zoomEn(f, cx, cy) {
-    const s2 = Math.max(V.ajuste, Math.min(V.ajuste * 6, V.s * f));
-    const r = s2 / V.s; V.x = cx - (cx - V.x) * r; V.y = cy - (cy - V.y) * r; V.s = s2; limitar(); aplicar();
-  }
-  function abrirVisor() {
-    const F = fuentes(); const [src, rot] = F[estado] || F.abierta;
-    $("#visor-titulo").textContent = rot + " · Pellizque o toque dos veces para acercar";
-    vImg.alt = (estado === "abierta" ? img("img-interior-izq") : estado === "dorso" ? img("img-contra") : img("img-portada")).alt;
-    abrirDialogo("dlg-visor");
-    if (vImg.getAttribute("src") !== src) { vImg.style.transform = "scale(0)"; vImg.onload = ajustar; vImg.src = src; }
-    else requestAnimationFrame(ajustar);
-  }
-  addEventListener("resize", () => { if (dlgVisor.open) ajustar(); });
-  $("#zoom-mas").addEventListener("click", () => zoomEn(1.5, lienzo.clientWidth / 2, lienzo.clientHeight / 2));
-  $("#zoom-menos").addEventListener("click", () => zoomEn(1 / 1.5, lienzo.clientWidth / 2, lienzo.clientHeight / 2));
-  $("#zoom-ajustar").addEventListener("click", ajustar);
-  lienzo.addEventListener("wheel", (e) => { e.preventDefault(); const r = lienzo.getBoundingClientRect(); zoomEn(e.deltaY < 0 ? 1.15 : 1 / 1.15, e.clientX - r.left, e.clientY - r.top); }, { passive: false });
-  const punteros = new Map(); let pinch = null, ultimoToque = 0, ultimoPos = null;
-  lienzo.addEventListener("pointerdown", (e) => {
-    lienzo.setPointerCapture(e.pointerId); punteros.set(e.pointerId, { x: e.clientX, y: e.clientY }); lienzo.classList.add("arrastrando");
-    if (punteros.size === 2) { const [a, b] = [...punteros.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), s: V.s }; }
-  });
-  lienzo.addEventListener("pointermove", (e) => {
-    const prev = punteros.get(e.pointerId); if (!prev) return;
-    const act = { x: e.clientX, y: e.clientY }; punteros.set(e.pointerId, act);
-    const r = lienzo.getBoundingClientRect();
-    if (punteros.size === 2 && pinch) {
-      const [a, b] = [...punteros.values()]; const d = Math.hypot(a.x - b.x, a.y - b.y);
-      zoomEn((pinch.s * d / pinch.d) / V.s, (a.x + b.x) / 2 - r.left, (a.y + b.y) / 2 - r.top);
-    } else if (punteros.size === 1) { V.x += act.x - prev.x; V.y += act.y - prev.y; limitar(); aplicar(); }
-  });
-  const soltar = (e) => {
-    const p = punteros.get(e.pointerId); punteros.delete(e.pointerId); if (punteros.size < 2) pinch = null;
-    if (!punteros.size) lienzo.classList.remove("arrastrando");
-    if (e.type === "pointerup" && p) {
-      const ahora = Date.now();
-      if (ahora - ultimoToque < 320 && ultimoPos && Math.hypot(p.x - ultimoPos.x, p.y - ultimoPos.y) < 30) {
-        const r = lienzo.getBoundingClientRect();
-        if (V.s > V.ajuste * 1.05) ajustar(); else zoomEn(2.6, p.x - r.left, p.y - r.top);
-        ultimoToque = 0;
-      } else { ultimoToque = ahora; ultimoPos = p; }
-    }
-  };
-  lienzo.addEventListener("pointerup", soltar); lienzo.addEventListener("pointercancel", soltar);
-
   // Pruebas automatizadas: estado observable sin exponer datos personales.
   window.__invitacion = { get estado() { return estado; }, get objetivo() { return objetivo; }, get corriendo() { return corriendo; }, get recorrido() { return recorrido ? (recorrido.pausado ? "pausado" : "activo") : "no"; }, plano };
 
   window.Tarjeta = {
-    configurar, mostrar, reiniciar, abrirDialogo,
+    configurar, mostrar, reiniciar,
     fijarNombre(n) { nombreCorto = n; actualizarUI(); },
     detener: detenerRecorrido,
     medir,
