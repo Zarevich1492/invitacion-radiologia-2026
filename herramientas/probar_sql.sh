@@ -12,4 +12,5 @@ psql -U postgres -q -d $DB -v ON_ERROR_STOP=1 -f supabase/semilla.sql
 # Segunda ejecución: deben ser idempotentes
 psql -U postgres -q -d $DB -v ON_ERROR_STOP=1 -f supabase/esquema.sql
 psql -U postgres -q -d $DB -v ON_ERROR_STOP=1 -f supabase/semilla.sql
+psql -U postgres -d $DB -v ON_ERROR_STOP=1 -f supabase/pruebas/renombrado.sql | tail -7
 psql -U postgres -d $DB -v ON_ERROR_STOP=1 -f supabase/pruebas/pruebas.sql

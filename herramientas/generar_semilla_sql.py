@@ -19,6 +19,7 @@ for c, d in ((c, d) for c, d in E["categorias"].items() if c in ("padrino", "r1"
 for p in E["padrinos"]:
     L.append(f"insert into public.padrinos(id, nombre, apellido) values ({q(p['id'])}, {q(p['nombre'])}, {q(p['apellido'])})\n  on conflict (id) do update set nombre = excluded.nombre, apellido = excluded.apellido;")
 L.append("select public.admin_sincronizar_padrinos();")
+L.append("-- Renombrado seguro: el nombre oficial se propaga a todos los registros vinculados (mismo id, mismas respuestas, sin duplicados).\nupdate public.invitados i set nombre = p.nombre from public.padrinos p where i.padrino_id = p.id and i.nombre <> p.nombre;")
 L.append("commit;")
 (RAIZ / "supabase" / "semilla.sql").write_text("\n".join(L) + "\n", encoding="utf-8")
 print("supabase/semilla.sql generado:", len(E["actividades"]), "actividades,", len(E["padrinos"]), "padrinos")

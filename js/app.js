@@ -172,13 +172,13 @@
     let t = "";
     if (corriendo) t = "";
     else if (estado === "cerrada") t = "Toca para abrir tu invitación";
-    else if (estado === "abierta") t = "Invitación abierta";
-    else t = "Gracias por acompañarnos" + (nombreCorto ? ", " + nombreCorto : "");
+    else if (estado === "abierta") t = "Toca la tarjeta para cerrarla y ver la contraportada";
+    else t = "Gracias por acompañarnos" + (nombreCorto ? ", " + nombreCorto : "") + " · toca la tarjeta para volver a la portada";
     if (t) pista.textContent = t;
     pista.style.opacity = corriendo ? "0" : "1";
     pista.classList.toggle("destacada", !corriendo && estado === "cerrada");
     tarjeta.setAttribute("aria-label", `Invitación. ${ROTULO[estado]}. ` +
-      (estado === "cerrada" ? "Pulse Intro para abrir." : estado === "abierta" ? "Flechas para cambiar de cara." : "Flechas para cambiar de cara."));
+      (estado === "cerrada" ? "Pulse Intro para abrir." : estado === "abierta" ? "Pulse Intro para cerrar y ver la contraportada." : "Pulse Intro para volver a la portada."));
   }
 
   btnPrincipal.addEventListener("click", () => manual(objetivo === "cerrada" ? "abierta" : "cerrada"));
@@ -208,11 +208,11 @@
   });
   tarjeta.addEventListener("pointercancel", () => { inicio = null; });
 
+  // Recorrido por clic: 1.º portada → abre · 2.º interior → se cierra y gira a la contraportada · 3.º contraportada → vuelve a la portada.
+  // La máquina de estados encadena abierta → cerrada → dorso; durante un movimiento manual los toques se ignoran.
   function tocar() {
-    if (corriendo && !recorrido) return; // ignora toques durante un movimiento manual (el objetivo ya está fijado)
-    if (estado === "cerrada" || objetivo === "cerrada") manual("abierta");
-    // Interior y contraportada: el toque no abre nada; se navega con los botones, las flechas o deslizando.
-    // En la contraportada el toque no hace nada: la tarjeta permanece hasta que el usuario elija.
+    if (corriendo && !recorrido) return;
+    manual(objetivo === "cerrada" ? "abierta" : objetivo === "abierta" ? "dorso" : "cerrada");
   }
   const ORDEN = ["cerrada", "abierta", "dorso"];
   function deslizar(dir) {

@@ -118,8 +118,21 @@ async function responder(p, resp) {
   // La función de ampliación no existe: ni botón, ni visor, ni textos, ni activación al tocar
   const sinAmpliar = await p.evaluate(() => ({ btn: !!document.getElementById("btn-ampliar"), visor: !!document.getElementById("dlg-visor"), dialogos: document.querySelectorAll("dialog").length, texto: /ampliar|ampliado/i.test(document.body.innerText) }));
   ok("Sin función Ampliar (botón, visor, diálogos ni textos)", !sinAmpliar.btn && !sinAmpliar.visor && sinAmpliar.dialogos === 0 && !sinAmpliar.texto, JSON.stringify(sinAmpliar));
-  await p.click("#tarjeta", { force: true }); await p.waitForTimeout(500);
-  ok("Tocar el interior no abre ningún visor ni cambia de estado", (await p.evaluate(() => document.querySelectorAll("dialog[open]").length)) === 0 && (await est(p)).e === "abierta");
+  // Recorrido por clic sobre la propia tarjeta (sin botones, sin recargas, sin saltos de posición)
+  await p.evaluate(() => { window.__marca = "sin-recarga"; });
+  const y0 = await p.evaluate(() => Math.round(scrollY));
+  await p.click("#btn-reiniciar"); await esperarEstado(p, "cerrada", 10000);
+  const regionTarjeta = async () => { const r = await p.evaluate(() => { const c = document.getElementById("tarjeta").getBoundingClientRect(); return { x: c.left + c.width / 2, y: c.top + c.height / 2 }; }); await p.mouse.click(r.x, r.y); };
+  await regionTarjeta(); await esperarEstado(p, "abierta");
+  ok("Clic 1 sobre la portada: abre la tarjeta", (await caraVisible(p))[1] === "base.frente");
+  await regionTarjeta(); await esperarEstado(p, "dorso", 12000);
+  ok("Clic 2 sobre el interior: cierra y gira a la contraportada", (await caraVisible(p))[0] === "base.dorso");
+  await regionTarjeta(); await esperarEstado(p, "cerrada", 12000);
+  ok("Clic 3 sobre la contraportada: vuelve a la portada", (await caraVisible(p))[1] === "tapa.frente");
+  ok("El recorrido por clic no recarga la página ni mueve la posición", (await p.evaluate(() => window.__marca)) === "sin-recarga" && Math.abs((await p.evaluate(() => Math.round(scrollY))) - y0) < 5);
+  await regionTarjeta(); await esperarEstado(p, "abierta");
+  const textoPista = await p.textContent("#pista");
+  ok("Indicación del interior: toca la tarjeta", /Toca la tarjeta/.test(textoPista), textoPista);
   const botones = async () => p.evaluate(() => [...document.querySelectorAll(".inv-acciones .btn")].filter((b) => !b.hidden && b.getBoundingClientRect().width > 0).map((b) => b.textContent.replace(/[→\s]+$/, "").trim()).join(" | "));
   ok("Botones del interior: Cerrar tarjeta | Ver contraportada", (await botones()) === "Cerrar tarjeta | Ver contraportada", await botones());
   await p.click("#btn-contra"); await esperarEstado(p, "dorso", 12000);

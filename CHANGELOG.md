@@ -5,6 +5,12 @@ https://zarevich1492.github.io/invitacion-radiologia-2026/ (misma dirección sie
 Reversión: `git revert <commit>` o volver a una etiqueta: `git checkout -B main <etiqueta> && git push -f origin main`
 (solo con autorización expresa).
 
+## v2.4 · Recorrido por clic y apellido corregido
+- Clic sobre la tarjeta: portada → abre; interior → cierra y gira a la contraportada; contraportada → vuelve
+  a la portada. Los botones son alternativos. El visor de ampliación no se reincorpora.
+- «Dra. Omaira Berrios» (antes «Berrio») en la fuente única, selector, semilla SQL y pruebas; el identificador
+  `berrio-omaira` se conserva. La semilla propaga el nombre a los registros vinculados sin duplicar ni perder respuestas.
+
 ## v2.3 · Sin función Ampliar, controles por estado y apariencia clara explícita
 - Eliminada por completo la función «Ampliar» (botón, visor, diálogos, eventos y textos); el zoom nativo se conserva.
 - Controles por estado: portada «Abrir tarjeta | Ver el programa»; interior «Cerrar tarjeta | Ver contraportada»;

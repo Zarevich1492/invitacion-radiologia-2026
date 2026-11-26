@@ -25,7 +25,7 @@ begin
   -- ===== Rol público (anon) =====
   execute 'set local role anon';
   cfg := public.invitacion_config();
-  perform public._ok('anon: config con 10 padrinos ordenados', jsonb_array_length(cfg->'padrinos') = 10 and cfg->'padrinos'->0->>'nombre' = 'Dra. Omaira Berrio' and cfg->'padrinos'->9->>'nombre' = 'Dr. Daniel Viña');
+  perform public._ok('anon: config con 10 padrinos ordenados', jsonb_array_length(cfg->'padrinos') = 10 and cfg->'padrinos'->0->>'nombre' = 'Dra. Omaira Berrios' and cfg->'padrinos'->9->>'nombre' = 'Dr. Daniel Viña');
   perform public._ok('anon: 3 actividades', jsonb_array_length(cfg->'actividades') = 3);
 
   begin perform count(*) from public.invitados; perform public._ok('anon NO lee invitados', false, 'leyó');
