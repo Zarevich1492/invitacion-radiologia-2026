@@ -35,7 +35,7 @@ async function nuevaPagina(ctx, errores, externos) {
   await p.route(/\/js\/config\.js(\?.*)?$/, (r) => r.fulfill({ contentType: "application/javascript", body: `window.CONFIG={supabaseUrl:${JSON.stringify(API)},supabaseAnonKey:"clave-publica-de-prueba"};` }));
   p.on("pageerror", (e) => errores.push(e.message));
   p.on("console", (m) => { if (m.type() === "error") errores.push(m.text()); });
-  p.on("request", (r) => { const u = r.url(); if (!u.startsWith(BASE) && !u.startsWith(API) && !/^(blob|data):/.test(u)) externos.push(u); });
+  p.on("request", (r) => { const u = r.url(); if (!u.startsWith(BASE) && !u.startsWith(API) && !/^(blob|data):/.test(u) && !/^https:\/\/challenges\.cloudflare\.com\//.test(u)) externos.push(u); });
   return p;
 }
 async function irVista(p, v) {
@@ -338,6 +338,57 @@ async function responder(p, resp) {
   }
   p = await nuevaPagina(ctx, errores, externos);
 
+  // ===== Dedicatorias y aportes (públicos). El widget de Cloudflare se sustituye por un DOBLE DE PRUEBA (no hay red hacia Cloudflare). =====
+  p = await nuevaPagina(ctx, errores, externos);
+  await p.route("https://challenges.cloudflare.com/**", (r) => r.fulfill({ contentType: "application/javascript", body: "window.turnstile={render:function(el,o){setTimeout(function(){o.callback('TOKEN-VALIDO-PRUEBA')},50);return 1},reset:function(){}};" }));
+  await p.goto(BASE, { waitUntil: "networkidle" });
+  ok("Bienvenida: accesos públicos a dedicatorias y aportes sin código", (await p.isVisible('[data-visitante="dedicatorias"]')) && (await p.isVisible('[data-visitante="aportes"]')));
+  await p.click('[data-visitante="dedicatorias"]'); await p.waitForFunction(() => document.body.dataset.vistaActiva === "dedicatorias");
+  await p.waitForSelector("#dd-stickers .sticker"); await p.waitForFunction(() => !document.getElementById("dd-enviar").disabled, null, { timeout: 8000 });
+  ok("Dedicatorias: visibles para un visitante sin código; encabezado y frase", (await p.textContent("#vista-dedicatorias .versalita")).includes("XXIV Promoción · ULA 2026") && (await p.textContent(".cita-libro")).includes("recuerdos para toda la vida"));
+  ok("Dedicatorias: tipografía manuscrita (Caveat) cargada", await p.evaluate(async () => { await document.fonts.load('500 20px Caveat'); return document.fonts.check('500 20px Caveat'); }));
+  ok("Dedicatorias: exactamente seis stickers", (await p.$$("#dd-stickers .sticker")).length === 6);
+  ok("Dedicatorias: sin emojis ni subida de archivos", !(await p.$("#form-dedic input[type=file]")) && !/\p{Extended_Pictographic}/u.test(await p.textContent("#form-dedic")));
+  await p.check('input[name="dd-dest"][value="esp"]');
+  const espOpts = await p.$$eval("#dd-esp option", (o) => o.length);
+  ok("Dedicatorias: al elegir un especialista se despliegan los siete graduandos", (await p.isVisible("#dd-esp")) && espOpts === 7, espOpts);
+  await p.selectOption("#dd-esp", "arrieta-jorge");
+  await p.fill("#dd-msg", "Felicitaciones, Dr. Arrieta. Gracias por todo."); await p.fill("#dd-autor", "María Prueba"); await p.fill("#dd-tel", "+58 412 1234567");
+  await p.click('[data-sticker="corazon"]'); await p.click('[data-sticker="birrete"]'); await p.click('[data-sticker="brindis"]');
+  ok("Dedicatorias: máximo dos stickers", (await p.$$eval('#dd-stickers [aria-pressed="true"]', (x) => x.length)) === 2);
+  const previa = await p.textContent("#dd-vista");
+  ok("Dedicatorias: vista previa con destinatario, mensaje y firma", previa.includes("Dr. Jorge Arrieta") && previa.includes("Felicitaciones, Dr. Arrieta") && previa.includes("— María Prueba") && (await p.$$("#dd-vista .sticker-img")).length === 2);
+  ok("Dedicatorias: aviso de privacidad del teléfono", (await p.textContent("#form-dedic")).includes("Tu número de teléfono será tratado de forma privada y no aparecerá en la dedicatoria."));
+  await p.screenshot({ path: `${OUT}/17-dedicatorias.png`, fullPage: true });
+  await p.click("#dd-enviar"); await p.waitForSelector("#dd-gracias:not([hidden])", { timeout: 10000 });
+  ok("Dedicatorias: mensaje de gracias y aviso de revisión", (await p.textContent("#dd-gracias")).includes("Gracias por dejar una huella en nuestra historia") && (await p.textContent("#dd-gracias")).includes("revisada antes de publicarse"));
+  const hdr = { apikey: "x", "Content-Type": "application/json" };
+  const rbd = await p.request.post(API + "/rest/v1/rpc/dedicatoria_enviar", { headers: hdr, data: { p_destinatario: "promocion", p_mensaje: "Mensaje directo sin verificación", p_autor: "Bot", p_telefono: "+584120000001", p_stickers: [], p_turnstile: "falso-falso-falso" } });
+  ok("Llamada directa a la API sin Turnstile válido es rechazada", rbd.status() === 400 && /verificacion_fallida/.test(await rbd.text()), rbd.status());
+  const pub = await (await p.request.post(API + "/rest/v1/rpc/dedicatorias_publicas", { headers: hdr, data: {} })).json();
+  ok("Dedicatoria pendiente: no aparece en el libro público", pub.length === 0);
+  const lect = await p.request.get(API + "/rest/v1/dedicatorias?select=telefono", { headers: hdr });
+  ok("El público no puede leer teléfonos", lect.status() === 404 || lect.status() === 401 || lect.status() === 403);
+  await p.close();
+  // Aportes voluntarios
+  p = await nuevaPagina(ctx, errores, externos);
+  await p.goto(BASE, { waitUntil: "networkidle" }); await p.click('[data-visitante="aportes"]');
+  await p.waitForSelector("#pm-datos .pm-fila");
+  const filas = await p.$$eval("#pm-datos .pm-fila", (f) => f.map((x) => x.querySelector("dt").textContent));
+  ok("Aportes: cinco datos con su botón Copiar", filas.join("|") === "Banco|Código bancario|Titular|Cédula de identidad|Teléfono" && (await p.$$("#pm-datos .pm-copiar")).length === 5, filas.join("|"));
+  ok("Aportes: título, aviso de voluntariedad y cierre", (await p.textContent("#t-aportes")).includes("Que la distancia no sea un impedimento") && (await p.textContent("#pm-tarjeta")).includes("Todo aporte es voluntario") && (await p.textContent("#pm-gracias")).includes("incluso desde la distancia"));
+  ok("Aportes: sin montos, metas ni comprobantes", !/(monto|meta|m[ií]nimo|comprobante|ranking)/i.test(await p.textContent("#vista-aportes")));
+  await p.evaluate(() => { window.__cp = []; navigator.clipboard.writeText = async (t) => { window.__cp.push(t); }; });
+  await p.click('[data-copiar="cedula"]'); await p.waitForTimeout(150);
+  ok("Aportes: copiar un dato individual con confirmación visual", (await p.evaluate(() => window.__cp[0])) === "1" && (await p.textContent("#pm-copiado")).includes("Copiado"));
+  await p.click("#pm-copiar-todo"); await p.waitForTimeout(150);
+  const todo = await p.evaluate(() => window.__cp[1]);
+  ok("Aportes: «Copiar datos de Pago Móvil» copia los cinco datos", /^Pago Móvil\nBanco: .+\nCódigo bancario: .+\nTitular: .+\nCédula de identidad: .+\nTeléfono: .+$/.test(todo), todo);
+  await p.screenshot({ path: `${OUT}/18-aportes.png`, fullPage: true });
+  const sw2 = await p.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth]);
+  ok("Aportes: sin desplazamiento horizontal en móvil", sw2[0] <= sw2[1], sw2.join(" ≤ "));
+  await p.close();
+
   // Docentes y egresados
   p = await nuevaPagina(ctx, errores, externos);
   await p.goto(BASE, { waitUntil: "networkidle" }); await conCodigo(p, "docentes"); await p.waitForSelector("#opciones-cat .opcion-cat");
@@ -421,6 +472,22 @@ async function responder(p, resp) {
   const dcsv2 = a.waitForEvent("download"); await a.click("#exportar"); const csv2 = await dcsv2; await csv2.saveAs(`${OUT}/confirmaciones-2.csv`);
   const txt2 = fs.readFileSync(`${OUT}/confirmaciones-2.csv`, "utf8");
   ok("CSV incluye docentes y egresados con su categoría", /Dr\. Luis Ángel Núñez";"Docente"/.test(txt2) && /Dra\. Marta Rivas";"Egresado"/.test(txt2));
+  // Moderación de dedicatorias en el panel
+  await a.click("details:has(#dd-tabla) summary"); await a.waitForSelector("#dd-tabla tbody tr");
+  const ddTile = await a.$$eval("#dd-indicadores .adm-tile", (t) => Object.fromEntries(t.map((x) => [x.querySelector("span").textContent, +x.querySelector("b").textContent])));
+  ok("Panel dedicatorias: indicadores recibidas/pendientes/aprobadas/rechazadas", ddTile["Recibidas"] === 1 && ddTile["Pendientes"] === 1 && ddTile["Aprobadas"] === 0, JSON.stringify(ddTile));
+  ok("Panel dedicatorias: teléfono visible solo aquí y mensaje pendiente", /\+584121234567/.test(await a.textContent("#dd-tabla")) && /Pendiente/.test(await a.textContent("#dd-tabla")));
+  await a.click('#dd-tabla [data-e="aprobado"]'); await a.waitForTimeout(700);
+  const pubOk = await (await a.request.post(API + "/rest/v1/rpc/dedicatorias_publicas", { headers: { apikey: "x", "Content-Type": "application/json" }, data: {} })).json();
+  ok("Aprobada: aparece en el libro público sin teléfono", pubOk.length === 1 && pubOk[0].para === "Dr. Jorge Arrieta" && !JSON.stringify(pubOk).includes("+58"), JSON.stringify(pubOk).slice(0, 160));
+  const dd = a.waitForEvent("download"); await a.click("#dd-exportar"); const ddf = await dd; await ddf.saveAs(`${OUT}/dedicatorias.csv`);
+  ok("Exportación de dedicatorias aprobadas", fs.readFileSync(`${OUT}/dedicatorias.csv`, "utf8").includes("María Prueba"));
+  const pl = await nuevaPagina(ctx, errores, externos);
+  await pl.goto(BASE, { waitUntil: "networkidle" }); await pl.click('[data-visitante="dedicatorias"]'); await pl.waitForSelector("#libro-dedic .libro-item");
+  ok("Libro público: muestra la dedicatoria aprobada con firma y fecha", (await pl.textContent("#libro-dedic")).includes("Felicitaciones, Dr. Arrieta") && (await pl.textContent("#libro-dedic")).includes("María Prueba") && !(await pl.textContent("#libro-dedic")).includes("+58"));
+  await pl.close();
+  await a.click('#dd-tabla [data-e="oculto"]'); await a.waitForTimeout(500);
+  ok("Ocultar: la dedicatoria deja de ser pública", (await (await a.request.post(API + "/rest/v1/rpc/dedicatorias_publicas", { headers: { apikey: "x", "Content-Type": "application/json" }, data: {} })).json()).length === 0);
   await a.click("details:has(#reglas) summary");
   const matriz = await a.$$eval("#reglas tbody tr", (f) => f.map((r) => r.querySelector("th").textContent.trim()));
   ok("Panel: matriz de habilitación con las seis categorías", matriz.length === 6 && matriz.some((m) => /Docente/.test(m)) && matriz.some((m) => /Egresado/.test(m)), matriz.join(" | "));

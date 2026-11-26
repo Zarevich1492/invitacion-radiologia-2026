@@ -6,6 +6,8 @@
   const $ = (s) => document.querySelector(s);
   const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const normal = (t) => String(t || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  // Evita inyección de fórmulas al abrir el CSV en Excel/Sheets: se antepone «'» a celdas que empiezan con = + - @ o control
+  const csvSeguro = (v) => { const t = String(v ?? ""); return /^[=+\-@\t\r]/.test(t) ? "'" + t : t; };
   const fecha = (v) => (v ? new Date(v).toLocaleString("es-VE", { dateStyle: "short", timeStyle: "short" }) : "—");
   const ETQ = { asistira: "Asistirá", no_asistira: "No asistirá", por_confirmar: "Por confirmar", sin_responder: "Sin responder", no_aplica: "No aplica" };
   const CAT = { padrino: "Padrino/Madrina", docente: "Docente", egresado: "Egresado", r1: "R1", r2: "R2", otro: "Otro invitado" };
@@ -69,6 +71,7 @@
     $("#acceso").hidden = true; $("#panel").hidden = false; $("#salir").hidden = false;
     $("#actualizado").textContent = `Datos al ${fecha(new Date())} · sesión: ${sesion.email || ""}`;
     pintar();
+    cargarModulos().catch((e) => { $("#mod-aviso").textContent = "Módulos de dedicatorias y aportes no disponibles: ejecute supabase/dedicatorias.sql (" + e.message + ")"; });
   }
   $("#recargar").addEventListener("click", () => cargar().then(() => toast("Datos actualizados")).catch((e) => toast(e.message)));
 
@@ -226,7 +229,7 @@
       p.verificado ? "Verificado" : p.respondio ? "Enlace general" : "", p.envios, p.nota]);
     filas.push([], ["Graduandos (anfitriones)", EV.graduandos]);
     R.porActividad.forEach((a) => filas.push([`Total previsto · ${a.titulo}`, a.totalPrevisto]));
-    const csv = "﻿" + [cab, ...filas].map((f) => f.map((v) => `"${String(v ?? "").replace(/"/g, '""')}"`).join(";")).join("\r\n");
+    const csv = "﻿" + [cab, ...filas].map((f) => f.map((v) => `"${csvSeguro(v).replace(/"/g, '""')}"`).join(";")).join("\r\n");
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
     const a = document.createElement("a"); a.href = url; a.download = `confirmaciones-xxiv-promocion-${new Date().toISOString().slice(0, 10)}.csv`;
     document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 30000);
@@ -236,6 +239,57 @@
     e.preventDefault();
     try { const n = await rpc("admin_eliminar_registros", { p_confirmacion: $("#borrar-confirmacion").value }); $("#borrar-confirmacion").value = ""; await cargar(); toast(`${n} registros eliminados`); }
     catch (err) { toast(err.message === "confirmacion_requerida" ? "Escriba ELIMINAR TODO para confirmar" : err.message); }
+  });
+
+
+  /* ---------- Dedicatorias y aportes voluntarios ---------- */
+  let DD = [];
+  const ESTADO = { pendiente: "Pendiente", aprobado: "Aprobado", rechazado: "Rechazado", oculto: "Oculto" };
+  async function cargarModulos() {
+    $("#mod-aviso").textContent = "";
+    DD = await rpc("admin_dedicatorias");
+    const a = await rpc("admin_ajustes");
+    pintarDedic();
+    const ap = a.aportes || {};
+    $("#ap-activo").checked = !!ap.activo;
+    for (const k of ["intro", "gracias", "banco", "codigo", "titular", "cedula", "telefono"]) $("#ap-" + k).value = ap[k] || "";
+    $("#ts-sitio").value = a.turnstile_sitio || "";
+    $("#ts-estado").textContent = a.turnstile_sitio && a.turnstile_secreto_definido ? "Turnstile configurado: el envío de dedicatorias está activo." : "Turnstile incompleto: faltan " + [!a.turnstile_sitio && "la clave de sitio", !a.turnstile_secreto_definido && "la clave secreta"].filter(Boolean).join(" y ") + ". Hasta entonces el formulario permanece cerrado.";
+  }
+  function pintarDedic() {
+    const n = (e) => DD.filter((d) => d.estado === e).length;
+    $("#dd-indicadores").innerHTML = [["Recibidas", DD.length], ["Pendientes", n("pendiente")], ["Aprobadas", n("aprobado")], ["Rechazadas", n("rechazado") + n("oculto")]].map(([t, v]) => `<div class="adm-tile"><b>${v}</b><span>${t}</span></div>`).join("");
+    const fe = $("#dd-f-estado").value, fd = $("#dd-f-dest").value, fb = $("#dd-f-fecha").value;
+    const l = DD.filter((d) => (!fe || d.estado === fe) && (!fd || d.destinatario === fd) && (!fb || (d.creado || "").slice(0, 10) === fb));
+    $("#dd-tabla").innerHTML = `<thead><tr><th>Fecha</th><th>Para</th><th>Autor y teléfono</th><th>Mensaje</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>` +
+      l.map((d) => `<tr><td>${esc(fecha(d.creado))}</td><td>${esc(d.para)}</td><td>${esc(d.autor)}<br><small>${esc(d.telefono)}</small>${d.duplicados > 0 ? `<br><small class="adm-dup">Posible duplicado (${d.duplicados})</small>` : ""}</td><td>${esc(d.mensaje)}${d.stickers && d.stickers.length ? `<br><small>Stickers: ${esc(d.stickers.join(", "))}</small>` : ""}</td><td>${ESTADO[d.estado]}</td><td class="adm-acc">${["aprobado", "rechazado", "oculto"].filter((e) => e !== d.estado).map((e) => `<button class="btn" type="button" data-dd="${esc(d.id)}" data-e="${e}">${{ aprobado: "Aprobar", rechazado: "Rechazar", oculto: "Ocultar" }[e]}</button>`).join(" ")}</td></tr>`).join("") + `</tbody>`;
+    const dests = [...new Map(DD.map((d) => [d.destinatario, d.para])).entries()];
+    const cur = $("#dd-f-dest").value;
+    $("#dd-f-dest").innerHTML = `<option value="">Todos los destinatarios</option>` + dests.map(([id, t]) => `<option value="${esc(id)}">${esc(t)}</option>`).join("");
+    $("#dd-f-dest").value = cur;
+  }
+  for (const id of ["#dd-f-estado", "#dd-f-dest", "#dd-f-fecha"]) $(id).addEventListener("change", pintarDedic);
+  $("#dd-tabla").addEventListener("click", async (e) => {
+    const b = e.target.closest("[data-dd]"); if (!b) return;
+    try { await rpc("admin_dedicatoria_estado", { p_id: b.dataset.dd, p_estado: b.dataset.e }); const d = DD.find((x) => x.id === b.dataset.dd); if (d) { d.estado = b.dataset.e; if (b.dataset.e === "aprobado" && !d.publicada) d.publicada = new Date().toISOString(); } pintarDedic(); toast("Estado actualizado"); }
+    catch (err) { toast(err.message); }
+  });
+  $("#dd-exportar").addEventListener("click", () => {
+    const filas = DD.filter((d) => d.estado === "aprobado").map((d) => [fecha(d.publicada), d.para, d.autor, d.mensaje, (d.stickers || []).join(" ")]);
+    const csv = "﻿" + [["Fecha de publicación", "Para", "Autor", "Mensaje", "Stickers"], ...filas].map((f) => f.map((v) => `"${csvSeguro(v).replace(/"/g, '""')}"`).join(";")).join("\r\n");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    const a = document.createElement("a"); a.href = url; a.download = `dedicatorias-aprobadas-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 30000);
+  });
+  $("#form-aportes").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const v = { activo: $("#ap-activo").checked };
+    for (const k of ["intro", "gracias", "banco", "codigo", "titular", "cedula", "telefono"]) { const t = $("#ap-" + k).value.trim(); if (t) v[k] = t; }
+    try { await rpc("admin_definir_aportes", { p_valor: v }); toast("Aportes guardados"); } catch (err) { toast(err.message); }
+  });
+  $("#form-turnstile").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    try { await rpc("admin_definir_turnstile", { p_sitio: $("#ts-sitio").value.trim(), p_secreto: $("#ts-secreto").value.trim() }); $("#ts-secreto").value = ""; await cargarModulos(); toast("Turnstile guardado"); } catch (err) { toast(err.message); }
   });
 
   /* ---------- Inicio ---------- */

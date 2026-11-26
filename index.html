@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="version-recursos" content="202611260450">
+<meta name="version-recursos" content="202611260510">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>XXIV Promoción de Radiólogos | Invitación especial</title>
 <meta name="description" content="Tres momentos. Una misma celebración. Sábado 28 de noviembre de 2026.">
@@ -30,7 +30,7 @@
 <link rel="preload" href="assets/fonts/BodoniModa-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/EBGaramond-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/logos/promocion-xxiv-560.jpg" as="image">
-<link rel="stylesheet" href="css/estilos.css?v=202611260450">
+<link rel="stylesheet" href="css/estilos.css?v=202611260510">
 </head>
 <body>
 
@@ -56,6 +56,7 @@
         <button class="acceso" type="button" data-acceso="otros"><b>Otros invitados</b><span>Familiares, amigos y colegas</span></button>
         <button class="acceso" type="button" data-acceso="especialistas" id="btn-integrante"><b>Especialistas 2026<svg class="candado" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11V8a5 5 0 0110 0v3M6 11h12a1 1 0 011 1v8a1 1 0 01-1 1H6a1 1 0 01-1-1v-8a1 1 0 011-1z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr-solo"> (acceso con código)</span></b><span>Integrantes de la XXIV Promoción</span></button>
       </div>
+      <p class="mas-bienvenida"><button class="btn btn-texto" type="button" data-visitante="dedicatorias">Dejar unas palabras a la promoción</button><button class="btn btn-texto" type="button" data-visitante="aportes">Aportes voluntarios</button></p>
     </div>
 
     <!-- Código de acceso (padrinos, docentes y egresados, residentes, especialistas) -->
@@ -124,6 +125,8 @@
       <a href="#confirmar" data-ir="confirmar">Confirmar asistencia</a>
       <a href="#pase" data-ir="pase">Mi pase</a>
       <a href="#liston" data-ir="liston" hidden>Mi listón</a>
+      <a href="#dedicatorias" data-ir="dedicatorias" class="nav-extra">Palabras</a>
+      <a href="#aportes" data-ir="aportes" class="nav-extra">Aportes</a>
     </nav>
     <button class="btn btn-texto cambiar-nombre" type="button" id="btn-cambiar-nombre">Cambiar nombre</button>
   </div>
@@ -143,6 +146,7 @@
         <a class="btn btn-primario" href="#liston" data-ir="liston">Ver mi listón conmemorativo <span aria-hidden="true">→</span></a>
         <a class="btn btn-siguiente" href="#programa" data-ir="programa">Ver el programa <span aria-hidden="true">→</span></a>
       </div>
+      <p class="mas-secciones"><a class="btn btn-texto" href="#dedicatorias" data-ir="dedicatorias">Dejar unas palabras</a><a class="btn btn-texto" href="#aportes" data-ir="aportes">Aportes voluntarios</a></p>
     </div>
     <div class="inv-grid">
       <header class="inv-enc saludo">
@@ -187,6 +191,7 @@
           <button class="btn-sec" type="button" id="btn-reproducir" aria-pressed="false"><span class="ico" aria-hidden="true">▶</span><span>Reproducir</span></button>
           <button class="btn-sec" type="button" id="btn-reiniciar"><span class="ico" aria-hidden="true">↺</span><span>Reiniciar</span></button>
         </div>
+        <p class="mas-secciones"><a class="btn btn-texto" href="#dedicatorias" data-ir="dedicatorias">Dejar unas palabras</a><a class="btn btn-texto" href="#aportes" data-ir="aportes">Aportes voluntarios</a></p>
       </div>
     </div>
   </section>
@@ -204,6 +209,7 @@
       <a class="btn btn-primario" id="btn-prog-confirmar" href="#confirmar" data-ir="confirmar">Confirmar asistencia <span aria-hidden="true">→</span></a>
       <a class="btn btn-primario" id="btn-prog-liston" href="#liston" data-ir="liston" hidden>Ver mi listón <span aria-hidden="true">→</span></a>
     </div>
+    <p class="mas-secciones"><a class="btn btn-texto" href="#dedicatorias" data-ir="dedicatorias">Dejar unas palabras</a><a class="btn btn-texto" href="#aportes" data-ir="aportes">Aportes voluntarios</a></p>
   </section>
 
   <!-- 03 · Confirmación -->
@@ -314,6 +320,74 @@
       XXIV Promoción de Radiólogos · Postgrado de Radiología · Universidad de Los Andes
     </footer>
   </section>
+  <!-- 06 · Palabras que nos acompañan (público) -->
+  <section class="vista vista-dedic" id="vista-dedicatorias" data-vista="dedicatorias" aria-labelledby="t-dedic" hidden>
+    <header class="vista-enc">
+      <span class="versalita">XXIV Promoción · ULA 2026</span>
+      <h2 id="t-dedic" tabindex="-1">Palabras que <em>nos acompañan</em></h2>
+      <p class="cita-libro">«Hay palabras que se convierten en recuerdos para toda la vida».</p>
+    </header>
+    <div class="dedic-grid">
+      <form class="papel" id="form-dedic" novalidate autocomplete="off">
+        <p class="papel-pregunta">¿Quieres dedicarle unas palabras a nuestros nuevos especialistas?</p>
+        <fieldset class="dd-dest">
+          <legend class="sr-solo">Destinatario</legend>
+          <label class="dd-radio"><input type="radio" name="dd-dest" value="promocion" checked> A toda la XXIV Promoción</label>
+          <label class="dd-radio"><input type="radio" name="dd-dest" value="esp"> A un especialista 2026</label>
+          <select class="campo" id="dd-esp" aria-label="Especialista 2026" hidden></select>
+        </fieldset>
+        <label class="etiqueta" for="dd-msg">Tu mensaje</label>
+        <textarea class="campo manuscrito lineas" id="dd-msg" rows="6" maxlength="500" placeholder="Escribe aquí tus palabras…"></textarea>
+        <span class="dd-cont" id="dd-cont" aria-live="polite">0 / 500</span>
+        <label class="etiqueta" for="dd-autor">Nombre y apellido</label>
+        <input class="campo manuscrito" id="dd-autor" maxlength="80" autocomplete="name">
+        <label class="etiqueta" for="dd-tel">Número telefónico, con prefijo internacional</label>
+        <input class="campo" id="dd-tel" type="tel" inputmode="tel" maxlength="24" placeholder="+58 412 1234567" autocomplete="tel">
+        <p class="nota">Tu número de teléfono será tratado de forma privada y no aparecerá en la dedicatoria.</p>
+        <fieldset class="dd-stickers">
+          <legend class="etiqueta">Un detalle para tu nota <span class="nota">(opcional, hasta dos)</span></legend>
+          <div class="dd-sticker-fila" id="dd-stickers"></div>
+        </fieldset>
+        <input class="trampa" id="dd-web" type="text" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <div id="dd-turnstile" class="dd-turnstile"></div>
+        <p class="rsvp-estado" id="dd-estado" role="status" aria-live="polite"></p>
+        <button class="btn btn-primario" type="submit" id="dd-enviar">Enviar mis palabras</button>
+        <p class="nota">Cada dedicatoria se revisa antes de publicarse en el libro.</p>
+      </form>
+      <aside class="dd-previa" aria-label="Vista previa">
+        <p class="etiqueta-mini">Así quedará tu dedicatoria</p>
+        <article class="nota-papel" id="dd-vista"></article>
+      </aside>
+    </div>
+    <div class="dd-gracias" id="dd-gracias" hidden tabindex="-1">
+      <h3>Gracias por dejar una huella en nuestra historia</h3>
+      <p class="nota">Tu dedicatoria será revisada antes de publicarse.</p>
+      <button class="btn" type="button" id="dd-otra">Escribir otra dedicatoria</button>
+    </div>
+    <h3 class="libro-tit">El libro de dedicatorias</h3>
+    <ul class="libro-lista" id="libro-dedic" aria-live="polite"></ul>
+    <div class="vista-pie"><a class="btn btn-texto" href="#invitacion" data-ir="invitacion"><span aria-hidden="true">←</span> Inicio</a><a class="btn btn-texto" href="#aportes" data-ir="aportes">Aportes voluntarios</a></div>
+  </section>
+
+  <!-- 07 · Aportes voluntarios (público) -->
+  <section class="vista vista-aportes" id="vista-aportes" data-vista="aportes" aria-labelledby="t-aportes" hidden>
+    <header class="vista-enc">
+      <span class="versalita">Aportes voluntarios</span>
+      <h2 id="t-aportes" tabindex="-1">Que la distancia <em>no sea un impedimento</em></h2>
+      <p id="aportes-intro">Si no puedes acompañarnos presencialmente y deseas tener un gesto con nuestra promoción, puedes hacerlo a través de un aporte voluntario.</p>
+      <p><em>Cada gesto tiene un significado que trasciende su valor.</em></p>
+    </header>
+    <div class="pm-tarjeta" id="pm-tarjeta" hidden>
+      <div class="pm-cab"><b>Pago Móvil</b><span>Todo aporte es voluntario</span></div>
+      <dl class="pm-datos" id="pm-datos"></dl>
+      <button class="btn btn-primario" type="button" id="pm-copiar-todo">Copiar datos de Pago Móvil</button>
+      <p class="pm-copiado" id="pm-copiado" role="status" aria-live="polite"></p>
+      <p class="pm-gracias" id="pm-gracias">Gracias por acompañarnos, incluso desde la distancia.</p>
+    </div>
+    <p class="nota" id="aportes-inactivo" hidden>Esta sección no está disponible por ahora.</p>
+    <div class="vista-pie"><a class="btn btn-texto" href="#invitacion" data-ir="invitacion"><span aria-hidden="true">←</span> Inicio</a><a class="btn btn-texto" href="#dedicatorias" data-ir="dedicatorias">Dejar unas palabras</a></div>
+  </section>
+
 </main>
 
 <!-- Navegación inferior (móviles) -->
@@ -334,10 +408,11 @@
   <style>.bienvenida{display:none!important}</style>
 </noscript>
 
-<script src="js/config.js?v=202611260450"></script>
-<script src="js/api.js?v=202611260450"></script>
-<script src="js/pase.js?v=202611260450"></script>
-<script src="js/app.js?v=202611260450"></script>
-<script src="js/inicio.js?v=202611260450"></script>
+<script src="js/config.js?v=202611260510"></script>
+<script src="js/api.js?v=202611260510"></script>
+<script src="js/pase.js?v=202611260510"></script>
+<script src="js/app.js?v=202611260510"></script>
+<script src="js/dedicatorias.js?v=202611260510"></script>
+<script src="js/inicio.js?v=202611260510"></script>
 </body>
 </html>

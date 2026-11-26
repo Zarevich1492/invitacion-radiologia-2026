@@ -5,6 +5,14 @@ https://zarevich1492.github.io/invitacion-radiologia-2026/ (misma dirección sie
 Reversión: `git revert <commit>` o volver a una etiqueta: `git checkout -B main <etiqueta> && git push -f origin main`
 (solo con autorización expresa).
 
+## v2.10 · Dedicatorias («Palabras que nos acompañan») y Aportes voluntarios (rama `acceso-por-codigo`; pendiente de publicar)
+- Secciones públicas para todos los visitantes (también desde la bienvenida, sin código): libro de dedicatorias con estética de papel y tipografía manuscrita (Caveat, autoalojada, licencia OFL), destinatario (promoción o uno de los 7 especialistas), 500 caracteres, nombre, teléfono internacional privado, hasta 2 de 6 stickers de línea propios, vista previa en vivo y aviso de revisión.
+- Antispam gratuito: Cloudflare Turnstile validado en el servidor (clave secreta solo en la base), campo trampa, límites por IP (5/h) y por teléfono (3/día), duplicados, saneamiento de texto y teléfonos normalizados. Sin Turnstile configurado el formulario no se habilita.
+- Moderación: pendiente → aprobado/rechazado/oculto; el libro público solo expone autor, destinatario, mensaje, stickers y fecha.
+- Aportes voluntarios: tarjeta de Pago Móvil con botones de copiado individual y global; datos y textos configurables desde el panel (no están en el código ni en GitHub); sin montos, metas ni comprobantes.
+- Panel: módulo de dedicatorias (indicadores, filtros, acciones, exportación) y de aportes/Turnstile. CSV de confirmaciones y dedicatorias protegidos contra inyección de fórmulas.
+- Pruebas: SQL 46 + 30 + 30, aceptación 159, responsive 244, contraste 553, apariencia 6. El widget de Cloudflare y la extensión `http` se sustituyen por dobles de prueba en local; la validación real requiere las claves de Turnstile.
+
 ## v2.9 · Acceso por código de categoría (rama `acceso-por-codigo`; pendiente de publicar tras la migración SQL)
 - Pantalla inicial: cinco accesos (Padrinos y madrinas · Docentes y egresados · Residentes R1 y R2 · Otros invitados · Especialistas 2026), subtítulos nuevos, candado discreto en los cuatro restringidos y «Especialistas 2026» con fondo rojo institucional. Frase, logotipos, fuentes y tarjeta 3D intactos.
 - Código de acceso validado en el servidor (hash bcrypt, sesión de 12 h, 8 intentos/10 min por IP, revocación). Campo con Mostrar/Ocultar, «Ingresar» y «Volver al inicio».

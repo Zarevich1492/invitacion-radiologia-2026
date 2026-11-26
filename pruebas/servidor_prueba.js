@@ -29,9 +29,12 @@ const FIRMAS = {
   guardar_confirmacion: ["p_token", "p_categoria", "p_padrino_id", "p_nombre", "p_respuestas", "p_trampa", "p_nota"],
   acceso_validar: ["p_grupo", "p_codigo"], acceso_estado: ["p_sesion"], lista_nombres: ["p_sesion"], mi_invitacion_sesion: ["p_sesion", "p_token"],
   guardar_con_sesion: ["p_sesion", "p_token", "p_categoria", "p_padrino_id", "p_nombre", "p_respuestas", "p_trampa", "p_nota"],
+  dedicatorias_config: [], dedicatorias_publicas: [], aportes_publicos: [],
+  dedicatoria_enviar: ["p_destinatario", "p_mensaje", "p_autor", "p_telefono", "p_stickers", "p_turnstile", "p_trampa"],
+  admin_dedicatorias: [], admin_dedicatoria_estado: ["p_id", "p_estado"], admin_ajustes: [], admin_definir_aportes: ["p_valor"], admin_definir_turnstile: ["p_sitio", "p_secreto"],
   admin_generar_enlace: ["p_invitado"], admin_crear_invitado: ["p_nombre", "p_categoria"], admin_sincronizar_padrinos: [], admin_eliminar_registros: ["p_confirmacion"],
 };
-const TIPOS = { p_respuestas: "jsonb", p_invitado: "uuid" };
+const TIPOS = { p_respuestas: "jsonb", p_invitado: "uuid", p_valor: "jsonb", p_id: "uuid", p_stickers: "text[]" };
 
 http.createServer(async (req, res) => {
   if (req.method === "OPTIONS") { res.writeHead(204, { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*", "Access-Control-Allow-Methods": "*" }); return res.end(); }
@@ -58,7 +61,7 @@ http.createServer(async (req, res) => {
     const b = JSON.parse(cuerpo || "{}"), vars = {}, params = [];
     for (const p of FIRMAS[mr[1]]) if (p in b) {
       if (b[p] === null) { params.push(`${p} => null`); continue; }
-      vars[p] = typeof b[p] === "string" ? b[p] : JSON.stringify(b[p]);
+      vars[p] = typeof b[p] === "string" ? b[p] : Array.isArray(b[p]) && TIPOS[p] === "text[]" ? "{" + b[p].map((x) => '"' + String(x).replace(/["\\]/g, "") + '"').join(",") + "}" : JSON.stringify(b[p]);
       params.push(`${p} => :'${p}'::${TIPOS[p] || "text"}`);
     }
     const r = sql(rol, sub, `select to_jsonb(public.${mr[1]}(${params.join(", ")}))::text;`, vars);

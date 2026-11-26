@@ -59,3 +59,9 @@ h2.adm-h2{display:block}
 .adm-padrinos .inactivo{text-decoration:line-through;color:var(--tinta-suave)}
 .adm-toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);transform:translate(-50%,20px);opacity:0;background:var(--tinta);color:var(--crema)!important;padding:.6em 1.1em;border-radius:999px;transition:opacity .25s,transform .25s;pointer-events:none;z-index:50;max-width:calc(100vw - 32px)}
 .adm-toast.visible{opacity:1;transform:translate(-50%,0)}
+
+.adm-form{display:grid;gap:8px;max-width:620px;margin-top:8px}
+.adm-check{display:flex;gap:10px;align-items:center;min-height:44px}
+.adm-check input{width:22px;height:22px;accent-color:var(--rojo)}
+.adm-dup{color:#8f1616;font-weight:600}
+.adm-acc{white-space:nowrap}

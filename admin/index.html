@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="version-recursos" content="202611260450">
+<meta name="version-recursos" content="202611260510">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Panel de confirmaciones · XXIV Promoción</title>
 <meta name="robots" content="noindex,nofollow,noarchive">
@@ -11,8 +11,8 @@
 <meta name="supported-color-schemes" content="light">
 <meta name="darkreader-lock">
 <link rel="icon" href="../assets/logos/promocion-xxiv-560.jpg" type="image/jpeg">
-<link rel="stylesheet" href="../css/estilos.css?v=202611260450">
-<link rel="stylesheet" href="../css/admin.css?v=202611260450">
+<link rel="stylesheet" href="../css/estilos.css?v=202611260510">
+<link rel="stylesheet" href="../css/admin.css?v=202611260510">
 </head>
 <body class="admin">
 <main class="envoltura">
@@ -80,6 +80,43 @@
       </form>
     </details>
 
+    <details class="adm-tarjeta">
+      <summary><h2 class="adm-h2">Dedicatorias · «Palabras que nos acompañan»</h2></summary>
+      <p class="nota" id="mod-aviso"></p>
+      <section class="adm-indicadores" id="dd-indicadores" aria-label="Indicadores de dedicatorias"></section>
+      <p class="nota">Las dedicatorias entran como «Pendiente». Solo las aprobadas se publican en el libro. El teléfono es privado y solo se muestra aquí.</p>
+      <div class="adm-filtros">
+        <select class="campo" id="dd-f-estado"><option value="">Cualquier estado</option><option value="pendiente">Pendiente</option><option value="aprobado">Aprobado</option><option value="rechazado">Rechazado</option><option value="oculto">Oculto</option></select>
+        <select class="campo" id="dd-f-dest"><option value="">Todos los destinatarios</option></select>
+        <input class="campo" id="dd-f-fecha" type="date" aria-label="Fecha de recepción">
+        <button class="btn" type="button" id="dd-exportar">Exportar aprobadas (CSV)</button>
+      </div>
+      <div class="adm-tabla-caja"><table class="adm-tabla" id="dd-tabla"></table></div>
+    </details>
+
+    <details class="adm-tarjeta">
+      <summary><h2 class="adm-h2">Aportes voluntarios y verificación antispam</h2></summary>
+      <p class="nota">Los datos de Pago Móvil se guardan solo en la base de datos (no en GitHub). Publíquelos únicamente con autorización de la titular.</p>
+      <form id="form-aportes" class="adm-form">
+        <label class="adm-check"><input type="checkbox" id="ap-activo"> Mostrar la sección «Aportes voluntarios» al público</label>
+        <input class="campo" id="ap-banco" placeholder="Banco">
+        <input class="campo" id="ap-codigo" placeholder="Código bancario">
+        <input class="campo" id="ap-titular" placeholder="Titular">
+        <input class="campo" id="ap-cedula" placeholder="Cédula de identidad">
+        <input class="campo" id="ap-telefono" placeholder="Teléfono">
+        <textarea class="campo" id="ap-intro" rows="3" placeholder="Mensaje introductorio (opcional; si se deja vacío se usa el texto estándar)"></textarea>
+        <input class="campo" id="ap-gracias" placeholder="Mensaje de agradecimiento (opcional)">
+        <button class="btn btn-primario" type="submit">Guardar aportes</button>
+      </form>
+      <h3>Cloudflare Turnstile (gratuito)</h3>
+      <p class="nota" id="ts-estado"></p>
+      <form id="form-turnstile" class="adm-form">
+        <input class="campo" id="ts-sitio" placeholder="Clave de sitio (pública)" autocomplete="off">
+        <input class="campo" id="ts-secreto" type="password" placeholder="Clave secreta (solo se guarda en el servidor; déjela vacía para no cambiarla)" autocomplete="off">
+        <button class="btn btn-primario" type="submit">Guardar Turnstile</button>
+      </form>
+    </details>
+
     <details class="adm-tarjeta peligro">
       <summary><h2 class="adm-h2">Después del evento</h2></summary>
       <p class="nota">Exporte primero el CSV. Esta acción elimina todos los registros personales y confirmaciones (conserva el listado de padrinos y las actividades). Escriba <b>ELIMINAR TODO</b> para confirmar.</p>
@@ -101,8 +138,8 @@
 </dialog>
 
 <p class="nota adm-toast" id="toast" role="status" aria-live="polite"></p>
-<script src="../js/config.js?v=202611260450"></script>
-<script src="../js/metricas.js?v=202611260450"></script>
-<script src="../js/admin.js?v=202611260450"></script>
+<script src="../js/config.js?v=202611260510"></script>
+<script src="../js/metricas.js?v=202611260510"></script>
+<script src="../js/admin.js?v=202611260510"></script>
 </body>
 </html>

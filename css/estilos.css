@@ -640,3 +640,54 @@ body{background-image:linear-gradient(#f4e6d1 0,#f4e6d1 55%,#efdfc6 100%);backgr
 .campo-clave{display:flex;gap:8px;align-items:stretch}.campo-clave .campo{flex:1;min-width:0}
 #form-codigo{display:flex;flex-direction:column;gap:8px;width:100%}
 @media (min-width:640px){.accesos{display:grid;grid-template-columns:1fr 1fr}.accesos .acceso:last-child:nth-child(odd){grid-column:1 / -1}}
+
+/* ---------- Dedicatorias y aportes voluntarios (v2.10) ---------- */
+@font-face{font-family:"Caveat";font-style:normal;font-weight:500;font-display:swap;src:url("../assets/fonts/Caveat-500.woff2") format("woff2")}
+@font-face{font-family:"Caveat";font-style:normal;font-weight:700;font-display:swap;src:url("../assets/fonts/Caveat-700.woff2") format("woff2")}
+:root{--f-mano:"Caveat","Segoe Print","Bradley Hand",cursive}
+.mas-secciones,.mas-bienvenida{display:flex;flex-wrap:wrap;justify-content:center;gap:2px 10px;margin:6px 0 0}
+.mas-bienvenida{margin-top:10px}
+.cita-libro{font-family:var(--f-mano);font-size:1.45rem;font-weight:500;color:var(--tinta)!important;line-height:1.25}
+.dedic-grid{display:grid;gap:18px;align-items:start}
+@media (min-width:900px){.dedic-grid{grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:28px}.dd-previa{position:sticky;top:84px}}
+.papel,.nota-papel{background:#fbf2e1 radial-gradient(circle at 20% 15%,rgba(255,255,255,.55),transparent 55%),radial-gradient(circle at 85% 90%,rgba(185,28,28,.04),transparent 50%);border:1px solid rgba(35,27,21,.22);border-radius:6px 14px 8px 12px;box-shadow:0 10px 24px -16px rgba(35,27,21,.55),inset 0 0 0 5px rgba(244,230,209,.7);color:var(--tinta)}
+.papel{display:flex;flex-direction:column;gap:10px;padding:20px 18px}
+.papel-pregunta{font-family:var(--f-display);font-weight:700;font-size:1.2rem;line-height:1.25;margin:0}
+.dd-dest{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.dd-radio{display:flex;align-items:center;gap:10px;min-height:44px;font-size:1.05rem;cursor:pointer}
+.dd-radio input{width:22px;height:22px;accent-color:var(--rojo)}
+.manuscrito{font-family:var(--f-mano);font-weight:500;font-size:1.45rem;line-height:1.3}
+.campo.lineas{line-height:2rem;padding-top:.2rem;background:#fffaf0 repeating-linear-gradient(transparent,transparent calc(2rem - 1px),rgba(35,27,21,.22) 2rem);background-attachment:local;resize:vertical;min-height:12rem}
+.dd-cont{align-self:flex-end;font-size:.82rem;color:var(--tinta-suave);margin-top:-6px}
+.dd-stickers{border:0;margin:0;padding:0}
+.dd-sticker-fila{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:6px}
+@media (max-width:420px){.dd-sticker-fila{grid-template-columns:repeat(3,1fr)}}
+.sticker{display:flex;align-items:center;justify-content:center;min-height:56px;border:1.5px solid rgba(35,27,21,.28);border-radius:12px;background:#fffaf2;cursor:pointer;padding:4px}
+.sticker[aria-pressed="true"]{border-color:var(--rojo);background:#f7e3d0;box-shadow:inset 0 0 0 1.5px var(--rojo)}
+.sticker:focus-visible{outline:3px solid var(--rojo);outline-offset:2px}
+.sticker-img{display:inline-block}.sticker-img svg{width:100%;height:100%;display:block}
+.trampa{position:absolute!important;left:-9999px!important;width:1px;height:1px;opacity:0}
+.dd-turnstile{min-height:0}
+.nota-papel{padding:18px 18px 14px;display:flex;flex-direction:column;gap:6px}
+.np-para{margin:0;font-size:.95rem;color:var(--tinta-suave)}
+.np-msg{margin:0;font-family:var(--f-mano);font-weight:500;font-size:1.6rem;line-height:1.3;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--tinta)}
+.np-vacio{color:#594638;opacity:.9}
+.np-stickers{margin:0;display:flex;gap:8px}
+.np-firma{margin:2px 0 0;font-family:var(--f-mano);font-weight:700;font-size:1.5rem;text-align:right;color:var(--rojo-osc)}
+.np-fecha{margin:0;font-size:.8rem;color:var(--tinta-suave);text-align:right}
+.dd-gracias{text-align:center;padding:26px 16px;border:1px dashed rgba(35,27,21,.3);border-radius:12px}
+.dd-gracias h3{font-family:var(--f-display);margin:0 0 6px}
+.libro-tit{font-family:var(--f-display);margin:26px 0 10px}
+.libro-lista{list-style:none;margin:0;padding:0;display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr))}
+.libro-vacio{color:var(--tinta-suave);list-style:none}
+.pm-tarjeta{background:#fbf2e1;border:1.5px solid var(--rojo);border-radius:14px;padding:20px 18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 10px 24px -16px rgba(35,27,21,.55);max-width:560px}
+.pm-cab{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;border-bottom:1px solid var(--linea);padding-bottom:8px}
+.pm-cab b{font-family:var(--f-display);font-size:1.4rem;color:var(--rojo-osc)}.pm-cab span{font-size:.88rem;color:var(--tinta-suave)}
+.pm-datos{margin:0;display:grid;gap:4px}
+.pm-fila{display:grid;grid-template-columns:1fr auto;column-gap:10px;align-items:center;padding:6px 0;border-bottom:1px dotted var(--linea)}
+.pm-fila dt{grid-column:1;font-size:.8rem;text-transform:uppercase;letter-spacing:.12em;color:var(--tinta-suave)}
+.pm-fila dd{grid-column:1;margin:0;font-family:var(--f-display);font-size:1.2rem;font-weight:600;overflow-wrap:anywhere}
+.pm-fila .pm-copiar{grid-column:2;grid-row:1 / span 2;min-height:44px;padding:0 14px}
+.pm-copiado{min-height:1.3em;margin:0;text-align:center;font-weight:600;color:var(--rojo-osc)}
+.pm-gracias{margin:0;text-align:center;font-family:var(--f-mano);font-size:1.5rem;font-weight:500}
+@media (min-width:900px){.nav-superior .nav-extra{font-size:.95em}}

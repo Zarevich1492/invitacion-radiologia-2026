@@ -47,6 +47,10 @@
     acceso: async (grupo, codigo) => { const r = await rpc("acceso_validar", { p_grupo: grupo, p_codigo: codigo || null }, 1); if (r && r.ok) guardarSesion({ sesion: r.sesion, grupo: r.grupo }); return r; },
     estadoSesion: () => { const x = leerSesion(); return x ? rpc("acceso_estado", { p_sesion: x.sesion }, 1) : Promise.resolve({ ok: false }); },
     listaNombres: () => rpc("lista_nombres", { p_sesion: sesionActual() }, 1),
+    dedicConfig: () => rpc("dedicatorias_config", {}, 1),
+    dedicPublicas: () => rpc("dedicatorias_publicas", {}, 1),
+    aportesPublicos: () => rpc("aportes_publicos", {}, 1),
+    dedicEnviar: (p) => rpc("dedicatoria_enviar", { p_destinatario: p.destinatario, p_mensaje: p.mensaje, p_autor: p.autor, p_telefono: p.telefono, p_stickers: p.stickers || [], p_turnstile: p.turnstile, p_trampa: p.trampa || null }, 0),
     sesion: leerSesion, cerrarSesion: () => guardarSesion(null),
     // Un token por identidad en este dispositivo (permite modificar sin duplicar)
     tokenDe: (clave) => leerTokens()[clave] || null,

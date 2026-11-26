@@ -129,6 +129,12 @@
       mostrarPaso("graduando");
     } else mostrarAcceso(g);
   }
+  // Dedicatorias y aportes: públicos, sin código. El visitante ve la tarjeta general y la sección elegida.
+  document.querySelectorAll("[data-visitante]").forEach((b) => b.addEventListener("click", async () => {
+    const v = b.dataset.visitante;
+    location.hash = v;
+    await entrar({ categoria: "otro", nombre: "", visitante: true });
+  }));
   $("#lista-graduandos").addEventListener("click", (e) => {
     const b = e.target.closest("[data-graduando]"); if (!b) return;
     const g = EV.graduandos_lista.find((x) => x.id === b.dataset.graduando);
@@ -211,7 +217,7 @@
 
   /* ---------- Escena 2 en adelante ---------- */
   async function entrar(id, vistaServidor) {
-    ID = id; guardarID(id);
+    ID = id; if (!id.visitante) guardarID(id);
     if (vistaServidor) servidor = vistaServidor;
     else {
       servidor = null;
@@ -266,7 +272,7 @@
   /* ---------- Vistas: Inicio · Programa · Confirmar · Mi pase · Mi listón ----------
      Navegación con el fragmento (#programa, #liston, …): el botón Atrás funciona y se puede entrar
      directamente a un apartado. El fragmento #t=… (enlace individual) se trata aparte, al inicio. */
-  const VISTAS = ["invitacion", "programa", "confirmar", "pase", "liston"];
+  const VISTAS = ["invitacion", "programa", "confirmar", "pase", "liston", "dedicatorias", "aportes"];
   let vistaActual = null;
   const vistaDeHash = () => { const h = location.hash.slice(1); if (h === "inicio") return "invitacion"; return VISTAS.includes(h) ? h : null; };
   const esGraduando = () => ID && ID.categoria === "graduando";
@@ -274,8 +280,8 @@
   const esOtro = () => ID && ID.categoria === "otro";
   // Navegación por categoría. «Otros»: solo Inicio y Programa hasta que la invitación sea autorizada por la organización.
   const permitida = (v) => {
-    if (esGraduando()) return v === "invitacion" || v === "programa" || v === "liston";
-    if (v === "invitacion" || v === "programa") return true;
+    if (esGraduando()) return v === "invitacion" || v === "programa" || v === "liston" || v === "dedicatorias" || v === "aportes";
+    if (v === "invitacion" || v === "programa" || v === "dedicatorias" || v === "aportes") return true;   // públicas para todos
     if (v === "liston") return tieneListon();
     if (esOtro() && !servidor) return false;
     return v === "confirmar" || v === "pase";
@@ -297,6 +303,8 @@
     window.scrollTo(0, 0);
     if (v === "invitacion" && !esGraduando()) requestAnimationFrame(() => window.Tarjeta.medir());
     if (v === "pase" && !esGraduando()) prepararPase();
+    if (v === "dedicatorias" && window.Dedicatorias) window.Dedicatorias.abrir();
+    if (v === "aportes" && window.Dedicatorias) window.Dedicatorias.abrirAportes();
     if (foco) {
       const sel = v === "invitacion" && esGraduando() ? "#esp-nombre" : `section[data-vista="${v}"] h1, section[data-vista="${v}"] h2`;
       const t = document.querySelector(sel);

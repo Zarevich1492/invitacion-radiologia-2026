@@ -13,9 +13,12 @@ psql -U postgres -q -c "drop database if exists invitacion_e2e" -c "create datab
 psql -U postgres -q -d invitacion_e2e -v ON_ERROR_STOP=1 -c "create schema auth; create function auth.uid() returns uuid language sql stable as \$\$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid \$\$; grant usage on schema auth to anon, authenticated; create schema extensions; grant usage on schema extensions to anon, authenticated;"
 psql -U postgres -q -d invitacion_e2e -v ON_ERROR_STOP=1 -f supabase/esquema.sql >/dev/null 2>&1
 psql -U postgres -q -d invitacion_e2e -v ON_ERROR_STOP=1 -f supabase/acceso.sql >/dev/null
+psql -U postgres -q -d invitacion_e2e -v ON_ERROR_STOP=1 -f supabase/dedicatorias.sql >/dev/null 2>&1
 psql -U postgres -q -d invitacion_e2e -v ON_ERROR_STOP=1 -f supabase/semilla.sql >/dev/null
 # Códigos SOLO de prueba (la base de producción recibe los suyos del organizador; nunca se guardan en el repositorio)
 for g in padrinos docentes residentes especialistas; do psql -U postgres -q -d invitacion_e2e -c "select public.admin_definir_codigo('$g', 'codigo-e2e-$g')" >/dev/null; done
+# Dedicatorias/aportes SOLO de prueba: claves ficticias, doble de prueba de Turnstile y datos de Pago Móvil ficticios
+psql -U postgres -q -d invitacion_e2e -c "select public.admin_definir_turnstile('SITIO-PRUEBA','SECRETO-PRUEBA')" -c "create or replace function public._turnstile_verificar(p_token text, p_ip text) returns boolean language sql as \$f\$ select p_token = 'TOKEN-VALIDO-PRUEBA' \$f\$" -c "select public.admin_definir_aportes('{\"activo\":true,\"banco\":\"Banco de prueba\",\"codigo\":\"0000\",\"titular\":\"Titular de Prueba\",\"cedula\":\"1\",\"telefono\":\"04120000000\"}')" >/dev/null
 psql -U postgres -q -d invitacion_e2e -c "insert into public.administradores(user_id,email) values ('11111111-1111-1111-1111-111111111111','organizador@prueba.local')"
 (python3 -m http.server 8765 --bind 127.0.0.1 >/dev/null 2>&1 &)
 node pruebas/servidor_prueba.js 8787 invitacion_e2e & API=$!

@@ -21,7 +21,7 @@ const BASE = process.argv[2] || "http://127.0.0.1:8765/";
     (await medir(p, "#bienvenida")).forEach((r) => registrar(et, "bienvenida-docentes", r));
     await p.click("#btn-volver-lista"); await p.waitForTimeout(300);
     await entrarGrupo(p, "padrinos"); await p.click('[data-padrino="falcon-analy"]'); await p.waitForTimeout(1500);
-    for (const v of ["invitacion", "programa", "confirmar", "pase", "liston"]) {
+    for (const v of ["invitacion", "programa", "confirmar", "pase", "liston", "dedicatorias", "aportes"]) {
       await p.evaluate((x) => { location.hash = x; }, v); await p.waitForTimeout(600);
       (await medir(p, `section[data-vista="${v}"], .barra, .nav-inferior`)).forEach((r) => registrar(et, v, r));
     }
