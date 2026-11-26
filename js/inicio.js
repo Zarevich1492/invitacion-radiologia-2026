@@ -150,7 +150,7 @@
   const ACCESOS = {
     docentes: { pregunta: "Familia radiológica", opciones: null, categoria: "docente" },   // una sola comunidad: sin subdivisiones (código interno «docente»)
     residentes: { pregunta: "Residentes R1 y R2", opciones: [["r1", "Residente de primer año", "R1 · Postgrado de Radiología"], ["r2", "Residente de segundo año", "R2 · Postgrado de Radiología"]] },
-    otros: { pregunta: "Otros invitados", opciones: null, categoria: "otro" },
+    otros: { pregunta: "Invitados especiales", opciones: null, categoria: "otro" },
   };
   function mostrarAcceso(id) {
     const a = ACCESOS[id]; categoriaElegida = null;
@@ -460,7 +460,7 @@
     if (!listonesActivos()) return null;
     if (id.categoria === "graduando") return id.graduandoId;
     if (id.categoria === "padrino" && EV.padrinos.some((p) => p.id === id.padrinoId)) return id.padrinoId;
-    return null;   // docentes, egresados, R1, R2 y otros invitados no tienen listón
+    return null;   // docentes, egresados, R1, R2 y invitados especiales no tienen listón
   }
   function pintarListon(id) {
     const lid = listonDe(id), grad = id.categoria === "graduando";

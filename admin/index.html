@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="version-recursos" content="202611261257">
+<meta name="version-recursos" content="202611261330">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Panel de confirmaciones · XXIV Promoción</title>
 <meta name="robots" content="noindex,nofollow,noarchive">
@@ -11,8 +11,8 @@
 <meta name="supported-color-schemes" content="light">
 <meta name="darkreader-lock">
 <link rel="icon" href="../assets/logos/promocion-xxiv-560.jpg" type="image/jpeg">
-<link rel="stylesheet" href="../css/estilos.css?v=202611261257">
-<link rel="stylesheet" href="../css/admin.css?v=202611261257">
+<link rel="stylesheet" href="../css/estilos.css?v=202611261330">
+<link rel="stylesheet" href="../css/admin.css?v=202611261330">
 </head>
 <body class="admin">
 <main class="envoltura">
@@ -46,7 +46,7 @@
     <h2 class="adm-h2">Registros</h2>
     <div class="adm-filtros">
       <input class="campo" id="f-buscar" type="search" placeholder="Buscar por nombre">
-      <select class="campo" id="f-cat"><option value="">Todas las categorías</option><option value="padrino">Padrinos y madrinas</option><option value="familia">Familia radiológica</option><option value="r1">R1</option><option value="r2">R2</option><option value="otro">Otros invitados</option></select>
+      <select class="campo" id="f-cat"><option value="">Todas las categorías</option><option value="padrino">Padrinos y madrinas</option><option value="familia">Familia radiológica</option><option value="r1">R1</option><option value="r2">R2</option><option value="otro">Invitados especiales</option></select>
       <select class="campo" id="f-act"><option value="">Cualquier actividad</option></select>
       <select class="campo" id="f-estado"><option value="">Cualquier estado</option><option value="asistira">Asistirá</option><option value="no_asistira">No asistirá</option><option value="por_confirmar">Por confirmar</option><option value="sin_responder">Sin responder</option><option value="no_aplica">No aplica</option></select>
       <button class="btn" type="button" id="exportar">Exportar CSV (Excel)</button>
@@ -72,25 +72,25 @@
 
     <details class="adm-tarjeta">
       <summary><h2 class="adm-h2">Enlaces individuales</h2></summary>
-      <p class="nota">Cree un registro para un residente u otro invitado y genere su enlace personal. Para padrinos, use el botón «Enlace» de su fila. Las respuestas enviadas desde un enlace individual quedan como verificadas. Cada enlace se muestra una sola vez: generar otro invalida el anterior.</p>
+      <p class="nota">Cree un registro para un residente u invitado especial y genere su enlace personal. Para padrinos, use el botón «Enlace» de su fila. Las respuestas enviadas desde un enlace individual quedan como verificadas. Cada enlace se muestra una sola vez: generar otro invalida el anterior.</p>
       <form id="form-invitado" class="adm-fila">
         <input class="campo" id="ni-nombre" placeholder="Nombre y apellido" required>
-        <select class="campo" id="ni-cat"><option value="docente">Familia radiológica</option><option value="r1">R1</option><option value="r2">R2</option><option value="otro">Otro invitado</option></select>
+        <select class="campo" id="ni-cat"><option value="docente">Familia radiológica</option><option value="r1">R1</option><option value="r2">R2</option><option value="otro">Invitado especial</option></select>
         <button class="btn" type="submit">Crear y generar enlace</button>
       </form>
     </details>
 
     <details class="adm-tarjeta" id="seg">
       <summary><h2 class="adm-h2">Seguridad y accesos</h2></summary>
-      <p class="nota">Cambiar una contraseña cierra las sesiones abiertas de esa categoría. «Otros invitados» es de acceso libre. Mínimo 8 caracteres; las contraseñas se guardan solo como hash. La autenticación del panel es independiente.</p>
+      <p class="nota">Cambiar una contraseña cierra las sesiones abiertas de esa categoría. «Invitados especiales» es de acceso libre. Mínimo 8 caracteres; las contraseñas se guardan solo como hash. La autenticación del panel es independiente.</p>
       <p class="nota" id="seg-estado" role="status"></p>
       <div class="ci-codigos" id="seg-codigos"></div>
       <p><button class="btn" type="button" id="seg-revocar-todo">Revocar todas las sesiones de invitados</button></p>
     </details>
 
     <details class="adm-tarjeta" id="solic">
-      <summary><h2 class="adm-h2">Solicitudes de invitación (Otros invitados)</h2></summary>
-      <p class="nota">Aprobar crea el registro «Otro invitado»; luego genere su enlace y autorice sus actividades en el Centro de invitaciones. Rechazar no crea nada. El teléfono es privado.</p>
+      <summary><h2 class="adm-h2">Solicitudes de invitación (Invitados especiales)</h2></summary>
+      <p class="nota">Aprobar crea el registro «Invitado especial»; luego genere su enlace y autorice sus actividades en el Centro de invitaciones. Rechazar no crea nada. El teléfono es privado.</p>
       <p class="nota" id="solic-resumen" role="status"></p>
       <div class="adm-tabla-caja"><table class="adm-tabla" id="solic-tabla"></table></div>
     </details>
@@ -102,7 +102,7 @@
       <div class="ci-codigos" id="ci-codigos"></div>
       <div class="adm-filtros">
         <input class="campo" id="ci-buscar" type="search" placeholder="Buscar destinatario" aria-label="Buscar destinatario">
-        <select class="campo" id="ci-cat" aria-label="Categoría"><option value="">Todas las categorías</option><option value="padrino">Padrinos y madrinas</option><option value="familia">Familia radiológica</option><option value="r1">R1</option><option value="r2">R2</option><option value="otro">Otros invitados</option></select>
+        <select class="campo" id="ci-cat" aria-label="Categoría"><option value="">Todas las categorías</option><option value="padrino">Padrinos y madrinas</option><option value="familia">Familia radiológica</option><option value="r1">R1</option><option value="r2">R2</option><option value="otro">Invitados especiales</option></select>
         <select class="campo" id="ci-estado" aria-label="Estado de distribución"><option value="">Cualquier estado</option><option value="sin">Sin enlace</option><option value="vigente">Enlace vigente</option><option value="enviado">Enviado</option></select>
         <label class="adm-check"><input type="checkbox" id="ci-todos"> Seleccionar todos (los visibles)</label>
         <span class="nota" id="ci-n" role="status"></span>
@@ -198,8 +198,8 @@
 </dialog>
 
 <p class="nota adm-toast" id="toast" role="status" aria-live="polite"></p>
-<script src="../js/config.js?v=202611261257"></script>
-<script src="../js/metricas.js?v=202611261257"></script>
-<script src="../js/admin.js?v=202611261257"></script>
+<script src="../js/config.js?v=202611261330"></script>
+<script src="../js/metricas.js?v=202611261330"></script>
+<script src="../js/admin.js?v=202611261330"></script>
 </body>
 </html>

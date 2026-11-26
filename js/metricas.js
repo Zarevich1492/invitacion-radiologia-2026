@@ -2,7 +2,7 @@
    Reglas:
    · Cada padrino activo cuenta como UNA persona. Su respuesta efectiva es la del registro oficial
      (enlace individual) si existe; si no, la más reciente enviada desde el enlace general.
-   · Cada registro de R1, R2 u otro invitado es una persona.
+   · Cada registro de R1, R2 u invitado especial es una persona.
    · Una actividad no habilitada para la persona es «no_aplica» (no cuenta como pendiente).
    · Los graduandos (7) no son invitados: solo se suman al «total previsto» de cada actividad.  */
 (function (raiz) {

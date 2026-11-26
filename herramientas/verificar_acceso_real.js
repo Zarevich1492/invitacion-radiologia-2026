@@ -36,7 +36,7 @@ const denegado = (r) => r.s === 401 || r.s === 403 || r.s === 404 || (r.s >= 400
   const cruz = CODIGOS.docentes ? await rpc("acceso_validar", { p_grupo: "padrinos", p_codigo: CODIGOS.docentes }) : null;
   if (cruz) ok("El código de docentes NO abre padrinos", cruz.j && cruz.j.ok === false);
   const otros = await rpc("acceso_validar", { p_grupo: "otros", p_codigo: null });
-  ok("«Otros invitados»: acceso libre sin contraseña", otros.j && otros.j.ok === true);
+  ok("«Invitados especiales»: acceso libre sin contraseña", otros.j && otros.j.ok === true);
   sesiones.otros = otros.j && otros.j.sesion;
 
   // 3) Permisos por categoría (se prueban rechazos: no se escribe nada)

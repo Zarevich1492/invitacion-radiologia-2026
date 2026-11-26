@@ -48,7 +48,7 @@ async function entrar(ctx, perfil) {
     { nombre: "Especialistas", grupo: "especialistas", identificar: async (p) => { await p.waitForSelector("#lista-graduandos [data-graduando]"); await p.click('[data-graduando="arrieta-jorge"]'); } },
     { nombre: "Familia radiológica", grupo: "docentes", identificar: async (p) => { await p.waitForSelector("#form-nombre:not([hidden])"); await p.fill("#campo-nombre", "Prueba Visual"); await p.click("#form-nombre button[type=submit]"); } },
     { nombre: "Residentes", grupo: "residentes", identificar: async (p) => { await p.waitForSelector("#opciones-cat .opcion-cat"); await p.click('[data-cat="r1"]'); await p.fill("#campo-nombre", "Prueba Visual"); await p.click("#form-nombre button[type=submit]"); } },
-    { nombre: "Otros invitados", grupo: "otros", identificar: async (p) => { await p.waitForSelector("#form-nombre:not([hidden])"); await p.fill("#campo-nombre", "Prueba Visual"); await p.click("#form-nombre button[type=submit]"); } },
+    { nombre: "Invitados especiales", grupo: "otros", identificar: async (p) => { await p.waitForSelector("#form-nombre:not([hidden])"); await p.fill("#campo-nombre", "Prueba Visual"); await p.click("#form-nombre button[type=submit]"); } },
   ];
   for (const [et, vp, mov] of [["móvil", { width: 390, height: 844 }, true], ["escritorio", { width: 1366, height: 768 }, false]]) {
     const ctx = await b.newContext({ viewport: vp, isMobile: mov, hasTouch: mov });

@@ -80,7 +80,7 @@ async function responder(p, resp) {
 
   // Pantalla inicial: cinco accesos, Especialistas destacado en rojo, candado en los cuatro restringidos
   const accesos = await p.$$eval(".acceso", (a) => a.filter((x) => !x.hidden && x.getBoundingClientRect().width > 0).map((x) => x.querySelector("b").textContent.replace(" (acceso con código)", "").trim() + "·" + x.querySelector("span:not(.sr-solo)").textContent.trim()));
-  ok("Bienvenida: cinco accesos con sus subtítulos", accesos.join("|") === "Padrinos y madrinas·Invitados de honor|Familia radiológica·Quienes hacen posible nuestra historia|Residentes R1 y R2·Compañeros del posgrado|Otros invitados·Familiares, amigos y colegas|Especialistas 2026·Integrantes de la XXIV Promoción", accesos.join("|"));
+  ok("Bienvenida: cinco accesos con sus subtítulos", accesos.join("|") === "Padrinos y madrinas·Invitados de honor|Familia radiológica·Quienes hacen posible nuestra historia|Residentes R1 y R2·Compañeros del posgrado|Invitados especiales·Familiares, amigos y colegas|Especialistas 2026·Integrantes de la XXIV Promoción", accesos.join("|"));
   ok("Bienvenida: candado discreto en las cuatro categorías restringidas (no en «Otros»)", (await p.$$eval(".acceso .candado", (c) => c.length)) === 4 && (await p.$$eval('[data-acceso="otros"] .candado', (c) => c.length)) === 0);
   ok("Bienvenida: «Especialistas 2026» con fondo rojo institucional", (await p.$eval("#btn-integrante", (b) => getComputedStyle(b).backgroundColor)) === "rgb(185, 28, 28)");
   ok("Bienvenida: frase institucional intacta", (await p.textContent("#bienvenida-titulo")).replace(/\s+/g, " ").trim() === "Hay momentos que merecen ser compartidos");
@@ -248,12 +248,12 @@ async function responder(p, resp) {
   const dlb = p.waitForEvent("download"); await p.click("#pase-png"); const db = await dlb; await db.saveAs(`${OUT}/11-pase-descargado-R1.png`);
   ok("R1: calendario sin recepción", (await p.$$eval("#cal-ics a", (a) => a.map((x) => x.getAttribute("href")).join(","))) === "assets/calendario/jornada-2-actividades.ics,assets/calendario/clase.ics,assets/calendario/caravana.ics");
 
-  // Ruta B: otro invitado
+  // Ruta B: invitado especial
   p = await nuevaPagina(ctx, errores, externos);
   await rutaB(p, "otro", "Carmen Rivas");
-  ok("Otro invitado: variante C", (await p.evaluate(() => window.__flujo.identidad.variante)) === "C");
-  ok("Otro invitado: tuteo en el cierre", (await p.textContent("#saludo-texto")).includes("tu presencia"));
-  ok("Otro invitado: sin «Confirmar asistencia» ni «Mi pase» hasta ser autorizado", (await p.isHidden('.nav-inferior [data-ir="confirmar"]')) && (await p.isHidden('.nav-inferior [data-ir="pase"]')));
+  ok("Invitado especial: variante C", (await p.evaluate(() => window.__flujo.identidad.variante)) === "C");
+  ok("Invitado especial: tuteo en el cierre", (await p.textContent("#saludo-texto")).includes("tu presencia"));
+  ok("Invitado especial: sin «Confirmar asistencia» ni «Mi pase» hasta ser autorizado", (await p.isHidden('.nav-inferior [data-ir="confirmar"]')) && (await p.isHidden('.nav-inferior [data-ir="pase"]')));
   await p.screenshot({ path: `${OUT}/12-otro-invitado.png` });
   // Spam: campo trampa (los errores 400/403 que siguen son provocados a propósito y se excluyen)
   const erroresAntes = errores.length;
@@ -401,7 +401,7 @@ async function responder(p, resp) {
   ok("Desde la distancia: sin desplazamiento horizontal en móvil", sw2[0] <= sw2[1], sw2.join(" ≤ "));
   await p.close();
 
-  // ===== «Otros invitados»: cinco funcionalidades de acceso libre, visibles desde Inicio =====
+  // ===== «Invitados especiales»: cinco funcionalidades de acceso libre, visibles desde Inicio =====
   p = await nuevaPagina(ctx, errores, externos);
   await rutaB(p, "otro", "Visitante Otros");
   const ops = await p.$$eval("#otros-tarjetas .op b", (b) => b.map((x) => x.textContent));
@@ -462,7 +462,7 @@ async function responder(p, resp) {
   const provocados = errores.splice(erroresAntes);
   ok("Solo los errores provocados (400 antispam, 403 lectura pública)", provocados.length === 2 && provocados.every((e) => /status of (400|403)/.test(e)), provocados.join(" | "));
 
-  // «Otros invitados»: acceso libre a tarjeta y programa; sin confirmar ni pase hasta ser autorizado
+  // «Invitados especiales»: acceso libre a tarjeta y programa; sin confirmar ni pase hasta ser autorizado
   p = await nuevaPagina(ctx, errores, externos);
   await rutaB(p, "otro", "Visitante Libre");
   const navO = await p.$$eval(".nav-inferior a", (a) => a.filter((x) => !x.hidden && getComputedStyle(x).display !== "none").map((x) => x.textContent.trim()).join("|"));
@@ -485,7 +485,7 @@ async function responder(p, resp) {
   await a.waitForSelector("#panel:not([hidden])", { timeout: 10000 });
   const tiles = await a.$$eval(".adm-tile", (t) => Object.fromEntries(t.map((x) => [x.querySelector("span").textContent, +x.querySelector("b").textContent])));
   ok("Panel: 10 padrinos, 1 respondió, 9 pendientes", tiles["Padrinos y madrinas"] === 10 && tiles["Padrinos que respondieron"] === 1 && tiles["Padrinos pendientes"] === 9, JSON.stringify(tiles));
-  ok("Panel: R1/R2/otros registrados", tiles["R1 registrados"] === 1 && tiles["R2 registrados"] === 0 && tiles["Otros invitados registrados"] === 0, JSON.stringify(tiles));
+  ok("Panel: R1/R2/otros registrados", tiles["R1 registrados"] === 1 && tiles["R2 registrados"] === 0 && tiles["Invitados especiales registrados"] === 0, JSON.stringify(tiles));
   ok("Panel: graduandos fuera de tasas", tiles["Graduandos (anfitriones)"] === 7);
   const acts = await a.$$eval(".adm-act", (x) => x.map((e) => [e.querySelector("h3").textContent, [...e.querySelectorAll("dd")].map((d) => +d.textContent)]));
   const clase = acts.find((x) => x[0] === "Clase magistral")[1];
@@ -575,7 +575,7 @@ async function responder(p, resp) {
   ok("Panel: solicitud con teléfono y «Lo invita» (Dra. Analy Falcón)", /Dra\. Analy Falcón/.test(await a.textContent("#solic-tabla")) && /\+584145550000/.test(await a.textContent("#solic-tabla")));
   await a.click('#solic-tabla [data-ap="1"]'); await a.waitForTimeout(1500);
   await a.selectOption("#ci-cat", "otro");
-  ok("Aprobar: el solicitante aparece en el Centro de invitaciones como Otro invitado", /Familiar Prueba/.test(await a.textContent("#ci-tabla")));
+  ok("Aprobar: el solicitante aparece en el Centro de invitaciones como Invitado especial", /Familiar Prueba/.test(await a.textContent("#ci-tabla")));
   await a.selectOption("#ci-cat", "");
   // ===== Pretarjeta (sobre con sello XXIV) en sesión privada y móvil, también con sesión previa en el navegador =====
   {

@@ -10,7 +10,7 @@
   const csvSeguro = (v) => { const t = String(v ?? ""); return /^[=+\-@\t\r]/.test(t) ? "'" + t : t; };
   const fecha = (v) => (v ? new Date(v).toLocaleString("es-VE", { dateStyle: "short", timeStyle: "short" }) : "—");
   const ETQ = { asistira: "Asistirá", no_asistira: "No asistirá", por_confirmar: "Por confirmar", sin_responder: "Sin responder", no_aplica: "No aplica" };
-  const CAT = { padrino: "Padrino/Madrina", docente: "Familia radiológica", egresado: "Familia radiológica", r1: "R1", r2: "R2", otro: "Otro invitado" };
+  const CAT = { padrino: "Padrino/Madrina", docente: "Familia radiológica", egresado: "Familia radiológica", r1: "R1", r2: "R2", otro: "Invitado especial" };
   const cuadra = (categoria, filtro) => (filtro === "familia" ? categoria === "docente" || categoria === "egresado" : categoria === filtro);   // «Familia radiológica» agrupa docente y egresado
   const ORDEN_CAT = ["padrino", "docente", "egresado", "r1", "r2", "otro"];
   const CLAVE_SESION = "invitacion-ula-2026:admin";
@@ -85,7 +85,7 @@
     const tile = (n, t, s) => `<div class="adm-tile"><b>${n}</b><span>${t}</span>${s ? `<small>${s}</small>` : ""}</div>`;
     $("#indicadores").innerHTML =
       tile(g.padrinos, "Padrinos y madrinas") + tile(g.padrinosRespondieron, "Padrinos que respondieron") + tile(g.padrinosPendientes, "Padrinos pendientes") +
-      tile(g.familia, "Familia radiológica registrada") + tile(g.r1, "R1 registrados") + tile(g.r2, "R2 registrados") + tile(g.otros, "Otros invitados registrados") +
+      tile(g.familia, "Familia radiológica registrada") + tile(g.r1, "R1 registrados") + tile(g.r2, "R2 registrados") + tile(g.otros, "Invitados especiales registrados") +
       tile(g.invitadosUnicos, "Invitados únicos", "10 padrinos + registrados") + tile(g.respuestas, "Respuestas registradas", "personas con al menos una respuesta") +
       tile(g.asistiranTres, "Asistirán a 3 actividades") + tile(g.asistiranDos, "Asistirán a 2") + tile(g.asistiranUna, "Asistirán a 1") +
       tile(g.graduandos, "Graduandos (anfitriones)", "fuera de las tasas de respuesta");
@@ -248,7 +248,7 @@
 
 
   /* ---------- Centro de invitaciones ---------- */
-  const GRUPO_DE = { padrino: ["padrinos", "Padrinos y madrinas"], docente: ["docentes", "Familia radiológica"], egresado: ["docentes", "Familia radiológica"], r1: ["residentes", "Residentes R1 y R2"], r2: ["residentes", "Residentes R1 y R2"], otro: ["otros", "Otros invitados"], graduando: ["especialistas", "Especialistas 2026"] };
+  const GRUPO_DE = { padrino: ["padrinos", "Padrinos y madrinas"], docente: ["docentes", "Familia radiológica"], egresado: ["docentes", "Familia radiológica"], r1: ["residentes", "Residentes R1 y R2"], r2: ["residentes", "Residentes R1 y R2"], otro: ["otros", "Invitados especiales"], graduando: ["especialistas", "Especialistas 2026"] };
   const GRUPOS_COD = [["padrinos", "Padrinos y madrinas"], ["docentes", "Familia radiológica"], ["residentes", "Residentes R1 y R2"], ["especialistas", "Especialistas 2026"]];
   const ACT_NOM = { clase: "Clase magistral", caravana: "Caravana", recepcion: "Recepción" };
   let CODIGOS = {};           // solo en memoria durante la sesión del panel (nunca en almacenamiento)

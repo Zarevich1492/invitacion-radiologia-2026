@@ -1,6 +1,6 @@
 # Invitación virtual · XXIV Promoción de Radiólogos · ULA 2026
 
-Invitación interactiva para padrinos y madrinas, residentes R1/R2 y otros invitados. Incluye:
+Invitación interactiva para padrinos y madrinas, residentes R1/R2 y invitados especiales. Incluye:
 
 - una tarjeta 3D con tres variantes;
 - confirmación de asistencia por actividad;
@@ -48,7 +48,7 @@ La web, el pase y el enlace de Google Calendar leen el JSON directamente. Si cam
 |---|---|---|
 | Padrino o madrina (10 en el listado) | A | Portada y contraportada originales. El interior original lleva la columna de programa recompuesta con las tres actividades |
 | Residente R1 / R2 | B | «Una vocación que nos une» / «Distintas etapas. Una misma vocación.» |
-| Otro invitado | C | «Un momento para compartir» / «Cada etapa que termina abre un nuevo camino.» |
+| Invitado especial | C | «Un momento para compartir» / «Cada etapa que termina abre un nuevo camino.» |
 
 Cómo se compusieron las variantes:
 
@@ -105,7 +105,7 @@ Dirección: `https://zarevich1492.github.io/invitacion-radiologia-2026/admin/`. 
 - Cada respuesta recibe un **token aleatorio de 256 bits**; en la base solo se guarda su hash SHA-256.
   - Con ese token, el mismo dispositivo o el enlace individual pueden modificar la respuesta sin duplicarla.
   - Elegir el nombre de un padrino **no** permite ver ni sobrescribir su registro oficial: crea una respuesta no verificada vinculada a él.
-- Padrinos, familia radiológica, residentes y especialistas ingresan con una contraseña de su categoría (validada en el servidor; solo se guarda su hash). «Otros invitados», las dedicatorias y los aportes son de acceso libre. A los invitados se les pide nombre y, en dedicatorias y solicitudes, un teléfono privado; no hay publicidad ni seguimiento.
+- Padrinos, familia radiológica, residentes y especialistas ingresan con una contraseña de su categoría (validada en el servidor; solo se guarda su hash). «Invitados especiales», las dedicatorias y los aportes son de acceso libre. A los invitados se les pide nombre y, en dedicatorias y solicitudes, un teléfono privado; no hay publicidad ni seguimiento.
 - Los nombres personalizados no aparecen en la URL ni en los metadatos de WhatsApp. El token de los enlaces individuales va en el fragmento `#t=`, que el navegador no envía al servidor, y se retira de la barra de direcciones al abrir.
 - `noindex` evita la indexación, pero no es un control de acceso.
 - **El listado de los 10 padrinos es público**, porque cualquiera que abra el selector lo ve.

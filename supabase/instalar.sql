@@ -870,8 +870,8 @@ grant execute on function public.admin_generar_enlaces(uuid[],boolean), public.a
   public.admin_autorizar(uuid[],text[],text), public.admin_verificar_codigo(text,text), public.admin_bitacora(int) to authenticated;
 notify pgrst, 'reload schema';
 
--- ---------- Solicitudes de invitación («Otros invitados») ----------
--- Una solicitud pendiente NO es una asistencia: solo al aprobarla se crea el registro «Otro invitado» (sin respuestas).
+-- ---------- Solicitudes de invitación («Invitados especiales») ----------
+-- Una solicitud pendiente NO es una asistencia: solo al aprobarla se crea el registro «Invitado especial» (sin respuestas).
 drop function if exists public.solicitar_invitacion(text,text,text,text,text,text,text);
 create table if not exists public.solicitudes (
   id uuid primary key default gen_random_uuid(),
@@ -920,7 +920,7 @@ begin
     'invitado_id', s.invitado_id, 'invita', s.invita_nombre, 'invita_tipo', s.invita_tipo) order by s.creado desc) from public.solicitudes s), '[]');
 end $$;
 
--- Aprobar crea el registro «Otro invitado» (luego se le genera su enlace y se autorizan sus actividades en el centro); rechazar no crea nada.
+-- Aprobar crea el registro «Invitado especial» (luego se le genera su enlace y se autorizan sus actividades en el centro); rechazar no crea nada.
 create or replace function public.admin_solicitud_resolver(p_id uuid, p_aprobar boolean) returns uuid
 language plpgsql volatile security definer set search_path = public as $$
 declare s public.solicitudes; v_inv uuid;
@@ -956,15 +956,15 @@ insert into public.actividades(codigo, orden, titulo, hora_texto, inicio, lugar)
 delete from public.actividades where codigo not in ('clase', 'caravana', 'recepcion');
 insert into public.categorias(codigo, etiqueta) values ('padrino', 'Padrino o madrina de promoción')
   on conflict (codigo) do update set etiqueta = excluded.etiqueta;
-insert into public.categorias(codigo, etiqueta) values ('docente', 'Docente')
+insert into public.categorias(codigo, etiqueta) values ('docente', 'Familia radiológica')
   on conflict (codigo) do update set etiqueta = excluded.etiqueta;
-insert into public.categorias(codigo, etiqueta) values ('egresado', 'Egresado')
+insert into public.categorias(codigo, etiqueta) values ('egresado', 'Familia radiológica')
   on conflict (codigo) do update set etiqueta = excluded.etiqueta;
 insert into public.categorias(codigo, etiqueta) values ('r1', 'Residente de primer año (R1)')
   on conflict (codigo) do update set etiqueta = excluded.etiqueta;
 insert into public.categorias(codigo, etiqueta) values ('r2', 'Residente de segundo año (R2)')
   on conflict (codigo) do update set etiqueta = excluded.etiqueta;
-insert into public.categorias(codigo, etiqueta) values ('otro', 'Otro invitado')
+insert into public.categorias(codigo, etiqueta) values ('otro', 'Invitado especial')
   on conflict (codigo) do update set etiqueta = excluded.etiqueta;
 insert into public.habilitaciones(categoria, actividad, habilitada) values ('padrino', 'clase', true) on conflict (categoria, actividad) do nothing;
 insert into public.habilitaciones(categoria, actividad, habilitada) values ('padrino', 'caravana', true) on conflict (categoria, actividad) do nothing;

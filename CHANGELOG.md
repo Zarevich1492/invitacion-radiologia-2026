@@ -5,6 +5,10 @@ https://zarevich1492.github.io/invitacion-radiologia-2026/ (misma dirección sie
 Reversión: `git revert <commit>` o volver a una etiqueta: `git checkout -B main <etiqueta> && git push -f origin main`
 (solo con autorización expresa).
 
+## v2.16 · «Otros invitados» pasa a «Invitados especiales»
+- Cambio exclusivamente de denominación en bienvenida, menú, tarjetas, formularios, panel (filtros, indicadores, solicitudes, mensajes de acceso y de WhatsApp), documentación y pruebas. Identificadores internos (`otro`, `otros`), enlaces, permisos y registros sin cambios; no requiere migración SQL.
+- Pruebas: aceptación 214, responsive 244.
+
 ## v2.15 · Separación de «Palabras que nos acompañan» y «Desde la distancia»
 - Bajo la tarjeta interactiva (y en bienvenida, programa y espacio de especialistas) solo aparece «Palabras que nos acompañan», con acceso al libro de dedicatorias. Ninguna referencia económica en bienvenida, tarjeta, confirmación, pase ni listones.
 - El menú ofrece «Palabras» y «Desde la distancia» (antes «Aportes»), para todos los perfiles. «Desde la distancia» es una sección independiente a la que solo se llega desde el menú; allí, discretamente, «¿Deseas tener un detalle con la promoción?» (plegado) revela los datos de Pago Móvil y el copiado. Sin botones destacados, ventanas emergentes ni recordatorios. Configuración administrativa de aportes intacta; enlaces, contraseñas y autorizaciones sin cambios.

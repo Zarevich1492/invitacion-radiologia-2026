@@ -128,7 +128,7 @@
     copiar("Pago Móvil\n" + CAMPOS.filter(([k]) => datosPM[k]).map(([k, t]) => `${t}: ${datosPM[k]}`).join("\n"), "Datos de Pago Móvil copiados");
   });
 
-  /* ---------- Solicitar invitación (Otros invitados) ---------- */
+  /* ---------- Solicitar invitación (Invitados especiales) ---------- */
   let EVs = null, cargandoSol = false;
   const MSG_SOL = Object.assign({}, MSG, { invita_invalido: "Indica el nombre de quien te invita.", nombre_invalido: "Escribe tu nombre y apellido." });
   const estadoSol = (t, cls = "") => { const e = $("#sol-estado"); e.textContent = t; e.className = "rsvp-estado" + (cls ? " " + cls : ""); };

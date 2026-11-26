@@ -10,5 +10,5 @@ El teléfono y la identidad del autor **no se verifican**. Sin CAPTCHA, un actor
 
 ## Operación (panel)
 - **Dedicatorias:** aprobar, rechazar, ocultar o eliminar; filtros; teléfono visible solo allí; exportación CSV de las aprobadas.
-- **Solicitudes de invitación:** nombre, teléfono, tipo y nombre de quien invita (obligatorio), invitados asociados por responsable; aprobar crea el registro «Otro invitado» (los pendientes no cuentan como asistencia).
+- **Solicitudes de invitación:** nombre, teléfono, tipo y nombre de quien invita (obligatorio), invitados asociados por responsable; aprobar crea el registro «Invitado especial» (los pendientes no cuentan como asistencia).
 - **Aportes voluntarios:** datos de Pago Móvil, textos y activación (la sección permanece oculta hasta activarla, con autorización de la titular). Los datos no están en el repositorio.

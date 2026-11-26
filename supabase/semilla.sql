@@ -9,15 +9,15 @@ insert into public.actividades(codigo, orden, titulo, hora_texto, inicio, lugar)
 delete from public.actividades where codigo not in ('clase', 'caravana', 'recepcion');
 insert into public.categorias(codigo, etiqueta) values ('padrino', 'Padrino o madrina de promoción')
   on conflict (codigo) do update set etiqueta = excluded.etiqueta;
-insert into public.categorias(codigo, etiqueta) values ('docente', 'Docente')
+insert into public.categorias(codigo, etiqueta) values ('docente', 'Familia radiológica')
   on conflict (codigo) do update set etiqueta = excluded.etiqueta;
-insert into public.categorias(codigo, etiqueta) values ('egresado', 'Egresado')
+insert into public.categorias(codigo, etiqueta) values ('egresado', 'Familia radiológica')
   on conflict (codigo) do update set etiqueta = excluded.etiqueta;
 insert into public.categorias(codigo, etiqueta) values ('r1', 'Residente de primer año (R1)')
   on conflict (codigo) do update set etiqueta = excluded.etiqueta;
 insert into public.categorias(codigo, etiqueta) values ('r2', 'Residente de segundo año (R2)')
   on conflict (codigo) do update set etiqueta = excluded.etiqueta;
-insert into public.categorias(codigo, etiqueta) values ('otro', 'Otro invitado')
+insert into public.categorias(codigo, etiqueta) values ('otro', 'Invitado especial')
   on conflict (codigo) do update set etiqueta = excluded.etiqueta;
 insert into public.habilitaciones(categoria, actividad, habilitada) values ('padrino', 'clase', true) on conflict (categoria, actividad) do nothing;
 insert into public.habilitaciones(categoria, actividad, habilitada) values ('padrino', 'caravana', true) on conflict (categoria, actividad) do nothing;

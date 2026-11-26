@@ -135,8 +135,8 @@ grant execute on function public.admin_generar_enlaces(uuid[],boolean), public.a
   public.admin_autorizar(uuid[],text[],text), public.admin_verificar_codigo(text,text), public.admin_bitacora(int) to authenticated;
 notify pgrst, 'reload schema';
 
--- ---------- Solicitudes de invitación («Otros invitados») ----------
--- Una solicitud pendiente NO es una asistencia: solo al aprobarla se crea el registro «Otro invitado» (sin respuestas).
+-- ---------- Solicitudes de invitación («Invitados especiales») ----------
+-- Una solicitud pendiente NO es una asistencia: solo al aprobarla se crea el registro «Invitado especial» (sin respuestas).
 drop function if exists public.solicitar_invitacion(text,text,text,text,text,text,text);
 create table if not exists public.solicitudes (
   id uuid primary key default gen_random_uuid(),
@@ -185,7 +185,7 @@ begin
     'invitado_id', s.invitado_id, 'invita', s.invita_nombre, 'invita_tipo', s.invita_tipo) order by s.creado desc) from public.solicitudes s), '[]');
 end $$;
 
--- Aprobar crea el registro «Otro invitado» (luego se le genera su enlace y se autorizan sus actividades en el centro); rechazar no crea nada.
+-- Aprobar crea el registro «Invitado especial» (luego se le genera su enlace y se autorizan sus actividades en el centro); rechazar no crea nada.
 create or replace function public.admin_solicitud_resolver(p_id uuid, p_aprobar boolean) returns uuid
 language plpgsql volatile security definer set search_path = public as $$
 declare s public.solicitudes; v_inv uuid;
