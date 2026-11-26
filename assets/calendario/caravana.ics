@@ -15,7 +15,7 @@ END:STANDARD
 END:VTIMEZONE
 BEGIN:VEVENT
 UID:caravana-20261128@invitacion-radiologia-2026
-DTSTAMP:20261125T234001Z
+DTSTAMP:20261126T000050Z
 DTSTART;TZID=America/Caracas:20261128T140000
 SUMMARY:Caravana de graduandos · XXIV Promoción de Radiólogos ULA
 LOCATION:Estacionamiento del Hospital Universitario de Los Andes\, Mérida\

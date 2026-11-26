@@ -72,12 +72,15 @@ const img = (f) => `<img class="base" src="${BASE}originales/${f}">`;
 
 function portada(v) {
   const t = TEXTOS[v].portada;
+  const [l1, l2] = t[2].split(" · ");   // la línea roja se compone en dos líneas para ganar tamaño en la portada vertical
   return `${img("3-portada.png")}
-  <div class="tapar" style="left:0;top:3250px;width:${W}px;height:880px"></div>
+  <div class="tapar" style="left:0;top:3250px;width:${W}px;height:1110px"></div>
   <div class="t bod c" style="top:3290px;font-size:214px;line-height:260px;letter-spacing:-7px">${t[0]}</div>
   <div class="t bod c" style="top:3590px;font-size:214px;line-height:260px;letter-spacing:-7px">${t[1]}</div>
-  <div class="t bod c rojo" style="top:3893px;font-size:158px;line-height:210px;letter-spacing:-4px">${t[2]}</div>`;
-  // La fecha «28 de noviembre de 2026» (y 4161–4338) se conserva del original.
+  <div class="t bod c rojo" style="top:3893px;font-size:170px;line-height:200px;letter-spacing:-4px">${l1}</div>
+  <div class="t bod c rojo" style="top:4093px;font-size:170px;line-height:200px;letter-spacing:-4px">${l2}</div>
+  <div class="mover" style="left:2150px;top:4380px;width:2300px;height:200px"><img src="${BASE}originales/3-portada.png" style="left:-2150px;top:-4150px"></div>`;
+  // La fecha «28 de noviembre de 2026» (píxeles originales, y 4161–4338) se traslada debajo, sin modificarla.
 }
 
 function interior(v, conRecepcion) {

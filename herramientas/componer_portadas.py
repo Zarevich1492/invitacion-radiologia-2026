@@ -25,7 +25,7 @@ ANCHO_UTIL = W - 2 * MARGEN_X       # 2563 px
 # Regiones medidas en la portada original 3-portada.png (idénticas en las variantes B y C)
 REG_LOGOS = (1700, 100, 4500, 560)    # fila ULA | Departamento
 REG_PROMO = (2000, 560, 4200, 3228)   # logotipo de la XXIV Promoción
-REG_TEXTO = (0, 3228, 6250, 4420)     # bloque de textos de portada
+REG_TEXTO = (0, 3228, 6250, 4680)     # bloque de textos de portada
 
 
 def recorte_ajustado(img, reg, pad=24):
@@ -42,36 +42,44 @@ def escalar(img, k):
     return img.resize((round(img.width * k), round(img.height * k)), Image.LANCZOS)
 
 
+MARGEN_V = round(H * 0.075)            # 362 px arriba y abajo
+MARGEN_L = round(W * 0.075)            # 234 px a cada lado
+ANCHO_MAX = W - 2 * MARGEN_L           # 2657 px (85 % del ancho)
+ALTO_UTIL = H - 2 * MARGEN_V           # 4106 px (85 % del alto)
+SEP = 170                              # separación entre bloques
+
+
+def apilar(bloques, destino, crema):
+    """Apila los bloques centrados; el espacio sobrante (si lo hay) se reparte en las separaciones."""
+    total = sum(b.height for b in bloques)
+    sep = max(SEP, (ALTO_UTIL - total) // (len(bloques) - 1)) if len(bloques) > 1 else 0
+    sep = min(sep, 320)
+    alto = total + sep * (len(bloques) - 1)
+    y = MARGEN_V + max(0, round((ALTO_UTIL - alto) * 0.46))
+    lienzo = Image.new("RGB", (W, H), crema); cajas = []
+    for b in bloques:
+        x = (W - b.width) // 2; lienzo.paste(b, (x, y)); cajas.append((x, y, x + b.width, y + b.height)); y += b.height + sep
+    lienzo.save(destino, optimize=True)
+    for (x0, y0, x1, y1) in cajas:
+        assert x0 >= MARGEN_L - 2 and x1 <= W - MARGEN_L + 2 and y0 >= MARGEN_V - 2 and y1 <= H - MARGEN_V + 2, (destino.name, (x0, y0, x1, y1))
+    ocup_v = (cajas[-1][3] - cajas[0][1]) / H
+    ocup_h = max(c[2] - c[0] for c in cajas) / W
+    return cajas, round(100 * ocup_v, 1), round(100 * ocup_h, 1)
+
+
 def componer(origen: Path, destino: Path):
     src = Image.open(origen).convert("RGB")
-    # Logotipos SIEMPRE desde la portada original (píxeles oficiales, idénticos en las tres variantes)
-    orig = Image.open(RAIZ / "originales" / "3-portada.png").convert("RGB")
+    orig = Image.open(RAIZ / "originales" / "3-portada.png").convert("RGB")   # logotipos SIEMPRE del original
     crema = orig.getpixel((20, 20))
-    logos = escalar(recorte_ajustado(orig, REG_LOGOS), ESCALA)
-    promo = escalar(recorte_ajustado(orig, REG_PROMO), ESCALA)
-    texto = recorte_ajustado(src, REG_TEXTO)
-    kt = min(ESCALA, ANCHO_UTIL / texto.width)      # el texto nunca rebasa los márgenes
-    texto = escalar(texto, kt)
-
-    gap1, gap2 = 300, 250
-    total = logos.height + gap1 + promo.height + gap2 + texto.height
-    libre = H - total
-    y = round(libre * 0.46)                           # centrado óptico
-    lienzo = Image.new("RGB", (W, H), crema)
-    cajas = []
-    for el, g in ((logos, gap1), (promo, gap2), (texto, 0)):
-        x = (W - el.width) // 2
-        lienzo.paste(el, (x, y)); cajas.append((x, y, x + el.width, y + el.height))
-        y += el.height + g
-    lienzo.save(destino, optimize=True)
-
-    # Verificaciones: dentro de márgenes, sin recortes
-    for (x0, y0, x1, y1) in cajas:
-        assert x0 >= MARGEN_X - 30 and x1 <= W - MARGEN_X + 30, f"rebasa margen lateral: {(x0, x1)}"
-        assert y0 >= 0.08 * H and y1 <= 0.92 * H, f"rebasa margen vertical: {(y0, y1)}"
-    return {"archivo": destino.name, "escala_logos_promo": ESCALA, "escala_texto": round(kt, 3), "cajas": cajas,
-            "margen_sup_%": round(100 * cajas[0][1] / H, 1), "margen_inf_%": round(100 * (H - cajas[-1][3]) / H, 1),
-            "margen_lat_min_%": round(100 * min(min(c[0], W - c[2]) for c in cajas) / W, 1)}
+    logos_o = recorte_ajustado(orig, REG_LOGOS); promo_o = recorte_ajustado(orig, REG_PROMO); texto_o = recorte_ajustado(src, REG_TEXTO)
+    k_logos = min(0.90, ANCHO_MAX / logos_o.width)
+    k_texto = min(1.0, ANCHO_MAX / texto_o.width)
+    resto = ALTO_UTIL - logos_o.height * k_logos - texto_o.height * k_texto - 2 * SEP
+    k_promo = min(1.0, resto / promo_o.height, ANCHO_MAX / promo_o.width)
+    bloques = [escalar(logos_o, k_logos), escalar(promo_o, k_promo), escalar(texto_o, k_texto)]
+    cajas, ov, oh = apilar(bloques, destino, crema)
+    return {"archivo": destino.name, "escalas": {"logos": round(k_logos, 3), "promo": round(k_promo, 3), "texto": round(k_texto, 3)},
+            "ocupacion_vertical_%": ov, "ancho_max_%": oh, "margen_sup_%": round(100 * cajas[0][1] / H, 1), "margen_inf_%": round(100 * (H - cajas[-1][3]) / H, 1)}
 
 
 # ---------- Contraportadas verticales (mismo criterio: solo escala y posición) ----------
@@ -82,22 +90,17 @@ REG_LOGOS_C = (0, 4150, 6250, 4650)  # logotipos institucionales
 
 def componer_contra(origen: Path, destino: Path):
     src = Image.open(origen).convert("RGB")
-    orig = Image.open(RAIZ / "originales" / "5-contraportada.png").convert("RGB")
+    orig = Image.open(RAIZ / "originales" / "5-contraportada.png").convert("RGB")   # ilustración y logotipos del original
     crema = orig.getpixel((20, 20))
-    arte = escalar(recorte_ajustado(orig, REG_ARTE), ESCALA)
-    texto = recorte_ajustado(src, REG_TEXTO_C)
-    texto = escalar(texto, min(ESCALA, ANCHO_UTIL / texto.width))
-    logos = escalar(recorte_ajustado(orig, REG_LOGOS_C), ESCALA)
-    gaps = (230, 300)
-    total = arte.height + gaps[0] + texto.height + gaps[1] + logos.height
-    y = round((H - total) * 0.46)
-    lienzo = Image.new("RGB", (W, H), crema); cajas = []
-    for el, g in ((arte, gaps[0]), (texto, gaps[1]), (logos, 0)):
-        x = (W - el.width) // 2; lienzo.paste(el, (x, y)); cajas.append((x, y, x + el.width, y + el.height)); y += el.height + g
-    lienzo.save(destino, optimize=True)
-    for (x0, y0, x1, y1) in cajas:
-        assert x0 >= MARGEN_X - 30 and x1 <= W - MARGEN_X + 30 and y0 >= 0.08 * H and y1 <= 0.92 * H, (destino.name, (x0, y0, x1, y1))
-    return {"archivo": destino.name, "margen_sup_%": round(100 * cajas[0][1] / H, 1), "margen_inf_%": round(100 * (H - cajas[-1][3]) / H, 1)}
+    arte_o = recorte_ajustado(orig, REG_ARTE); texto_o = recorte_ajustado(src, REG_TEXTO_C); logos_o = recorte_ajustado(orig, REG_LOGOS_C)
+    k_logos = min(0.90, ANCHO_MAX / logos_o.width)
+    k_texto = min(0.95, ANCHO_MAX / texto_o.width)
+    resto = ALTO_UTIL - logos_o.height * k_logos - texto_o.height * k_texto - 2 * SEP
+    k_arte = min(1.0, resto / arte_o.height, ANCHO_MAX / arte_o.width)
+    bloques = [escalar(arte_o, k_arte), escalar(texto_o, k_texto), escalar(logos_o, k_logos)]
+    cajas, ov, oh = apilar(bloques, destino, crema)
+    return {"archivo": destino.name, "escalas": {"ilustracion": round(k_arte, 3), "texto": round(k_texto, 3), "logos": round(k_logos, 3)},
+            "ocupacion_vertical_%": ov, "ancho_max_%": oh, "margen_sup_%": round(100 * cajas[0][1] / H, 1), "margen_inf_%": round(100 * (H - cajas[-1][3]) / H, 1)}
 
 
 if __name__ == "__main__":

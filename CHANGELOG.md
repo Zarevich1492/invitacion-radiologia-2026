@@ -5,6 +5,14 @@ https://zarevich1492.github.io/invitacion-radiologia-2026/ (misma dirección sie
 Reversión: `git revert <commit>` o volver a una etiqueta: `git checkout -B main <etiqueta> && git push -f origin main`
 (solo con autorización expresa).
 
+## v2.2 · Portada y contraportada ampliadas
+- Recomposición vertical desde los originales: ocupación del 85 % del alto, márgenes del 7,5–8 %.
+- Portada A: logotipo de la promoción +27 %, logotipos institucionales +20 %, texto al ancho máximo.
+- Portadas B y C: la línea roja (texto compuesto, no original) pasa a dos líneas; texto +50 %;
+  la fecha original se traslada como bloque, sin modificarla.
+- Contraportadas: ilustración +26 %, mensajes +27 %, logotipos +20 %. Escala máxima ×1,0 (sin ampliar
+  por encima de la resolución original); sin deformaciones ni recortes.
+
 ## v2.1 · Contraste, modo claro y caras continuas
 - Encabezado: nombre #231B15, mensaje #594638, categoría #B91C1C sobre crema #F4E6D1; 303/303 textos WCAG AA.
 - Categoría personalizada: «Madrina de promoción» o «Padrino de promoción».
