@@ -5,6 +5,11 @@ https://zarevich1492.github.io/invitacion-radiologia-2026/ (misma dirección sie
 Reversión: `git revert <commit>` o volver a una etiqueta: `git checkout -B main <etiqueta> && git push -f origin main`
 (solo con autorización expresa).
 
+## v2.15 · Separación de «Palabras que nos acompañan» y «Desde la distancia»
+- Bajo la tarjeta interactiva (y en bienvenida, programa y espacio de especialistas) solo aparece «Palabras que nos acompañan», con acceso al libro de dedicatorias. Ninguna referencia económica en bienvenida, tarjeta, confirmación, pase ni listones.
+- El menú ofrece «Palabras» y «Desde la distancia» (antes «Aportes»), para todos los perfiles. «Desde la distancia» es una sección independiente a la que solo se llega desde el menú; allí, discretamente, «¿Deseas tener un detalle con la promoción?» (plegado) revela los datos de Pago Móvil y el copiado. Sin botones destacados, ventanas emergentes ni recordatorios. Configuración administrativa de aportes intacta; enlaces, contraseñas y autorizaciones sin cambios.
+- Pruebas: aceptación 214, responsive 244, contraste.
+
 ## v2.14 · «Desde la distancia» (dedicatorias + detalle voluntario)
 - «Aportes voluntarios» deja de ser una sección independiente: una sola sección **«Desde la distancia»** («Hay muchas formas de estar presentes», «Tu cariño, tus enseñanzas y tus buenos deseos también forman parte de este logro»), con «Dejar unas palabras» como acción principal y el libro de dedicatorias debajo.
 - Segunda opción discreta y plegada: «¿Deseas tener un detalle con la promoción?». Solo si la persona la despliega se pintan los datos de Pago Móvil y sus botones de copiado (al plegar desaparecen). Sin solicitudes económicas en bienvenida, tarjeta, confirmación, pase, listón ni mensajes de WhatsApp.

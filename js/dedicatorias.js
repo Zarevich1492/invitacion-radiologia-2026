@@ -166,7 +166,8 @@
   });
 
   window.Dedicatorias = {
-    abrir() { pintarStickers(); previa(); cargarLibro(); comprobarAportes(); },
+    abrir() { pintarStickers(); previa(); cargarLibro(); },
+    abrirDistancia() { comprobarAportes(); },
     abrirSolicitud() { iniciarSolicitud(); },
   };
 })();

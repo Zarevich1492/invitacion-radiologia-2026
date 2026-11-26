@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="version-recursos" content="202611261236">
+<meta name="version-recursos" content="202611261257">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>XXIV Promoción de Radiólogos | Invitación especial</title>
 <meta name="description" content="Tres momentos. Una misma celebración. Sábado 28 de noviembre de 2026.">
@@ -31,7 +31,7 @@
 <link rel="preload" href="assets/fonts/BodoniModa-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/EBGaramond-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/logos/promocion-xxiv-560.jpg" as="image">
-<link rel="stylesheet" href="css/estilos.css?v=202611261236">
+<link rel="stylesheet" href="css/estilos.css?v=202611261257">
 </head>
 <body>
 
@@ -80,7 +80,7 @@
         <button class="acceso" type="button" data-acceso="otros"><b>Otros invitados</b><span>Familiares, amigos y colegas</span></button>
         <button class="acceso" type="button" data-acceso="especialistas" id="btn-integrante"><b>Especialistas 2026<svg class="candado" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11V8a5 5 0 0110 0v3M6 11h12a1 1 0 011 1v8a1 1 0 01-1 1H6a1 1 0 01-1-1v-8a1 1 0 011-1z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr-solo"> (acceso con código)</span></b><span>Integrantes de la XXIV Promoción</span></button>
       </div>
-      <p class="mas-bienvenida"><button class="btn btn-texto" type="button" data-visitante="distancia">Desde la distancia: dejar unas palabras</button></p>
+      <p class="mas-bienvenida"><button class="btn btn-texto" type="button" data-visitante="dedicatorias">Palabras que nos acompañan</button></p>
     </div>
 
     <!-- Código de acceso (padrinos, familia radiológica, residentes, especialistas) -->
@@ -143,6 +143,7 @@
       <a href="#confirmar" data-ir="confirmar">Confirmar asistencia</a>
       <a href="#pase" data-ir="pase">Mi pase</a>
       <a href="#liston" data-ir="liston" hidden>Mi listón</a>
+      <a href="#dedicatorias" data-ir="dedicatorias" class="nav-extra">Palabras</a>
       <a href="#distancia" data-ir="distancia" class="nav-extra">Desde la distancia</a>
       <a href="#solicitar" data-ir="solicitar" class="nav-extra" hidden>Solicitar invitación</a>
     </nav>
@@ -164,7 +165,7 @@
         <a class="btn btn-primario" href="#liston" data-ir="liston">Ver mi listón conmemorativo <span aria-hidden="true">→</span></a>
         <a class="btn btn-siguiente" href="#programa" data-ir="programa">Ver el programa <span aria-hidden="true">→</span></a>
       </div>
-      <p class="mas-secciones"><a class="btn btn-texto" href="#distancia" data-ir="distancia">Desde la distancia</a></p>
+      <p class="mas-secciones"><a class="btn btn-texto" href="#dedicatorias" data-ir="dedicatorias">Palabras que nos acompañan</a></p>
     </div>
     <div class="inv-grid">
       <header class="inv-enc saludo">
@@ -209,7 +210,7 @@
           <button class="btn-sec" type="button" id="btn-reproducir" aria-pressed="false"><span class="ico" aria-hidden="true">▶</span><span>Reproducir</span></button>
           <button class="btn-sec" type="button" id="btn-reiniciar"><span class="ico" aria-hidden="true">↺</span><span>Reiniciar</span></button>
         </div>
-        <p class="mas-secciones"><a class="btn btn-texto" href="#distancia" data-ir="distancia">Desde la distancia</a></p>
+        <p class="mas-secciones"><a class="btn btn-texto" href="#dedicatorias" data-ir="dedicatorias">Palabras que nos acompañan</a></p>
       </div>
     </div>
 
@@ -218,10 +219,10 @@
       <ul class="op-lista">
         <li data-solo-otros><a class="op" href="#invitacion" data-accion="ver"><svg viewBox="0 0 24 24" aria-hidden="true" class="op-ico"><path d="M4 7l8 6 8-6"/><rect x="3.5" y="5" width="17" height="14" rx="2"/></svg><b>Ver invitación</b><span>Abre la tarjeta de la promoción.</span></a></li>
         <li data-solo-otros><a class="op" href="#programa" data-ir="programa"><svg viewBox="0 0 24 24" aria-hidden="true" class="op-ico"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><b>Programa</b><span>Las tres actividades del 28 de noviembre.</span></a></li>
-        <li><a class="op" href="#distancia" data-ir="distancia"><svg viewBox="0 0 24 24" aria-hidden="true" class="op-ico"><path d="M5 4h11l3 3v13H5z"/><path d="M8 11h8M8 15h5"/></svg><b>Desde la distancia</b><span>Tu cariño y tus buenos deseos, estés donde estés.</span></a></li>
+        <li><a class="op" href="#dedicatorias" data-ir="dedicatorias"><svg viewBox="0 0 24 24" aria-hidden="true" class="op-ico"><path d="M5 4h11l3 3v13H5z"/><path d="M8 11h8M8 15h5"/></svg><b>Palabras que nos acompañan</b><span>Deja unas palabras y lee el libro de dedicatorias.</span></a></li>
         <li data-solo-otros><a class="op" href="#solicitar" data-ir="solicitar" id="op-solicitar"><svg viewBox="0 0 24 24" aria-hidden="true" class="op-ico"><circle cx="9" cy="8" r="3.500"/><path d="M3 20c0-3.300 2.700-6 6-6s6 2.700 6 6M18 8v6M15 11h6"/></svg><b>Solicitar invitación</b><span>Cuéntanos quién te invita.</span></a></li>
       </ul>
-      <p class="nota">«Desde la distancia» está abierta a todos, sin contraseña y sin condiciones.</p>
+      <p class="nota">El libro de dedicatorias está abierto a todos, sin contraseña y no depende de la asistencia.</p>
     </section>
   </section>
 
@@ -238,7 +239,7 @@
       <a class="btn btn-primario" id="btn-prog-confirmar" href="#confirmar" data-ir="confirmar">Confirmar asistencia <span aria-hidden="true">→</span></a>
       <a class="btn btn-primario" id="btn-prog-liston" href="#liston" data-ir="liston" hidden>Ver mi listón <span aria-hidden="true">→</span></a>
     </div>
-    <p class="mas-secciones"><a class="btn btn-texto" href="#distancia" data-ir="distancia">Desde la distancia</a></p>
+    <p class="mas-secciones"><a class="btn btn-texto" href="#dedicatorias" data-ir="dedicatorias">Palabras que nos acompañan</a></p>
   </section>
 
   <!-- 03 · Confirmación -->
@@ -349,12 +350,11 @@
       XXIV Promoción de Radiólogos · Postgrado de Radiología · Universidad de Los Andes
     </footer>
   </section>
-  <!-- 06 · Desde la distancia (público): dedicatorias y, de forma discreta, un detalle voluntario -->
-  <section class="vista vista-distancia" id="vista-distancia" data-vista="distancia" aria-labelledby="t-distancia" hidden>
+  <!-- 06 · Palabras que nos acompañan (libro de dedicatorias; público) -->
+  <section class="vista vista-dedic" id="vista-dedicatorias" data-vista="dedicatorias" aria-labelledby="t-dedic" hidden>
     <header class="vista-enc">
-      <span class="versalita">Desde la distancia</span>
-      <h2 id="t-distancia" tabindex="-1">Hay muchas formas <em>de estar presentes</em></h2>
-      <p>Tu cariño, tus enseñanzas y tus buenos deseos también forman parte de este logro.</p>
+      <span class="versalita">XXIV Promoción · ULA 2026</span>
+      <h2 id="t-dedic" tabindex="-1">Palabras que <em>nos acompañan</em></h2>
       <p class="cita-libro">«Hay palabras que se convierten en recuerdos para toda la vida».</p>
     </header>
     <p class="dd-cta"><button class="btn btn-primario btn-grande" type="button" id="dd-abrir" aria-expanded="false" aria-controls="dd-bloque">Dejar unas palabras</button></p>
@@ -396,14 +396,24 @@
       <button class="btn" type="button" id="dd-otra">Escribir otra dedicatoria</button>
     </div>
     </div>
-    <h3 class="libro-tit">Palabras que nos acompañan</h3>
+    <h3 class="libro-tit">El libro de dedicatorias</h3>
     <ul class="libro-lista" id="libro-dedic" aria-live="polite"></ul>
+    <div class="vista-pie"><a class="btn btn-texto" href="#invitacion" data-ir="invitacion"><span aria-hidden="true">←</span> Inicio</a></div>
+  </section>
+
+  <!-- 07 · Desde la distancia (independiente; solo se llega desde el menú) -->
+  <section class="vista vista-distancia" id="vista-distancia" data-vista="distancia" aria-labelledby="t-distancia" hidden>
+    <header class="vista-enc">
+      <span class="versalita">Desde la distancia</span>
+      <h2 id="t-distancia" tabindex="-1">Hay muchas formas <em>de estar presentes</em></h2>
+      <p>Tu cariño, tus enseñanzas y tus buenos deseos también forman parte de este logro.</p>
+    </header>
     <details class="pm-detalle" id="pm-detalle" hidden>
       <summary>¿Deseas tener un detalle con la promoción?</summary>
     <div class="pm-tarjeta" id="pm-tarjeta">
       <div class="pm-cab"><b>Pago Móvil</b><span>Todo es voluntario</span></div>
       <dl class="pm-datos" id="pm-datos"></dl>
-      <button class="btn btn-primario" type="button" id="pm-copiar-todo">Copiar datos de Pago Móvil</button>
+      <button class="btn" type="button" id="pm-copiar-todo">Copiar datos de Pago Móvil</button>
       <p class="pm-copiado" id="pm-copiado" role="status" aria-live="polite"></p>
       <p class="pm-gracias" id="pm-gracias">Gracias por acompañarnos, incluso desde la distancia.</p>
     </div>
@@ -456,6 +466,7 @@
   <a href="#confirmar" data-ir="confirmar"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M8 12.3l2.7 2.7L16.2 9.5"/></svg><span>Confirmar</span></a>
   <a href="#pase" data-ir="pase"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16v3a2 2 0 000 4v3H4v-3a2 2 0 000-4z"/><path d="M14 7v10" stroke-dasharray="1.6 1.8"/></svg><span>Mi pase</span></a>
   <a href="#liston" data-ir="liston" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg><span>Mi listón</span></a>
+  <a href="#dedicatorias" data-ir="dedicatorias" aria-label="Palabras que nos acompañan"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h11l3 3v13H5z"/><path d="M8 11h8M8 15h5"/></svg><span>Palabras</span></a>
   <a href="#distancia" data-ir="distancia" aria-label="Desde la distancia"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h11l3 3v13H5z"/><path d="M8 11h8M8 15h5"/></svg><span>Distancia</span></a>
   <a href="#solicitar" data-ir="solicitar" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.500"/><path d="M3 20c0-3.300 2.700-6 6-6s6 2.700 6 6M18 8v6M15 11h6"/></svg><span>Solicitar</span></a>
 </nav>
@@ -469,11 +480,11 @@
   <style>.bienvenida{display:none!important}</style>
 </noscript>
 
-<script src="js/config.js?v=202611261236"></script>
-<script src="js/api.js?v=202611261236"></script>
-<script src="js/pase.js?v=202611261236"></script>
-<script src="js/app.js?v=202611261236"></script>
-<script src="js/dedicatorias.js?v=202611261236"></script>
-<script src="js/inicio.js?v=202611261236"></script>
+<script src="js/config.js?v=202611261257"></script>
+<script src="js/api.js?v=202611261257"></script>
+<script src="js/pase.js?v=202611261257"></script>
+<script src="js/app.js?v=202611261257"></script>
+<script src="js/dedicatorias.js?v=202611261257"></script>
+<script src="js/inicio.js?v=202611261257"></script>
 </body>
 </html>
