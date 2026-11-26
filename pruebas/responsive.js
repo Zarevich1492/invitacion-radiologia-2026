@@ -1,6 +1,7 @@
 /* Pruebas responsive (Playwright + Chromium; SIMULACIÓN de tamaños, no dispositivos físicos).
    Uso: node pruebas/responsive.js <URL_BASE> <carpeta_capturas> */
 const { chromium } = require("playwright");
+const { usarApiLocal, entrarGrupo } = require("./ayuda");
 const fs = require("fs");
 const path = require("path");
 const BASE = process.argv[2] || "http://127.0.0.1:8765/";
@@ -21,6 +22,7 @@ const ok = (n, c, d = "") => { res.push({ n, ok: !!c, d }); if (!c) console.log(
   for (const [tipo, w, h] of TAMANOS) {
     const movil = tipo.startsWith("movil");
     const ctx = await b.newContext({ viewport: { width: w, height: h }, isMobile: movil, hasTouch: movil || tipo.startsWith("tableta"), deviceScaleFactor: 1 });
+    await usarApiLocal(ctx);
     const p = await ctx.newPage();
     const err = []; p.on("pageerror", (e) => err.push(e.message));
     const et = `${w}×${h}`;
@@ -29,7 +31,7 @@ const ok = (n, c, d = "") => { res.push({ n, ok: !!c, d }); if (!c) console.log(
     const bv = await p.evaluate(() => ({ sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth, primerNombre: (() => { const r = document.querySelector(".acceso").getBoundingClientRect(); return r.bottom <= innerHeight; })() }));
     ok(`${et} bienvenida sin desplazamiento horizontal`, bv.sw <= bv.cw, `${bv.sw}>${bv.cw}`);
     ok(`${et} bienvenida: los accesos son visibles sin desplazar`, bv.primerNombre || h < 600);
-    await p.click('[data-acceso="padrinos"]'); await p.click('[data-padrino="falcon-analy"]'); await p.waitForTimeout(1900);
+    await entrarGrupo(p, "padrinos"); await p.click('[data-padrino="falcon-analy"]'); await p.waitForTimeout(1900);
 
     const vistaInv = await p.evaluate(() => {
       const q = (s) => document.querySelector(s).getBoundingClientRect();

@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="version-recursos" content="202611260414">
+<meta name="version-recursos" content="202611260450">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>XXIV Promoción de Radiólogos | Invitación especial</title>
 <meta name="description" content="Tres momentos. Una misma celebración. Sábado 28 de noviembre de 2026.">
@@ -30,7 +30,7 @@
 <link rel="preload" href="assets/fonts/BodoniModa-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/EBGaramond-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/logos/promocion-xxiv-560.jpg" as="image">
-<link rel="stylesheet" href="css/estilos.css?v=202611260414">
+<link rel="stylesheet" href="css/estilos.css?v=202611260450">
 </head>
 <body>
 
@@ -50,13 +50,25 @@
     <div class="paso" id="paso-acceso">
       <p class="pregunta" id="acceso-pregunta">¿Cómo nos acompañas en esta celebración?</p>
       <div class="accesos" role="group" aria-label="Elige cómo nos acompañas">
-        <button class="acceso" type="button" data-acceso="padrinos"><b>Padrinos y madrinas</b><span>Elige tu nombre del listado</span></button>
-        <button class="acceso" type="button" data-acceso="docentes"><b>Docentes y egresados</b><span>Del postgrado de Radiología</span></button>
-        <button class="acceso" type="button" data-acceso="residentes"><b>Residentes R1 y R2</b><span>Primer y segundo año</span></button>
-        <button class="acceso" type="button" data-acceso="otros"><b>Otros invitados</b><span>Familia, amigos y colegas</span></button>
-        <button class="acceso" type="button" id="btn-integrante" data-acceso="especialistas" hidden><b>Especialistas 2026</b><span>Integrantes de la XXIV Promoción</span></button>
+        <button class="acceso" type="button" data-acceso="padrinos"><b>Padrinos y madrinas<svg class="candado" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11V8a5 5 0 0110 0v3M6 11h12a1 1 0 011 1v8a1 1 0 01-1 1H6a1 1 0 01-1-1v-8a1 1 0 011-1z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr-solo"> (acceso con código)</span></b><span>Invitados de honor</span></button>
+        <button class="acceso" type="button" data-acceso="docentes"><b>Docentes y egresados<svg class="candado" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11V8a5 5 0 0110 0v3M6 11h12a1 1 0 011 1v8a1 1 0 01-1 1H6a1 1 0 01-1-1v-8a1 1 0 011-1z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr-solo"> (acceso con código)</span></b><span>Nuestra comunidad académica</span></button>
+        <button class="acceso" type="button" data-acceso="residentes"><b>Residentes R1 y R2<svg class="candado" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11V8a5 5 0 0110 0v3M6 11h12a1 1 0 011 1v8a1 1 0 01-1 1H6a1 1 0 01-1-1v-8a1 1 0 011-1z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr-solo"> (acceso con código)</span></b><span>Compañeros del posgrado</span></button>
+        <button class="acceso" type="button" data-acceso="otros"><b>Otros invitados</b><span>Familiares, amigos y colegas</span></button>
+        <button class="acceso" type="button" data-acceso="especialistas" id="btn-integrante"><b>Especialistas 2026<svg class="candado" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11V8a5 5 0 0110 0v3M6 11h12a1 1 0 011 1v8a1 1 0 01-1 1H6a1 1 0 01-1-1v-8a1 1 0 011-1z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr-solo"> (acceso con código)</span></b><span>Integrantes de la XXIV Promoción</span></button>
       </div>
-      <button class="btn btn-texto" type="button" id="btn-general">Ver la invitación sin personalizar</button>
+    </div>
+
+    <!-- Código de acceso (padrinos, docentes y egresados, residentes, especialistas) -->
+    <div class="paso" id="paso-codigo" hidden>
+      <p class="pregunta" id="codigo-titulo">Código de acceso</p>
+      <p class="nota" style="text-align:center;margin:0" id="codigo-sub">Escribe el código que recibiste con tu invitación.</p>
+      <form id="form-codigo" autocomplete="off" novalidate>
+        <label class="etiqueta" for="campo-codigo">Código de acceso</label>
+        <div class="campo-clave"><input class="campo" id="campo-codigo" type="password" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="100" required><button class="btn btn-texto" type="button" id="ver-codigo" aria-pressed="false" aria-controls="campo-codigo">Mostrar</button></div>
+        <p class="rsvp-estado" id="codigo-estado" role="alert"></p>
+        <button class="btn btn-primario" type="submit" id="btn-ingresar">Ingresar</button>
+      </form>
+      <button class="btn btn-texto" type="button" id="btn-volver-inicio">← Volver al inicio</button>
     </div>
 
     <!-- Padrinos y madrinas: selector de nombres -->
@@ -322,10 +334,10 @@
   <style>.bienvenida{display:none!important}</style>
 </noscript>
 
-<script src="js/config.js?v=202611260414"></script>
-<script src="js/api.js?v=202611260414"></script>
-<script src="js/pase.js?v=202611260414"></script>
-<script src="js/app.js?v=202611260414"></script>
-<script src="js/inicio.js?v=202611260414"></script>
+<script src="js/config.js?v=202611260450"></script>
+<script src="js/api.js?v=202611260450"></script>
+<script src="js/pase.js?v=202611260450"></script>
+<script src="js/app.js?v=202611260450"></script>
+<script src="js/inicio.js?v=202611260450"></script>
 </body>
 </html>

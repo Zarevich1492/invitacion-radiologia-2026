@@ -32,12 +32,22 @@
   const leerTokens = () => { try { return JSON.parse(localStorage.getItem(CLAVE_TOKENS) || "{}"); } catch (e) { return {}; } };
   const guardarTokens = (m) => { try { localStorage.setItem(CLAVE_TOKENS, JSON.stringify(m)); } catch (e) {} };
 
+  const CLAVE_SESION = "invitacion-ula-2026:sesion";
+  const leerSesion = () => { try { return JSON.parse(sessionStorage.getItem(CLAVE_SESION) || "null"); } catch (e) { return null; } };
+  const guardarSesion = (x) => { try { x ? sessionStorage.setItem(CLAVE_SESION, JSON.stringify(x)) : sessionStorage.removeItem(CLAVE_SESION); } catch (e) {} };
+  const sesionActual = () => { const x = leerSesion(); return x ? x.sesion : null; };
+
   window.API = {
     configurado,
     async evento() { const r = await fetch("datos/evento.json", { cache: "no-cache" }); return r.json(); },
     config: () => rpc("invitacion_config", {}, 1),
     miInvitacion: (token) => rpc("mi_invitacion", { p_token: token }),
-    guardar: (p) => rpc("guardar_confirmacion", { p_token: p.token || null, p_categoria: p.categoria, p_padrino_id: p.padrinoId || null, p_nombre: p.nombre, p_respuestas: p.respuestas, p_trampa: p.trampa || null, p_nota: p.nota || null }),
+    guardar: (p) => rpc("guardar_con_sesion", { p_sesion: sesionActual(), p_token: p.token || null, p_categoria: p.categoria, p_padrino_id: p.padrinoId || null, p_nombre: p.nombre, p_respuestas: p.respuestas, p_trampa: p.trampa || null, p_nota: p.nota || null }, 1),
+    // Acceso por código de categoría (el servidor guarda solo hashes; la sesión caduca a las 12 h)
+    acceso: async (grupo, codigo) => { const r = await rpc("acceso_validar", { p_grupo: grupo, p_codigo: codigo || null }, 1); if (r && r.ok) guardarSesion({ sesion: r.sesion, grupo: r.grupo }); return r; },
+    estadoSesion: () => { const x = leerSesion(); return x ? rpc("acceso_estado", { p_sesion: x.sesion }, 1) : Promise.resolve({ ok: false }); },
+    listaNombres: () => rpc("lista_nombres", { p_sesion: sesionActual() }, 1),
+    sesion: leerSesion, cerrarSesion: () => guardarSesion(null),
     // Un token por identidad en este dispositivo (permite modificar sin duplicar)
     tokenDe: (clave) => leerTokens()[clave] || null,
     recordarToken(clave, token) { const m = leerTokens(); m[clave] = token; guardarTokens(m); },

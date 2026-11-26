@@ -23,14 +23,13 @@
   /* ---------- Arranque ---------- */
   async function iniciar() {
     EV = await window.API.evento();
-    $("#btn-integrante").hidden = !(EV.modulos && EV.modulos.listones);   // módulo de listones: visible solo cuando está publicado
     CFG = { padrinos: EV.padrinos, habilitaciones: EV.habilitacion_por_defecto, recepcion_padrinos: {}, remoto: false };
     pintarLista("");
     if (window.API.configurado) {
       try {
         const c = await window.API.config();
-        if (c && Array.isArray(c.padrinos) && c.padrinos.length) {
-          CFG = { padrinos: c.padrinos, habilitaciones: Object.assign({}, CFG.habilitaciones, c.habilitaciones || {}), recepcion_padrinos: c.recepcion_padrinos || {}, remoto: true };
+        if (c && Array.isArray(c.actividades) && c.actividades.length) {
+          CFG = { padrinos: EV.padrinos, habilitaciones: Object.assign({}, CFG.habilitaciones, c.habilitaciones || {}), recepcion_padrinos: c.recepcion_padrinos || {}, remoto: true };
           pintarLista($("#buscar-nombre").value);
         }
       } catch (e) { /* sin conexión: se usa la lista local; la invitación sigue disponible */ }
@@ -67,20 +66,78 @@
     else if (prev.categoria !== "general") { $("#campo-nombre").value = prev.nombre || ""; }
   }
 
-  /* ---------- Integrantes de la XXIV Promoción (graduandos): acceso directo al listón, sin confirmación ---------- */
-  $("#btn-integrante").addEventListener("click", () => {
-    $("#lista-graduandos").innerHTML = EV.graduandos_lista.map((g) => `<li><button type="button" role="option" class="nombre-opcion" data-graduando="${esc(g.id)}">${esc(g.nombre)}</button></li>`).join("");
-    mostrarPaso("graduando");
+  /* ---------- Acceso por código (el servidor valida el hash; la sesión es temporal) ---------- */
+  const GRUPOS = {
+    padrinos: { titulo: "Padrinos y madrinas", sub: "Invitados de honor" },
+    docentes: { titulo: "Docentes y egresados", sub: "Nuestra comunidad académica" },
+    residentes: { titulo: "Residentes R1 y R2", sub: "Compañeros del posgrado" },
+    especialistas: { titulo: "Especialistas 2026", sub: "Integrantes de la XXIV Promoción" },
+  };
+  let grupoActual = null;
+  const MSG_CODIGO = {
+    codigo_incorrecto: "El código no es correcto. Revísalo e inténtalo de nuevo.",
+    bloqueado: "Demasiados intentos desde esta conexión. Espera unos minutos e inténtalo de nuevo.",
+    sin_conexion: "No pudimos conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.",
+    sin_backend: "El acceso con código no está disponible por ahora.",
+  };
+  async function abrirGrupo(g) {
+    grupoActual = g;
+    if (g === "otros") {
+      try { await window.API.acceso("otros", null); } catch (e) { /* «Otros» ve la tarjeta y el programa aunque no haya conexión */ }
+      return mostrarAcceso("otros");
+    }
+    const prev = window.API.sesion();
+    if (prev && prev.grupo === g) { try { const r = await window.API.estadoSesion(); if (r && r.ok && r.grupo === g) return seguirTrasCodigo(g); } catch (e) {} }
+    $("#codigo-titulo").textContent = GRUPOS[g].titulo; $("#codigo-sub").textContent = "Escribe el código que recibiste con tu invitación.";
+    $("#campo-codigo").value = ""; $("#codigo-estado").textContent = ""; $("#codigo-estado").className = "rsvp-estado";
+    $("#campo-codigo").type = "password"; $("#ver-codigo").textContent = "Mostrar"; $("#ver-codigo").setAttribute("aria-pressed", "false");
+    mostrarPaso("codigo"); setTimeout(() => $("#campo-codigo").focus(), 30);
+  }
+  $("#ver-codigo").addEventListener("click", () => {
+    const c = $("#campo-codigo"), ver = c.type === "password";
+    c.type = ver ? "text" : "password"; $("#ver-codigo").textContent = ver ? "Ocultar" : "Mostrar"; $("#ver-codigo").setAttribute("aria-pressed", String(ver));
   });
+  $("#btn-volver-inicio").addEventListener("click", () => { window.API.cerrarSesion(); grupoActual = null; mostrarPaso("acceso"); });
+  let validando = false;
+  $("#form-codigo").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const est = $("#codigo-estado"), cod = $("#campo-codigo").value;
+    if (validando) return;
+    if (!cod.trim()) { est.textContent = "Escribe tu código de acceso."; est.className = "rsvp-estado error"; return; }
+    validando = true; $("#btn-ingresar").disabled = true; est.className = "rsvp-estado"; est.textContent = "Verificando…";
+    try {
+      const r = await window.API.acceso(grupoActual, cod.trim());
+      if (r && r.ok) { $("#campo-codigo").value = ""; est.textContent = ""; await seguirTrasCodigo(grupoActual); }
+      else { est.textContent = MSG_CODIGO[r && r.motivo] || MSG_CODIGO.codigo_incorrecto; est.className = "rsvp-estado error"; $("#campo-codigo").select(); }
+    } catch (err) { est.textContent = MSG_CODIGO[err.codigo] || MSG_CODIGO.sin_conexion; est.className = "rsvp-estado error"; }
+    finally { validando = false; $("#btn-ingresar").disabled = false; }
+  });
+  // Tras el código: identificación según el grupo (nombres desde el servidor; respaldo local)
+  // Respeta el orden oficial de evento.json; si el servidor devuelve la lista, solo se muestran sus nombres
+  function ordenarComoEvento(servidorLista, local) {
+    if (!Array.isArray(servidorLista) || !servidorLista.length) return local;
+    const idx = (id) => { const i = local.findIndex((x) => x.id === id); return i < 0 ? 999 : i; };
+    return servidorLista.slice().sort((a, b) => idx(a.id) - idx(b.id));
+  }
+  async function seguirTrasCodigo(g) {
+    let nombres = null;
+    if (g === "padrinos" || g === "especialistas") { try { nombres = await window.API.listaNombres(); } catch (e) {} }
+    if (g === "padrinos") {
+      CFG.padrinos = ordenarComoEvento(nombres, EV.padrinos).map((p) => ({ id: p.id, nombre: p.nombre })); buscar.value = ""; pintarLista(""); mostrarPaso("lista"); setTimeout(() => buscar.focus(), 30);
+    } else if (g === "especialistas") {
+      $("#lista-graduandos").innerHTML = ordenarComoEvento(nombres, EV.graduandos_lista).map((x) => `<li><button type="button" role="option" class="nombre-opcion" data-graduando="${esc(x.id)}">${esc(x.nombre)}</button></li>`).join("");
+      mostrarPaso("graduando");
+    } else mostrarAcceso(g);
+  }
   $("#lista-graduandos").addEventListener("click", (e) => {
     const b = e.target.closest("[data-graduando]"); if (!b) return;
     const g = EV.graduandos_lista.find((x) => x.id === b.dataset.graduando);
     if (g) entrar({ categoria: "graduando", graduandoId: g.id, nombre: g.nombre });
   });
-  
+
   let categoriaElegida = null;
   function mostrarPaso(p, aviso) {
-    for (const n of ["acceso", "lista", "categoria", "token", "graduando"]) $("#paso-" + n).hidden = p !== n;
+    for (const n of ["acceso", "codigo", "lista", "categoria", "token", "graduando"]) $("#paso-" + n).hidden = p !== n;
     if (p === "acceso") $("#acceso-pregunta").textContent = aviso ? "Tu nombre no aparece en el listado de padrinos. Elige cómo nos acompañas:" : "¿Cómo nos acompañas en esta celebración?";
   }
   // Subcategorías por acceso (la categoría final se guarda en la base de datos como docente, egresado, r1, r2 u otro)
@@ -107,12 +164,7 @@
     setTimeout(() => $("#campo-nombre").focus(), 30);
   }
   $("#opciones-cat").addEventListener("click", (e) => { const b = e.target.closest(".opcion-cat"); if (b) elegirCategoria(b.dataset.cat); });
-  document.querySelectorAll(".acceso").forEach((b) => b.addEventListener("click", () => {
-    const id = b.dataset.acceso;
-    if (id === "padrinos") { mostrarPaso("lista"); setTimeout(() => $("#buscar-nombre").focus(), 30); }
-    else if (id === "especialistas") { /* lo gestiona el módulo de listones (#btn-integrante) */ }
-    else mostrarAcceso(id);
-  }));
+  document.querySelectorAll(".acceso").forEach((b) => b.addEventListener("click", () => abrirGrupo(b.dataset.acceso)));
   for (const id of ["btn-volver-acceso-1", "btn-volver-lista", "btn-volver-lista-2"]) $("#" + id).addEventListener("click", () => mostrarPaso("acceso"));
   $("#form-nombre").addEventListener("submit", (e) => {
     e.preventDefault();
@@ -122,7 +174,6 @@
     entrar({ categoria: categoriaElegida, nombre: n });
   });
   $("#campo-nombre").addEventListener("input", () => $("#campo-nombre").setCustomValidity(""));
-  $("#btn-general").addEventListener("click", () => entrar({ categoria: "general", nombre: "" }));
 
   async function usarToken(token) {
     try {
@@ -191,6 +242,7 @@
     pintarRSVP(acts);
     pintarConservar(v, n, acts);
     pintarListon(id);
+    pintarNav();
     paseCache = null; $("#pase-vista").removeAttribute("src");
 
     $("#inv-fecha").textContent = EV.fecha_texto + " · " + EV.ciudad;
@@ -219,11 +271,21 @@
   const vistaDeHash = () => { const h = location.hash.slice(1); if (h === "inicio") return "invitacion"; return VISTAS.includes(h) ? h : null; };
   const esGraduando = () => ID && ID.categoria === "graduando";
   const tieneListon = () => !!(ID && listonDe(ID));
+  const esOtro = () => ID && ID.categoria === "otro";
+  // Navegación por categoría. «Otros»: solo Inicio y Programa hasta que la invitación sea autorizada por la organización.
   const permitida = (v) => {
     if (esGraduando()) return v === "invitacion" || v === "programa" || v === "liston";
+    if (v === "invitacion" || v === "programa") return true;
     if (v === "liston") return tieneListon();
-    return VISTAS.includes(v);
+    if (esOtro() && !servidor) return false;
+    return v === "confirmar" || v === "pase";
   };
+  function pintarNav() {
+    document.querySelectorAll(".nav-vistas [data-ir]").forEach((a) => { a.hidden = !permitida(a.dataset.ir); });
+    const n = document.querySelectorAll("#nav-inferior a:not([hidden])").length;
+    $("#nav-inferior").style.gridTemplateColumns = `repeat(${n || 1},1fr)`;
+    $("#btn-prog-confirmar").hidden = !permitida("confirmar");
+  }
   function mostrarVista(v, { foco = true } = {}) {
     if (!VISTAS.includes(v)) v = esGraduando() ? "liston" : "invitacion";
     if (!permitida(v)) v = esGraduando() ? "liston" : "invitacion";

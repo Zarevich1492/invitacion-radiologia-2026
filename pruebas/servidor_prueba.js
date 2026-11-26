@@ -27,6 +27,8 @@ const json = (res, code, obj) => { res.writeHead(code, { "Content-Type": "applic
 const FIRMAS = {
   invitacion_config: [], mi_invitacion: ["p_token"], es_admin: [],
   guardar_confirmacion: ["p_token", "p_categoria", "p_padrino_id", "p_nombre", "p_respuestas", "p_trampa", "p_nota"],
+  acceso_validar: ["p_grupo", "p_codigo"], acceso_estado: ["p_sesion"], lista_nombres: ["p_sesion"], mi_invitacion_sesion: ["p_sesion", "p_token"],
+  guardar_con_sesion: ["p_sesion", "p_token", "p_categoria", "p_padrino_id", "p_nombre", "p_respuestas", "p_trampa", "p_nota"],
   admin_generar_enlace: ["p_invitado"], admin_crear_invitado: ["p_nombre", "p_categoria"], admin_sincronizar_padrinos: [], admin_eliminar_registros: ["p_confirmacion"],
 };
 const TIPOS = { p_respuestas: "jsonb", p_invitado: "uuid" };

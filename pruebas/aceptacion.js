@@ -44,11 +44,17 @@ async function irVista(p, v) {
   await p.waitForFunction((x) => document.body.dataset.vistaActiva === x, v, { timeout: 5000 });
   await p.waitForTimeout(450); // transición de entrada de la vista (0,35 s)
 }
-async function elegirPadrino(p, id) { await p.goto(BASE, { waitUntil: "networkidle" }); await p.click('[data-acceso="padrinos"]'); await p.click(`[data-padrino="${id}"]`); await p.waitForTimeout(2300); }
+const codigoDe = (g) => "codigo-e2e-" + g;
+async function conCodigo(p, grupo, codigo = codigoDe(grupo)) {
+  await p.click(`[data-acceso="${grupo}"]`);
+  await p.waitForTimeout(450);
+  if (await p.isVisible("#paso-codigo")) { await p.fill("#campo-codigo", codigo); await p.click("#btn-ingresar"); }   // con sesión vigente se omite el código
+}
+async function elegirPadrino(p, id) { await p.goto(BASE, { waitUntil: "networkidle" }); await conCodigo(p, "padrinos"); await p.click(`[data-padrino="${id}"]`); await p.waitForTimeout(2300); }
 async function rutaB(p, cat, nombre) {
   await p.goto(BASE, { waitUntil: "networkidle" });
   const acceso = { r1: "residentes", r2: "residentes", otro: "otros", docente: "docentes", egresado: "docentes" }[cat];
-  await p.click(`[data-acceso="${acceso}"]`);
+  if (acceso === "otros") await p.click(`[data-acceso="otros"]`); else await conCodigo(p, acceso);
   if (cat !== "otro") await p.click(`[data-cat="${cat}"]`);
   await p.fill("#campo-nombre", nombre);
   await p.click("#form-nombre button[type=submit]"); await p.waitForTimeout(2300);
@@ -72,11 +78,23 @@ async function responder(p, resp) {
   await p.waitForTimeout(500);
   await p.screenshot({ path: `${OUT}/01-bienvenida-movil.png` });
 
-  // Pantalla inicial: accesos diferenciados (Especialistas 2026 solo si el módulo de listones está publicado)
-  const accesos = await p.$$eval(".acceso", (a) => a.filter((x) => !x.hidden && x.getBoundingClientRect().width > 0).map((x) => x.querySelector("b").textContent));
-  const modulo = !!(EV.modulos && EV.modulos.listones);
-  ok("Bienvenida: accesos diferenciados", accesos.join("|") === ["Padrinos y madrinas", "Docentes y egresados", "Residentes R1 y R2", "Otros invitados"].concat(modulo ? ["Especialistas 2026"] : []).join("|"), accesos.join("|"));
+  // Pantalla inicial: cinco accesos, Especialistas destacado en rojo, candado en los cuatro restringidos
+  const accesos = await p.$$eval(".acceso", (a) => a.filter((x) => !x.hidden && x.getBoundingClientRect().width > 0).map((x) => x.querySelector("b").textContent.replace(" (acceso con código)", "").trim() + "·" + x.querySelector("span:not(.sr-solo)").textContent.trim()));
+  ok("Bienvenida: cinco accesos con sus subtítulos", accesos.join("|") === "Padrinos y madrinas·Invitados de honor|Docentes y egresados·Nuestra comunidad académica|Residentes R1 y R2·Compañeros del posgrado|Otros invitados·Familiares, amigos y colegas|Especialistas 2026·Integrantes de la XXIV Promoción", accesos.join("|"));
+  ok("Bienvenida: candado discreto en las cuatro categorías restringidas (no en «Otros»)", (await p.$$eval(".acceso .candado", (c) => c.length)) === 4 && (await p.$$eval('[data-acceso="otros"] .candado', (c) => c.length)) === 0);
+  ok("Bienvenida: «Especialistas 2026» con fondo rojo institucional", (await p.$eval("#btn-integrante", (b) => getComputedStyle(b).backgroundColor)) === "rgb(185, 28, 28)");
+  ok("Bienvenida: frase institucional intacta", (await p.textContent("#bienvenida-titulo")).replace(/\s+/g, " ").trim() === "Hay momentos que merecen ser compartidos");
+  // Pantalla de código: validación en servidor
   await p.click('[data-acceso="padrinos"]');
+  ok("Código: campo oculto, Mostrar/Ocultar, Ingresar y Volver al inicio", (await p.isVisible("#paso-codigo")) && (await p.getAttribute("#campo-codigo", "type")) === "password" && (await p.isVisible("#btn-ingresar")) && (await p.isVisible("#btn-volver-inicio")));
+  await p.click("#ver-codigo"); ok("Código: «Mostrar» revela el texto", (await p.getAttribute("#campo-codigo", "type")) === "text"); await p.click("#ver-codigo");
+  await p.fill("#campo-codigo", "codigo-equivocado"); await p.click("#btn-ingresar"); await p.waitForTimeout(700);
+  ok("Código incorrecto: mensaje y no avanza", (await p.textContent("#codigo-estado")).includes("no es correcto") && !(await p.isVisible("#lista-nombres")));
+  await p.click("#btn-volver-inicio"); ok("Volver al inicio regresa a los cinco accesos", await p.isVisible('[data-acceso="especialistas"]'));
+  await p.click('[data-acceso="docentes"]'); await p.fill("#campo-codigo", codigoDe("padrinos")); await p.click("#btn-ingresar"); await p.waitForTimeout(700);
+  ok("El código de padrinos NO abre «Docentes y egresados»", !(await p.isVisible("#opciones-cat")) && (await p.textContent("#codigo-estado")).includes("no es correcto"));
+  await p.click("#btn-volver-inicio");
+  await conCodigo(p, "padrinos");
   // Identificación
   const nombres = await p.$$eval("#lista-nombres [data-padrino]", (e) => e.map((x) => x.textContent));
   ok("Selector: 10 padrinos y madrinas", nombres.length === 10, nombres.length);
@@ -235,16 +253,12 @@ async function responder(p, resp) {
   await rutaB(p, "otro", "Carmen Rivas");
   ok("Otro invitado: variante C", (await p.evaluate(() => window.__flujo.identidad.variante)) === "C");
   ok("Otro invitado: tuteo en el cierre", (await p.textContent("#saludo-texto")).includes("tu presencia"));
-  await irVista(p, "confirmar");
-  ok("Otro invitado: puede dejar nota de omisión", !(await p.isHidden("#rsvp-nota-caja")));
-  await p.fill("#rsvp-nota", "Soy madrina y no aparezco en el listado.");
-  const rc = await responder(p, { clase: "por_confirmar" });
-  ok("Otro invitado: confirmación guardada", rc.clase.includes("exito"), rc.texto);
+  ok("Otro invitado: sin «Confirmar asistencia» ni «Mi pase» hasta ser autorizado", (await p.isHidden('.nav-inferior [data-ir="confirmar"]')) && (await p.isHidden('.nav-inferior [data-ir="pase"]')));
   await p.screenshot({ path: `${OUT}/12-otro-invitado.png` });
   // Spam: campo trampa (los errores 400/403 que siguen son provocados a propósito y se excluyen)
   const erroresAntes = errores.length;
   p = await nuevaPagina(ctx, errores, externos);
-  await rutaB(p, "otro", "Robot Spam");
+  await rutaB(p, "docente", "Robot Spam");
   await p.evaluate(() => { document.getElementById("rsvp-web").value = "http://spam"; });
   const rs = await responder(p, { clase: "asistira" });
   ok("Antispam: no se muestra éxito si el servidor rechaza", rs.clase.includes("error"), rs.texto);
@@ -254,22 +268,23 @@ async function responder(p, resp) {
   await elegirPadrino(p, "rojas-gustavo"); await irVista(p, "confirmar");
   await p.check('input[name="r-clase"][value="no_asistira"]', { force: true });
   ok("Resumen de respuestas se actualiza", /Clase magistral\s*No podré asistir/.test(await p.textContent("#rsvp-resumen")));
-  await p.click("#btn-cambiar-nombre"); await p.click('[data-acceso="residentes"]'); await p.click('[data-cat="r2"]');
+  await p.click("#btn-cambiar-nombre"); await conCodigo(p, "residentes"); await p.click('[data-cat="r2"]');
   await p.fill("#campo-nombre", "Persona Distinta"); await p.click("#form-nombre button[type=submit]"); await p.waitForTimeout(1500);
   await irVista(p, "confirmar");
   ok("Cambio de identidad: formulario limpio", (await p.$$("#rsvp-actividades input:checked")).length === 0);
   await p.close();
   // Acceso directo a un apartado
   p = await nuevaPagina(ctx, errores, externos);
-  await p.goto(BASE + "#programa", { waitUntil: "networkidle" }); await p.click('[data-acceso="padrinos"]'); await p.click('[data-padrino="moreno-franklin"]'); await p.waitForTimeout(1500);
+  await p.goto(BASE + "#programa", { waitUntil: "networkidle" }); await conCodigo(p, "padrinos"); await p.click('[data-padrino="moreno-franklin"]'); await p.waitForTimeout(1500);
   ok("Acceso directo: #programa abre el apartado tras identificarse", (await p.evaluate(() => document.body.dataset.vistaActiva)) === "programa");
   await p.close();
-  // Sin base de datos configurada: aviso temprano y formulario deshabilitado (sin simular)
+  // Sin base de datos configurada: el acceso con código no se simula; «Otros» sigue viendo tarjeta y programa
   const p0 = await ctx.newPage();
-  await p0.goto(BASE, { waitUntil: "networkidle" }); await p0.click('[data-acceso="padrinos"]'); await p0.click('[data-padrino="sosa-angel"]'); await p0.waitForTimeout(1500);
-  await irVista(p0, "confirmar");
-  ok("Sin Supabase: aviso visible antes del formulario y campos deshabilitados", (await p0.isVisible("#rsvp-aviso")) && (await p0.$eval("#rsvp-campos", (f) => f.disabled)) && (await p0.$eval("#btn-rsvp", (b) => b.disabled)));
-  await p0.screenshot({ path: `${OUT}/15-confirmacion-sin-base-de-datos.png` });
+  await p0.route(/\/js\/config\.js(\?.*)?$/, (r) => r.fulfill({ contentType: "application/javascript", body: "window.CONFIG={}" }));
+  await p0.goto(BASE, { waitUntil: "networkidle" }); await conCodigo(p0, "padrinos"); await p0.waitForTimeout(800);
+  ok("Sin Supabase: el código no se valida ni se simula", (await p0.textContent("#codigo-estado")).includes("no está disponible") && !(await p0.isVisible("#lista-nombres")));
+  await p0.click("#btn-volver-inicio"); await p0.click('[data-acceso="otros"]'); await p0.fill("#campo-nombre", "Invitado Sin Red"); await p0.click("#form-nombre button[type=submit]"); await p0.waitForTimeout(2300);
+  await p0.screenshot({ path: `${OUT}/15-sin-base-de-datos.png` });
   await p0.close();
   p = await nuevaPagina(ctx, errores, externos);
 
@@ -283,7 +298,7 @@ async function responder(p, resp) {
   p = await nuevaPagina(ctx, errores, externos);
   await p.goto(BASE, { waitUntil: "networkidle" });
   ok("Inicio: acceso «Especialistas 2026» visible", await p.isVisible("#btn-integrante"));
-  await p.click("#btn-integrante");
+  await conCodigo(p, "especialistas"); await p.waitForSelector("#lista-graduandos [data-graduando]");
   const grads = await p.$$eval("#lista-graduandos [data-graduando]", (e) => e.map((x) => x.textContent));
   ok("Integrantes: los 7 graduandos", grads.join("|") === "Dr. Jorge Arrieta|Dr. Nelson Páez|Dr. Diego Guillén|Dr. José Sánchez|Dra. Andrea Montes|Dra. Francia Méndez|Dra. Oriana Hernández", grads.join("|"));
   await p.click('[data-graduando="arrieta-jorge"]'); await p.waitForTimeout(1500);
@@ -325,7 +340,7 @@ async function responder(p, resp) {
 
   // Docentes y egresados
   p = await nuevaPagina(ctx, errores, externos);
-  await p.goto(BASE, { waitUntil: "networkidle" }); await p.click('[data-acceso="docentes"]');
+  await p.goto(BASE, { waitUntil: "networkidle" }); await conCodigo(p, "docentes"); await p.waitForSelector("#opciones-cat .opcion-cat");
   const subs = await p.$$eval("#opciones-cat .opcion-cat b", (b) => b.map((x) => x.textContent).join("|"));
   ok("Docentes y egresados: elegir entre Docente y Egresado", subs === "Docente|Egresado", subs);
   await p.click('[data-cat="docente"]'); await p.fill("#campo-nombre", "Dr. Luis Ángel Núñez"); await p.click("#form-nombre button[type=submit]"); await p.waitForTimeout(2300);
@@ -341,7 +356,7 @@ async function responder(p, resp) {
   ok("Egresado: invitación y confirmación", (await p.textContent("#saludo-eyebrow")) === "Egresado" && (await responder(p, { clase: "no_asistira" })).clase.includes("exito"));
   await p.close();
   p = await nuevaPagina(ctx, errores, externos);
-  await p.goto(BASE, { waitUntil: "networkidle" }); await p.click('[data-acceso="padrinos"]'); await p.click("#btn-no-aparece");
+  await p.goto(BASE, { waitUntil: "networkidle" }); await conCodigo(p, "padrinos"); await p.click("#btn-no-aparece");
   ok("«Mi nombre no aparece» vuelve al menú de accesos", await p.isVisible('[data-acceso="docentes"]'));
   await p.close();
   p = await nuevaPagina(ctx, errores, externos);
@@ -353,11 +368,14 @@ async function responder(p, resp) {
   const provocados = errores.splice(erroresAntes);
   ok("Solo los errores provocados (400 antispam, 403 lectura pública)", provocados.length === 2 && provocados.every((e) => /status of (400|403)/.test(e)), provocados.join(" | "));
 
-  // Vista general sin personalizar
+  // «Otros invitados»: acceso libre a tarjeta y programa; sin confirmar ni pase hasta ser autorizado
   p = await nuevaPagina(ctx, errores, externos);
-  await p.goto(BASE, { waitUntil: "networkidle" }); await p.click("#btn-general"); await p.waitForTimeout(1500);
-  await irVista(p, "confirmar");
-  ok("Invitación general sin personalizar disponible", (await p.isVisible("#rsvp-identificar")) && (await p.getAttribute("#img-portada", "src")).split("?")[0] === "assets/img/C-portada-1400.jpg");
+  await rutaB(p, "otro", "Visitante Libre");
+  const navO = await p.$$eval(".nav-inferior a", (a) => a.filter((x) => !x.hidden && getComputedStyle(x).display !== "none").map((x) => x.textContent.trim()).join("|"));
+  ok("Otros: navegación Inicio|Programa (sin confirmar ni pase hasta ser autorizado)", navO === "Inicio|Programa", navO);
+  await p.evaluate(() => { location.hash = "confirmar"; }); await p.waitForTimeout(400);
+  ok("Otros: la ruta #confirmar no está disponible", (await p.evaluate(() => document.body.dataset.vistaActiva)) !== "confirmar");
+  ok("Otros: ve la tarjeta personalizada", (await p.getAttribute("#img-portada", "src")).split("?")[0] === "assets/img/C-portada-1400.jpg");
   const sw = await p.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth]);
   ok("Móvil: sin desplazamiento horizontal", sw[0] <= sw[1], sw.join(" ≤ "));
   await p.close();
@@ -373,11 +391,11 @@ async function responder(p, resp) {
   await a.waitForSelector("#panel:not([hidden])", { timeout: 10000 });
   const tiles = await a.$$eval(".adm-tile", (t) => Object.fromEntries(t.map((x) => [x.querySelector("span").textContent, +x.querySelector("b").textContent])));
   ok("Panel: 10 padrinos, 1 respondió, 9 pendientes", tiles["Padrinos y madrinas"] === 10 && tiles["Padrinos que respondieron"] === 1 && tiles["Padrinos pendientes"] === 9, JSON.stringify(tiles));
-  ok("Panel: R1/R2/otros registrados", tiles["R1 registrados"] === 1 && tiles["R2 registrados"] === 0 && tiles["Otros invitados registrados"] === 1, JSON.stringify(tiles));
+  ok("Panel: R1/R2/otros registrados", tiles["R1 registrados"] === 1 && tiles["R2 registrados"] === 0 && tiles["Otros invitados registrados"] === 0, JSON.stringify(tiles));
   ok("Panel: graduandos fuera de tasas", tiles["Graduandos (anfitriones)"] === 7);
   const acts = await a.$$eval(".adm-act", (x) => x.map((e) => [e.querySelector("h3").textContent, [...e.querySelectorAll("dd")].map((d) => +d.textContent)]));
   const clase = acts.find((x) => x[0] === "Clase magistral")[1];
-  ok("Panel clase: confirmados 3 (padrino, R1, docente), total previsto = 3 + 7 graduandos", clase[0] === 14 && clase[1] === 3 && clase[2] === 1 && clase[3] === 1 && clase[5] === 10, JSON.stringify(clase));
+  ok("Panel clase: confirmados 3 (padrino, R1, docente; «Otros» ya no se autorregistra), total previsto = 3 + 7 graduandos + 3 por confirmar", clase[0] === 13 && clase[1] === 3 && clase[2] === 1 && clase[3] === 0 && clase[5] === 10, JSON.stringify(clase));
   const rec = acts.find((x) => /Recepción/.test(x[0]))[1];
   ok("Panel recepción: habilitados = 10 padrinos (R1 y otro no aplican)", rec[0] === 10 && rec[2] === 1, JSON.stringify(rec));
   await a.screenshot({ path: `${OUT}/13-panel.png`, fullPage: true });
@@ -389,7 +407,6 @@ async function responder(p, resp) {
   await a.fill("#f-buscar", "nanez");
   ok("Panel: búsqueda sin tildes", (await a.$$("#tabla tbody tr")).length === 1);
   await a.fill("#f-buscar", "");
-  ok("Panel: nota de omisión visible", /no aparezco en el listado/.test(await a.textContent("#tabla")));
   const dcsv = a.waitForEvent("download"); await a.click("#exportar"); const csv = await dcsv; const rcsv = `${OUT}/confirmaciones.csv`; await csv.saveAs(rcsv);
   const txt = fs.readFileSync(rcsv, "utf8");
   ok("CSV compatible con Excel (BOM UTF-8, «;»)", txt.charCodeAt(0) === 0xfeff && txt.split("\r\n")[0].includes(";") && txt.includes("Dra. Analy Falcón"), txt.split("\r\n")[0]);

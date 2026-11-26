@@ -1,21 +1,26 @@
 /* Contraste WCAG 2.1 AA de los textos visibles en las cuatro vistas (móvil y escritorio).
    Normal ≥ 4,5:1 · grande (≥ 24 px, o ≥ 18,66 px en negrita) ≥ 3:1. Uso: node pruebas/contraste.js URL */
 const { chromium } = require("playwright");
+const { usarApiLocal, entrarGrupo } = require("./ayuda");
 const BASE = process.argv[2] || "http://127.0.0.1:8765/";
 (async () => {
   const b = await chromium.launch();
   const fallos = [], todos = [];
   for (const [et, vp] of [["móvil", { width: 390, height: 844, isMobile: true }], ["escritorio", { width: 1366, height: 768 }]]) {
     const ctx = await b.newContext({ viewport: { width: vp.width, height: vp.height }, isMobile: !!vp.isMobile, hasTouch: !!vp.isMobile });
+    await usarApiLocal(ctx);
     const p = await ctx.newPage();
     await p.goto(BASE, { waitUntil: "networkidle" });
     await p.waitForTimeout(1600);   // fin de la animación de entrada (se mide el estado estable)
     const bienvenida = await medir(p, "#bienvenida");
     bienvenida.forEach((r) => registrar(et, "bienvenida", r));
-    await p.click('[data-acceso="docentes"]'); await p.click('[data-cat="docente"]'); await p.waitForTimeout(1100);
+    await p.click('[data-acceso="docentes"]'); await p.waitForSelector("#campo-codigo", { state: "visible" }); await p.waitForTimeout(1200);
+    (await medir(p, "#bienvenida")).forEach((r) => registrar(et, "bienvenida-codigo", r));
+    await p.click("#btn-volver-inicio"); await p.waitForTimeout(300);
+    await entrarGrupo(p, "docentes"); await p.click('[data-cat="docente"]'); await p.waitForTimeout(1100);
     (await medir(p, "#bienvenida")).forEach((r) => registrar(et, "bienvenida-docentes", r));
     await p.click("#btn-volver-lista"); await p.waitForTimeout(300);
-    await p.click('[data-acceso="padrinos"]'); await p.click('[data-padrino="falcon-analy"]'); await p.waitForTimeout(1500);
+    await entrarGrupo(p, "padrinos"); await p.click('[data-padrino="falcon-analy"]'); await p.waitForTimeout(1500);
     for (const v of ["invitacion", "programa", "confirmar", "pase", "liston"]) {
       await p.evaluate((x) => { location.hash = x; }, v); await p.waitForTimeout(600);
       (await medir(p, `section[data-vista="${v}"], .barra, .nav-inferior`)).forEach((r) => registrar(et, v, r));

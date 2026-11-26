@@ -5,6 +5,15 @@ https://zarevich1492.github.io/invitacion-radiologia-2026/ (misma dirección sie
 Reversión: `git revert <commit>` o volver a una etiqueta: `git checkout -B main <etiqueta> && git push -f origin main`
 (solo con autorización expresa).
 
+## v2.9 · Acceso por código de categoría (rama `acceso-por-codigo`; pendiente de publicar tras la migración SQL)
+- Pantalla inicial: cinco accesos (Padrinos y madrinas · Docentes y egresados · Residentes R1 y R2 · Otros invitados · Especialistas 2026), subtítulos nuevos, candado discreto en los cuatro restringidos y «Especialistas 2026» con fondo rojo institucional. Frase, logotipos, fuentes y tarjeta 3D intactos.
+- Código de acceso validado en el servidor (hash bcrypt, sesión de 12 h, 8 intentos/10 min por IP, revocación). Campo con Mostrar/Ocultar, «Ingresar» y «Volver al inicio».
+- Identificación tras el código: 10 padrinos, 7 especialistas, subcategoría y nombre para docentes/egresados y residentes; «Otros» entra libremente.
+- Navegación por categoría: Padrinos (Inicio|Programa|Confirmar|Mi pase|Mi listón), Especialistas (Inicio|Programa|Mi listón), Docentes/egresados y residentes (Inicio|Programa|Confirmar|Mi pase), Otros (Inicio|Programa).
+- Servidor: `acceso_validar`, `lista_nombres`, `guardar_con_sesion`, `mi_invitacion_sesion`, administración de códigos y `cierre_acceso.sql`. Se retira «Ver la invitación sin personalizar».
+- Pruebas: SQL 46 + 30 de acceso, aceptación 134, responsive 244, contraste 385, apariencia 6.
+- Pendiente: «Solicitar invitación» de Otros (especificación recibida incompleta) y listones en almacenamiento privado con enlaces temporales.
+
 ## v2.7 · Botón Inicio, sección independiente Mi listón, espacio Especialistas 2026, logotipo oficial y 17 listones (Dirección B)
 - Botón «Inicio» con icono de casa en barra superior y barra inferior: regresa a la tarjeta conservando su último estado e identidad (y al espacio conmemorativo personalizado para Especialistas 2026).
 - Sección independiente «Mi listón» (`#liston`) separada de «Mi pase», visible exclusivamente para los 7 graduandos y 10 padrinos/madrinas oficiales; oculta para docentes, egresados, residentes y otros invitados.

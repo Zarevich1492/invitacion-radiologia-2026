@@ -631,6 +631,12 @@ body{background-image:linear-gradient(#f4e6d1 0,#f4e6d1 55%,#efdfc6 100%);backgr
 .acceso::after{content:"→";position:absolute;right:16px;top:50%;transform:translateY(-50%);color:var(--rojo)}
 .acceso:hover,.acceso:focus-visible{border-color:var(--rojo);background:#fff6e8}
 .acceso[hidden]{display:none}
-.acceso[data-acceso="especialistas"]{border:1.5px solid var(--rojo);background:#faf0e1}
-.acceso[data-acceso="especialistas"] b{color:var(--rojo)}
+.acceso[data-acceso="especialistas"]{border:1.5px solid #8F1515;background:#B91C1C}
+.acceso[data-acceso="especialistas"] b,.acceso[data-acceso="especialistas"] span{color:#F4E6D1}
+.acceso[data-acceso="especialistas"]::after{color:#F4E6D1}
+.acceso[data-acceso="especialistas"]:hover,.acceso[data-acceso="especialistas"]:focus-visible{background:#9F1818;border-color:#231B15}
+.candado{width:.8em;height:.8em;margin-left:.45em;vertical-align:-.04em;opacity:.8}
+.sr-solo{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.campo-clave{display:flex;gap:8px;align-items:stretch}.campo-clave .campo{flex:1;min-width:0}
+#form-codigo{display:flex;flex-direction:column;gap:8px;width:100%}
 @media (min-width:640px){.accesos{display:grid;grid-template-columns:1fr 1fr}.accesos .acceso:last-child:nth-child(odd){grid-column:1 / -1}}
