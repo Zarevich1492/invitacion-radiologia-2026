@@ -123,7 +123,7 @@ async function responder(p, resp) {
   await p.screenshot({ path: `${OUT}/02-portada-variante-A.png` });
 
   // Navegación por vistas (padrinos: 5 apartados con Inicio y Mi listón independiente)
-  const navEsperadaPadrino = EV.modulos && EV.modulos.listones ? "Inicio|Programa|Confirmar|Mi pase|Mi listón|Palabras|Aportes" : "Inicio|Programa|Confirmar|Mi pase|Palabras|Aportes";
+  const navEsperadaPadrino = EV.modulos && EV.modulos.listones ? "Inicio|Programa|Confirmar|Mi pase|Mi listón|Distancia" : "Inicio|Programa|Confirmar|Mi pase|Distancia";
   const navPadrino = await p.$$eval(".nav-inferior [data-ir]", (a) => a.filter((x) => !x.hidden && getComputedStyle(x).display !== "none").map((x) => x.textContent.trim()).join("|"));
   ok("Navegación padrino: «Inicio» activo al entrar y apartados exactos", navPadrino === navEsperadaPadrino && (await p.getAttribute('.nav-inferior [data-ir="invitacion"]', "aria-current")) === "page", navPadrino);
   await irVista(p, "programa"); await irVista(p, "pase");
@@ -304,7 +304,7 @@ async function responder(p, resp) {
   await p.click('[data-graduando="arrieta-jorge"]'); await p.waitForTimeout(1500);
   ok("Graduando: entra directamente a su listón", (await p.evaluate(() => document.body.dataset.vistaActiva)) === "liston" && (await p.isVisible("#vista-liston")) && (await p.getAttribute("#liston-vista", "src")).split("?")[0] === "assets/listones/arrieta-jorge.png");
   const navG = await p.$$eval(".nav-inferior a", (a) => a.filter((x) => !x.hidden && getComputedStyle(x).display !== "none").map((x) => x.textContent.trim()).join("|"));
-  ok("Graduando: navegación exacta (Inicio|Programa|Mi listón|Palabras|Aportes)", navG === "Inicio|Programa|Mi listón|Palabras|Aportes", navG);
+  ok("Graduando: navegación exacta (Inicio|Programa|Mi listón|Distancia)", navG === "Inicio|Programa|Mi listón|Distancia", navG);
   await p.evaluate(() => { location.hash = "confirmar"; }); await p.waitForTimeout(400);
   ok("Graduando: la ruta #confirmar no está disponible", (await p.evaluate(() => document.body.dataset.vistaActiva)) === "liston");
   await irVista(p, "invitacion");
@@ -331,7 +331,7 @@ async function responder(p, resp) {
   p = await nuevaPagina(ctx, errores, externos);
   await rutaB(p, "r2", "Residente Prueba");
   const navR = await p.$$eval(".nav-inferior a", (a) => a.filter((x) => !x.hidden && getComputedStyle(x).display !== "none").map((x) => x.textContent.trim()).join("|"));
-  ok("Residente: navegación sin Mi listón (Inicio|Programa|Confirmar|Mi pase)", navR === "Inicio|Programa|Confirmar|Mi pase|Palabras|Aportes", navR);
+  ok("Residente: navegación sin Mi listón (Inicio|Programa|Confirmar|Mi pase)", navR === "Inicio|Programa|Confirmar|Mi pase|Distancia", navR);
   await p.evaluate(() => { location.hash = "liston"; }); await p.waitForTimeout(400);
   ok("Residente: ruta #liston no accesible", (await p.evaluate(() => document.body.dataset.vistaActiva)) !== "liston");
   await p.close();
@@ -341,10 +341,15 @@ async function responder(p, resp) {
   // ===== Dedicatorias y aportes (públicos, sin CAPTCHA externo) =====
   p = await nuevaPagina(ctx, errores, externos);
   await p.goto(BASE, { waitUntil: "networkidle" });
-  ok("Bienvenida: accesos públicos a dedicatorias y aportes sin código", (await p.isVisible('[data-visitante="dedicatorias"]')) && (await p.isVisible('[data-visitante="aportes"]')));
-  await p.click('[data-visitante="dedicatorias"]'); await p.waitForFunction(() => document.body.dataset.vistaActiva === "dedicatorias");
+  ok("Bienvenida: acceso público «Desde la distancia» sin código y sin solicitudes económicas", (await p.isVisible('[data-visitante="distancia"]')) && !/aporte|pago|dinero|dólar|bs\.?|transferencia|donaci/i.test(await p.textContent("#bienvenida")));
+  await p.click('[data-visitante="distancia"]'); await p.waitForFunction(() => document.body.dataset.vistaActiva === "distancia");
+  ok("Desde la distancia: título y texto aprobados", (await p.textContent("#t-distancia")).replace(/\s+/g, " ").includes("Hay muchas formas de estar presentes") && (await p.textContent("#vista-distancia")).includes("Tu cariño, tus enseñanzas y tus buenos deseos también forman parte de este logro."));
+  ok("Desde la distancia: «Dejar unas palabras» protagonista y formulario plegado", (await p.isVisible("#dd-abrir")) && (await p.textContent("#dd-abrir")) === "Dejar unas palabras" && !(await p.isVisible("#form-dedic")));
+  await p.waitForSelector("#pm-detalle:not([hidden])");
+  ok("Detalle voluntario: opción discreta plegada, sin datos de Pago Móvil a la vista", (await p.textContent("#pm-detalle summary")).includes("¿Deseas tener un detalle con la promoción?") && !(await p.isVisible("#pm-datos")) && !(await p.textContent("#vista-distancia")).includes("Titular de Prueba") && (await p.$$("#pm-datos .pm-fila")).length === 0);
+  await p.click("#dd-abrir");
   await p.waitForSelector("#dd-stickers .sticker"); await p.waitForFunction(() => !document.getElementById("dd-enviar").disabled, null, { timeout: 8000 });
-  ok("Dedicatorias: visibles para un visitante sin código; encabezado y frase", (await p.textContent("#vista-dedicatorias .versalita")).includes("XXIV Promoción · ULA 2026") && (await p.textContent(".cita-libro")).includes("recuerdos para toda la vida"));
+  ok("Dedicatorias: visibles para un visitante sin código; encabezado y frase", (await p.textContent("#vista-distancia .versalita")).includes("Desde la distancia") && (await p.textContent(".cita-libro")).includes("recuerdos para toda la vida"));
   ok("Dedicatorias: tipografía manuscrita (Caveat) cargada", await p.evaluate(async () => { await document.fonts.load('500 20px Caveat'); return document.fonts.check('500 20px Caveat'); }));
   ok("Dedicatorias: exactamente seis stickers", (await p.$$("#dd-stickers .sticker")).length === 6);
   ok("Dedicatorias: sin emojis ni subida de archivos", !(await p.$("#form-dedic input[type=file]")) && !/\p{Extended_Pictographic}/u.test(await p.textContent("#form-dedic")));
@@ -371,30 +376,33 @@ async function responder(p, resp) {
   const lect = await p.request.get(API + "/rest/v1/dedicatorias?select=telefono", { headers: hdr });
   ok("El público no puede leer teléfonos", lect.status() === 404 || lect.status() === 401 || lect.status() === 403);
   await p.close();
-  // Aportes voluntarios
+  // Detalle voluntario: solo al desplegar la opción
   p = await nuevaPagina(ctx, errores, externos);
-  await p.goto(BASE, { waitUntil: "networkidle" }); await p.click('[data-visitante="aportes"]');
-  await p.waitForSelector("#pm-datos .pm-fila");
+  await p.goto(BASE, { waitUntil: "networkidle" }); await p.click('[data-visitante="distancia"]');
+  await p.waitForSelector("#pm-detalle:not([hidden])");
+  await p.click("#pm-detalle summary"); await p.waitForSelector("#pm-datos .pm-fila");
   const filas = await p.$$eval("#pm-datos .pm-fila", (f) => f.map((x) => x.querySelector("dt").textContent));
-  ok("Aportes: cinco datos con su botón Copiar", filas.join("|") === "Banco|Código bancario|Titular|Cédula de identidad|Teléfono" && (await p.$$("#pm-datos .pm-copiar")).length === 5, filas.join("|"));
-  ok("Aportes: título, aviso de voluntariedad y cierre", (await p.textContent("#t-aportes")).includes("Que la distancia no sea un impedimento") && (await p.textContent("#pm-tarjeta")).includes("Todo aporte es voluntario") && (await p.textContent("#pm-gracias")).includes("incluso desde la distancia"));
-  ok("Aportes: sin montos, metas ni comprobantes", !/(monto|meta|m[ií]nimo|comprobante|ranking)/i.test(await p.textContent("#vista-aportes")));
+  ok("Detalle voluntario: al elegirlo se muestran cinco datos con su botón Copiar", filas.join("|") === "Banco|Código bancario|Titular|Cédula de identidad|Teléfono" && (await p.$$("#pm-datos .pm-copiar")).length === 5, filas.join("|"));
+  ok("Detalle voluntario: aviso de voluntariedad y cierre de gratitud", (await p.textContent("#pm-tarjeta")).includes("Todo es voluntario") && (await p.textContent("#pm-gracias")).includes("incluso desde la distancia"));
+  ok("Detalle voluntario: sin montos, metas ni comprobantes", !/(monto|meta|m[ií]nimo|comprobante|ranking)/i.test(await p.textContent("#vista-distancia")));
   await p.evaluate(() => { window.__cp = []; navigator.clipboard.writeText = async (t) => { window.__cp.push(t); }; });
   await p.click('[data-copiar="cedula"]'); await p.waitForTimeout(150);
-  ok("Aportes: copiar un dato individual con confirmación visual", (await p.evaluate(() => window.__cp[0])) === "1" && (await p.textContent("#pm-copiado")).includes("Copiado"));
+  ok("Detalle voluntario: copiar un dato individual con confirmación visual", (await p.evaluate(() => window.__cp[0])) === "1" && (await p.textContent("#pm-copiado")).includes("Copiado"));
   await p.click("#pm-copiar-todo"); await p.waitForTimeout(150);
   const todo = await p.evaluate(() => window.__cp[1]);
-  ok("Aportes: «Copiar datos de Pago Móvil» copia los cinco datos", /^Pago Móvil\nBanco: .+\nCódigo bancario: .+\nTitular: .+\nCédula de identidad: .+\nTeléfono: .+$/.test(todo), todo);
-  await p.screenshot({ path: `${OUT}/18-aportes.png`, fullPage: true });
+  ok("Detalle voluntario: «Copiar datos de Pago Móvil» copia los cinco datos", /^Pago Móvil\nBanco: .+\nCódigo bancario: .+\nTitular: .+\nCédula de identidad: .+\nTeléfono: .+$/.test(todo), todo);
+  await p.screenshot({ path: `${OUT}/18-desde-la-distancia.png`, fullPage: true });
+  await p.click("#pm-detalle summary"); await p.waitForTimeout(200);
+  ok("Detalle voluntario: al plegarlo los datos desaparecen", (await p.$$("#pm-datos .pm-fila")).length === 0);
   const sw2 = await p.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth]);
-  ok("Aportes: sin desplazamiento horizontal en móvil", sw2[0] <= sw2[1], sw2.join(" ≤ "));
+  ok("Desde la distancia: sin desplazamiento horizontal en móvil", sw2[0] <= sw2[1], sw2.join(" ≤ "));
   await p.close();
 
   // ===== «Otros invitados»: cinco funcionalidades de acceso libre, visibles desde Inicio =====
   p = await nuevaPagina(ctx, errores, externos);
   await rutaB(p, "otro", "Visitante Otros");
   const ops = await p.$$eval("#otros-tarjetas .op b", (b) => b.map((x) => x.textContent));
-  ok("Otros: cinco tarjetas visibles desde Inicio", ops.join("|") === "Ver invitación|Programa|Dejar una dedicatoria|Aporte voluntario|Solicitar invitación" && (await p.isVisible("#otros-tarjetas")), ops.join("|"));
+  ok("Otros: tarjetas visibles desde Inicio (ver, programa, desde la distancia, solicitar)", ops.join("|") === "Ver invitación|Programa|Desde la distancia|Solicitar invitación" && (await p.isVisible("#otros-tarjetas")), ops.join("|"));
   ok("Otros: sin contraseña ni registro previo (acceso libre)", !(await p.isVisible("#paso-codigo")));
   await p.screenshot({ path: `${OUT}/19-otros-inicio.png`, fullPage: true });
   await p.click('#otros-tarjetas [data-ir="solicitar"]'); await p.waitForFunction(() => document.body.dataset.vistaActiva === "solicitar");
@@ -408,14 +416,13 @@ async function responder(p, resp) {
   ok("Solicitar invitación: identifica quién invita y confirma el envío", (await p.textContent("#sol-gracias")).includes("Hemos recibido tu solicitud"));
   const rsol = await p.request.post(API + "/rest/v1/rpc/solicitar_invitacion", { headers: { apikey: "x", "Content-Type": "application/json" }, data: { p_nombre: "Bot", p_invita_tipo: "otro", p_invita_nombre: "", p_telefono: "+584140000000" } });
   ok("Solicitud directa sin quién invita es rechazada por el servidor", rsol.status() === 400 && /invita_invalido/.test(await rsol.text()));
-  await p.click('.nav-inferior [data-ir="dedicatorias"], .nav-superior [data-ir="dedicatorias"]').catch(() => {});
-  await p.evaluate(() => { location.hash = "dedicatorias"; }); await p.waitForFunction(() => document.body.dataset.vistaActiva === "dedicatorias");
+  await p.evaluate(() => { location.hash = "distancia"; }); await p.waitForFunction(() => document.body.dataset.vistaActiva === "distancia");
+  await p.click("#dd-abrir");
   ok("Otros: dedicatorias disponibles aunque su solicitud no esté autorizada", await p.isVisible("#form-dedic"));
-  await p.evaluate(() => { location.hash = "aportes"; }); await p.waitForFunction(() => document.body.dataset.vistaActiva === "aportes");
-  await p.waitForSelector("#pm-tarjeta:not([hidden])", { timeout: 8000 });
-  ok("Otros: aportes disponibles sin confirmar asistencia", await p.isVisible("#pm-tarjeta"));
+  await p.waitForSelector("#pm-detalle:not([hidden])", { timeout: 8000 });
+  ok("Otros: detalle voluntario disponible sin confirmar asistencia", await p.isVisible("#pm-detalle"));
   const navOt = await p.$$eval(".nav-inferior a", (a) => a.filter((x) => !x.hidden && getComputedStyle(x).display !== "none").map((x) => x.textContent.trim()).join("|"));
-  ok("Otros: navegación Inicio|Programa|Palabras|Aportes|Solicitar", navOt === "Inicio|Programa|Palabras|Aportes|Solicitar", navOt);
+  ok("Otros: navegación Inicio|Programa|Distancia|Solicitar", navOt === "Inicio|Programa|Distancia|Solicitar", navOt);
   await p.close();
   // Familia radiológica (una sola comunidad, sin subdivisiones)
   p = await nuevaPagina(ctx, errores, externos);
@@ -455,7 +462,7 @@ async function responder(p, resp) {
   p = await nuevaPagina(ctx, errores, externos);
   await rutaB(p, "otro", "Visitante Libre");
   const navO = await p.$$eval(".nav-inferior a", (a) => a.filter((x) => !x.hidden && getComputedStyle(x).display !== "none").map((x) => x.textContent.trim()).join("|"));
-  ok("Otros: navegación Inicio|Programa|Palabras|Aportes|Solicitar (sin confirmar ni pase hasta ser autorizado)", navO === "Inicio|Programa|Palabras|Aportes|Solicitar", navO);
+  ok("Otros: navegación Inicio|Programa|Distancia|Solicitar (sin confirmar ni pase hasta ser autorizado)", navO === "Inicio|Programa|Distancia|Solicitar", navO);
   await p.evaluate(() => { location.hash = "confirmar"; }); await p.waitForTimeout(400);
   ok("Otros: la ruta #confirmar no está disponible", (await p.evaluate(() => document.body.dataset.vistaActiva)) !== "confirmar");
   ok("Otros: ve la tarjeta personalizada", (await p.getAttribute("#img-portada", "src")).split("?")[0] === "assets/img/C-portada-1400.jpg");
@@ -611,7 +618,7 @@ async function responder(p, resp) {
   const dd = a.waitForEvent("download"); await a.click("#dd-exportar"); const ddf = await dd; await ddf.saveAs(`${OUT}/dedicatorias.csv`);
   ok("Exportación de dedicatorias aprobadas", fs.readFileSync(`${OUT}/dedicatorias.csv`, "utf8").includes("María Prueba"));
   const pl = await nuevaPagina(ctx, errores, externos);
-  await pl.goto(BASE, { waitUntil: "networkidle" }); await pl.click('[data-visitante="dedicatorias"]'); await pl.waitForSelector("#libro-dedic .libro-item");
+  await pl.goto(BASE, { waitUntil: "networkidle" }); await pl.click('[data-visitante="distancia"]'); await pl.waitForSelector("#libro-dedic .libro-item");
   ok("Libro público: muestra la dedicatoria aprobada con firma y fecha", (await pl.textContent("#libro-dedic")).includes("Felicitaciones, Dr. Arrieta") && (await pl.textContent("#libro-dedic")).includes("María Prueba") && !(await pl.textContent("#libro-dedic")).includes("+58"));
   await pl.close();
   await a.click('#dd-tabla [data-e="oculto"]'); await a.waitForTimeout(500);

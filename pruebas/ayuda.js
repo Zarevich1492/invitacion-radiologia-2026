@@ -7,6 +7,6 @@ async function entrarGrupo(p, grupo) {
   await p.click(`[data-acceso="${grupo}"]`);
   await p.waitForSelector("#campo-codigo", { state: "visible" });
   await p.fill("#campo-codigo", "codigo-e2e-" + grupo); await p.click("#btn-ingresar");
-  await p.waitForSelector(grupo === "padrinos" ? "#lista-nombres [data-padrino]" : "#opciones-cat .opcion-cat", { state: "visible" });
+  await p.waitForSelector(grupo === "padrinos" ? "#lista-nombres [data-padrino]" : grupo === "docentes" ? "#form-nombre:not([hidden]) #campo-nombre" : "#opciones-cat .opcion-cat", { state: "visible" });
 }
 module.exports = { API_PRUEBA, usarApiLocal, entrarGrupo };

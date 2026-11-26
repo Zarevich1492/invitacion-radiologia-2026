@@ -5,6 +5,12 @@ https://zarevich1492.github.io/invitacion-radiologia-2026/ (misma dirección sie
 Reversión: `git revert <commit>` o volver a una etiqueta: `git checkout -B main <etiqueta> && git push -f origin main`
 (solo con autorización expresa).
 
+## v2.14 · «Desde la distancia» (dedicatorias + detalle voluntario)
+- «Aportes voluntarios» deja de ser una sección independiente: una sola sección **«Desde la distancia»** («Hay muchas formas de estar presentes», «Tu cariño, tus enseñanzas y tus buenos deseos también forman parte de este logro»), con «Dejar unas palabras» como acción principal y el libro de dedicatorias debajo.
+- Segunda opción discreta y plegada: «¿Deseas tener un detalle con la promoción?». Solo si la persona la despliega se pintan los datos de Pago Móvil y sus botones de copiado (al plegar desaparecen). Sin solicitudes económicas en bienvenida, tarjeta, confirmación, pase, listón ni mensajes de WhatsApp.
+- Navegación: una sola entrada «Desde la distancia» (barra inferior: «Distancia») para todos los perfiles; los enlaces antiguos `#dedicatorias` y `#aportes` abren la nueva sección. Configuración administrativa y datos de aportes sin cambios.
+- Pruebas: aceptación 211, responsive 244, contraste 449.
+
 ## v2.13 · Pretarjeta (sobre con sello XXIV) y «Familia radiológica»
 - Enlaces individuales: escena de recepción obligatoria antes de la tarjeta 3D (sobre crema con sello rojo XXIV, tres logotipos oficiales, «Has recibido una invitación especial», nombre recuperado de Supabase, mensaje institucional, «Abrir mi invitación», animación de apertura y transición). Se muestra también con sesión previa en el navegador y nunca el formulario de categorías. Los enlaces y tokens existentes no cambian.
 - «Docentes y egresados» pasa a «Familia radiológica» («Quienes hacen posible nuestra historia»): una sola comunidad sin subdivisiones; misma contraseña; registros, permisos y enlaces anteriores intactos (códigos internos `docente`/`egresado` conservados); panel, filtros, indicadores, solicitudes y mensajes actualizados.

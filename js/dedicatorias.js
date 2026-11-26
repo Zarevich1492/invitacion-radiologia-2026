@@ -1,4 +1,4 @@
-/* Palabras que nos acompañan (dedicatorias), Aportes voluntarios y Solicitud de invitación. Públicos.
+/* Desde la distancia (dedicatorias + detalle voluntario) y Solicitud de invitación. Públicos.
    Protección solo en el servidor: validación, frecuencia, duplicados, saneamiento y moderación obligatoria (sin CAPTCHA externo). */
 (function () {
   "use strict";
@@ -99,7 +99,7 @@
     } catch (e) { ul.innerHTML = '<li class="libro-vacio">No pudimos cargar el libro en este momento.</li>'; }
   }
 
-  /* ---------- Aportes voluntarios ---------- */
+  /* ---------- Detalle voluntario (Pago Móvil): solo se muestra si la persona despliega la opción ---------- */
   const CAMPOS = [["banco", "Banco"], ["codigo", "Código bancario"], ["titular", "Titular"], ["cedula", "Cédula de identidad"], ["telefono", "Teléfono"]];
   let datosPM = null, tCopia = null;
   function copiado(t) { const e = $("#pm-copiado"); e.textContent = t; clearTimeout(tCopia); tCopia = setTimeout(() => { e.textContent = ""; }, 2200); }
@@ -108,23 +108,25 @@
     catch (e) { const ta = document.createElement("textarea"); ta.value = texto; ta.setAttribute("readonly", ""); ta.style.cssText = "position:fixed;opacity:0"; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); } catch (e2) {} ta.remove(); }
     copiado(msg);
   }
-  async function cargarAportes() {
+  async function comprobarAportes() {
+    const det = $("#pm-detalle"); det.open = false; $("#pm-datos").innerHTML = ""; datosPM = null;
     let a = null;
     if (window.API.configurado) { try { a = await window.API.aportesPublicos(); } catch (e) {} }
     const ok = !!(a && a.activo && CAMPOS.some(([k]) => a[k]));
-    $("#pm-tarjeta").hidden = !ok; $("#aportes-inactivo").hidden = ok;
-    if (!ok) return;
-    datosPM = a;
-    if (a.intro) $("#aportes-intro").textContent = a.intro;
-    if (a.gracias) $("#pm-gracias").textContent = a.gracias;
-    $("#pm-datos").innerHTML = CAMPOS.filter(([k]) => a[k]).map(([k, t]) => `<div class="pm-fila"><dt>${t}</dt><dd>${esc(a[k])}</dd><button class="btn pm-copiar" type="button" data-copiar="${k}" aria-label="Copiar ${t.toLowerCase()}">Copiar</button></div>`).join("");
+    det.hidden = !ok;                     // la opción solo existe si la organización la activó
+    if (ok) datosPM = a;                  // se guarda en memoria; no se pinta hasta que la persona lo elija
   }
+  function pintarPM() {
+    if (!datosPM) return;
+    if (datosPM.gracias) $("#pm-gracias").textContent = datosPM.gracias;
+    $("#pm-datos").innerHTML = CAMPOS.filter(([k]) => datosPM[k]).map(([k, t]) => `<div class="pm-fila"><dt>${t}</dt><dd>${esc(datosPM[k])}</dd><button class="btn pm-copiar" type="button" data-copiar="${k}" aria-label="Copiar ${t.toLowerCase()}">Copiar</button></div>`).join("");
+  }
+  $("#pm-detalle").addEventListener("toggle", () => { if ($("#pm-detalle").open) pintarPM(); else { $("#pm-datos").innerHTML = ""; $("#pm-copiado").textContent = ""; } });
   $("#pm-datos").addEventListener("click", (e) => { const b = e.target.closest("[data-copiar]"); if (b && datosPM) copiar(String(datosPM[b.dataset.copiar]), "Copiado: " + CAMPOS.find(([k]) => k === b.dataset.copiar)[1]); });
   $("#pm-copiar-todo").addEventListener("click", () => {
     if (!datosPM) return;
     copiar("Pago Móvil\n" + CAMPOS.filter(([k]) => datosPM[k]).map(([k, t]) => `${t}: ${datosPM[k]}`).join("\n"), "Datos de Pago Móvil copiados");
   });
-
 
   /* ---------- Solicitar invitación (Otros invitados) ---------- */
   let EVs = null, cargandoSol = false;
@@ -156,9 +158,15 @@
     finally { cargandoSol = false; $("#sol-enviar").disabled = false; }
   });
 
+  // El botón principal despliega el formulario (el libro de dedicatorias ya es visible debajo)
+  $("#dd-abrir").addEventListener("click", () => {
+    const bloque = $("#dd-bloque"), abrir = bloque.hidden;
+    bloque.hidden = !abrir; $("#dd-abrir").setAttribute("aria-expanded", String(abrir));
+    if (abrir) { iniciarForm(); setTimeout(() => { const m = $("#dd-msg"); if (m && !m.disabled) m.focus({ preventScroll: false }); }, 350); }
+  });
+
   window.Dedicatorias = {
-    abrir() { pintarStickers(); previa(); iniciarForm(); cargarLibro(); },
-    abrirAportes() { cargarAportes(); },
+    abrir() { pintarStickers(); previa(); cargarLibro(); comprobarAportes(); },
     abrirSolicitud() { iniciarSolicitud(); },
   };
 })();

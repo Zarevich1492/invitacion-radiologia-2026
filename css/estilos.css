@@ -733,3 +733,13 @@ body{background-image:linear-gradient(#f4e6d1 0,#f4e6d1 55%,#efdfc6 100%);backgr
 .sobre-escena .btn-primario{min-width:220px;margin-top:4px}
 @media (max-height:640px){.sobre-logos{height:36px}.sobre{width:min(62vw,250px)}}
 @media (prefers-reduced-motion:reduce){.sobre-escena,.sobre-solapa,.sobre-carta,.sello{transition-duration:.01s!important;transition-delay:0s!important}}
+
+/* ---------- Desde la distancia ---------- */
+.dd-cta{margin:6px 0 16px}
+.btn-grande{min-height:58px;padding-inline:2em;font-size:1.15rem;box-shadow:0 10px 22px -12px rgba(142,26,23,.8)}
+.pm-detalle{margin:26px 0 8px;max-width:560px}
+.pm-detalle>summary{cursor:pointer;color:var(--tinta-suave);font-size:.95rem;min-height:44px;display:flex;align-items:center;gap:8px;text-decoration:underline;text-underline-offset:.25em;list-style:none}
+.pm-detalle>summary::-webkit-details-marker{display:none}
+.pm-detalle>summary::before{content:"+";font-weight:700;color:var(--rojo)}
+.pm-detalle[open]>summary::before{content:"−"}
+.pm-detalle .pm-tarjeta{margin-top:8px}
