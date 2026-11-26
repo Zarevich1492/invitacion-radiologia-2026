@@ -5,6 +5,6 @@
    Mientras estos valores estén vacíos, la invitación funciona completa pero la confirmación
    en línea muestra un aviso de «no disponible» (no simula guardados). */
 window.CONFIG = {
-  supabaseUrl: "",        // p. ej. "https://abcdefghijkl.supabase.co"
-  supabaseAnonKey: "",    // clave pública anon / publishable
+  supabaseUrl: "https://cutihnjpffjlfkqngdry.supabase.co",        // p. ej. "https://abcdefghijkl.supabase.co"
+  supabaseAnonKey: "sb_publishable_kEyMnd8DdxMJfKpOmBikug_LexLC9tN",    // clave pública anon / publishable
 };
