@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="version-recursos" content="202611260128">
+<meta name="version-recursos" content="202611260148">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>XXIV Promoción de Radiólogos | Invitación especial</title>
 <meta name="description" content="Tres momentos. Una misma celebración. Sábado 28 de noviembre de 2026.">
@@ -30,7 +30,7 @@
 <link rel="preload" href="assets/fonts/BodoniModa-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/EBGaramond-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/logos/promocion-xxiv-560.jpg" as="image">
-<link rel="stylesheet" href="css/estilos.css?v=202611260128">
+<link rel="stylesheet" href="css/estilos.css?v=202611260148">
 </head>
 <body>
 
@@ -46,41 +46,46 @@
     <h1 id="bienvenida-titulo">Hay momentos que merecen <em>ser compartidos</em></h1>
     <p class="bienvenida-sub">Hemos preparado una invitación especial para ti.</p>
 
-    <!-- Paso 1: selector de padrinos -->
-    <div class="paso" id="paso-lista">
+    <!-- Paso 0: cinco accesos -->
+    <div class="paso" id="paso-acceso">
+      <p class="pregunta" id="acceso-pregunta">¿Cómo nos acompañas en esta celebración?</p>
+      <div class="accesos" role="group" aria-label="Elige cómo nos acompañas">
+        <button class="acceso" type="button" data-acceso="padrinos"><b>Padrinos y madrinas</b><span>Elige tu nombre del listado</span></button>
+        <button class="acceso" type="button" data-acceso="docentes"><b>Docentes y egresados</b><span>Del postgrado de Radiología</span></button>
+        <button class="acceso" type="button" data-acceso="residentes"><b>Residentes R1 y R2</b><span>Primer y segundo año</span></button>
+        <button class="acceso" type="button" data-acceso="otros"><b>Otros invitados</b><span>Familia, amigos y colegas</span></button>
+        <button class="acceso" type="button" id="btn-integrante" data-acceso="especialistas" hidden><b>Especialistas 2026</b><span>Integrantes de la XXIV Promoción</span></button>
+      </div>
+      <button class="btn btn-texto" type="button" id="btn-general">Ver la invitación sin personalizar</button>
+    </div>
+
+    <!-- Padrinos y madrinas: selector de nombres -->
+    <div class="paso" id="paso-lista" hidden>
+      <p class="pregunta">Padrinos y madrinas</p>
       <label class="etiqueta" for="buscar-nombre">Busca y elige tu nombre</label>
       <input id="buscar-nombre" class="campo" type="search" placeholder="Nombre o apellido" autocomplete="off" autocapitalize="words" spellcheck="false" aria-controls="lista-nombres">
       <ul class="lista-nombres" id="lista-nombres" role="listbox" aria-label="Padrinos y madrinas de la promoción"></ul>
-      <button class="btn btn-texto" type="button" id="btn-general">Ver la invitación sin personalizar</button>
-      <button class="btn btn-integrante" type="button" id="btn-integrante" hidden>Soy integrante de la XXIV Promoción</button>
+      <button class="btn btn-texto" type="button" id="btn-volver-acceso-1">← Otras opciones</button>
     </div>
 
-    <!-- Paso alterno: integrantes de la promoción (graduandos) -->
+    <!-- Especialistas 2026 (módulo de listones; coordinado con Antigravity) -->
     <div class="paso" id="paso-graduando" hidden>
-      <p class="pregunta">Integrantes de la XXIV Promoción</p>
+      <p class="pregunta">Especialistas 2026</p>
       <p class="nota" style="text-align:center;margin:0">Elige tu nombre para obtener tu listón conmemorativo.</p>
       <ul class="lista-nombres" id="lista-graduandos" role="listbox" aria-label="Integrantes de la XXIV Promoción"></ul>
-      <button class="btn btn-texto" type="button" id="btn-volver-lista-2">← Volver al listado de padrinos</button>
+      <button class="btn btn-texto" type="button" id="btn-volver-lista-2">← Otras opciones</button>
     </div>
 
-    <!-- Paso 2: categoría -->
+    <!-- Docentes y egresados · Residentes · Otros: subcategoría y nombre -->
     <div class="paso" id="paso-categoria" hidden>
-      <p class="pregunta">¿Cómo nos acompañas en esta celebración?</p>
-      <div class="opciones-cat" role="radiogroup" aria-label="Categoría de invitado">
-        <button class="opcion-cat" type="button" role="radio" aria-checked="false" data-cat="r1"><b>Residente de primer año</b><span>R1 · Postgrado de Radiología</span></button>
-        <button class="opcion-cat" type="button" role="radio" aria-checked="false" data-cat="r2"><b>Residente de segundo año</b><span>R2 · Postgrado de Radiología</span></button>
-        <button class="opcion-cat" type="button" role="radio" aria-checked="false" data-cat="otro"><b>Otro invitado</b><span>Familia, amigos y colegas</span></button>
-      </div>
+      <p class="pregunta" id="categoria-pregunta"></p>
+      <div class="opciones-cat" id="opciones-cat" role="radiogroup" aria-label="Categoría de invitado"></div>
       <form class="form-nombre" id="form-nombre" autocomplete="off" hidden>
-        <label class="etiqueta" for="campo-nombre">Tu nombre y apellido</label>
+        <label class="etiqueta" for="campo-nombre">Tu nombre completo</label>
         <input id="campo-nombre" class="campo" maxlength="80" placeholder="Nombre y apellido" autocapitalize="words" spellcheck="false" enterkeyhint="go" required minlength="2">
-        <button class="btn btn-primario" type="submit">Abrir mi invitación</button>
+        <button class="btn btn-primario" type="submit">Continuar a mi invitación</button>
       </form>
-      <details class="omision">
-        <summary>¿Eres padrino o madrina y no apareces en el listado?</summary>
-        <p>Elige «Otro invitado» y continúa; al confirmar tu asistencia podrás dejar una nota para los organizadores.</p>
-      </details>
-      <button class="btn btn-texto" type="button" id="btn-volver-lista">← Volver al listado</button>
+      <button class="btn btn-texto" type="button" id="btn-volver-lista">← Otras opciones</button>
     </div>
 
     <!-- Paso alterno: enlace individual reconocido -->
@@ -286,10 +291,10 @@
   <style>.bienvenida{display:none!important}</style>
 </noscript>
 
-<script src="js/config.js?v=202611260128"></script>
-<script src="js/api.js?v=202611260128"></script>
-<script src="js/pase.js?v=202611260128"></script>
-<script src="js/app.js?v=202611260128"></script>
-<script src="js/inicio.js?v=202611260128"></script>
+<script src="js/config.js?v=202611260148"></script>
+<script src="js/api.js?v=202611260148"></script>
+<script src="js/pase.js?v=202611260148"></script>
+<script src="js/app.js?v=202611260148"></script>
+<script src="js/inicio.js?v=202611260148"></script>
 </body>
 </html>

@@ -8,7 +8,8 @@
   const normal = (t) => String(t || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
   const fecha = (v) => (v ? new Date(v).toLocaleString("es-VE", { dateStyle: "short", timeStyle: "short" }) : "—");
   const ETQ = { asistira: "Asistirá", no_asistira: "No asistirá", por_confirmar: "Por confirmar", sin_responder: "Sin responder", no_aplica: "No aplica" };
-  const CAT = { padrino: "Padrino/Madrina", r1: "R1", r2: "R2", otro: "Otro invitado" };
+  const CAT = { padrino: "Padrino/Madrina", docente: "Docente", egresado: "Egresado", r1: "R1", r2: "R2", otro: "Otro invitado" };
+  const ORDEN_CAT = ["padrino", "docente", "egresado", "r1", "r2", "otro"];
   const CLAVE_SESION = "invitacion-ula-2026:admin";
   let sesion = null, EV = null, D = null, R = null;
 
@@ -54,15 +55,16 @@
 
   /* ---------- Carga ---------- */
   async function cargar() {
-    const [invitados, padrinos, categorias, actividades, soyAdmin] = await Promise.all([
+    const [invitados, padrinos, categorias, habilitaciones, actividades, soyAdmin] = await Promise.all([
       api("invitados?select=id,categoria,padrino_id,nombre,origen,token_admin,verificado,recepcion_override,nota_omision,creado,actualizado,respondido,confirmaciones(actividad,estado,actualizado)&order=creado.asc"),
       api("padrinos?select=*&order=apellido.asc,nombre.asc"),
       api("categorias?select=*"),
+      api("habilitaciones?select=*"),
       api("actividades?select=*&order=orden.asc"),
       rpc("es_admin"),
     ]);
     if (!soyAdmin) { salir(); $("#acceso-aviso").textContent = "Esta cuenta no figura como organizadora. Pida que la añadan a la tabla «administradores»."; return; }
-    D = { invitados, padrinos, categorias, actividades };
+    D = { invitados, padrinos, categorias, habilitaciones, actividades };
     R = window.Metricas.calcular(D, EV.graduandos);
     $("#acceso").hidden = true; $("#panel").hidden = false; $("#salir").hidden = false;
     $("#actualizado").textContent = `Datos al ${fecha(new Date())} · sesión: ${sesion.email || ""}`;
@@ -76,7 +78,7 @@
     const tile = (n, t, s) => `<div class="adm-tile"><b>${n}</b><span>${t}</span>${s ? `<small>${s}</small>` : ""}</div>`;
     $("#indicadores").innerHTML =
       tile(g.padrinos, "Padrinos y madrinas") + tile(g.padrinosRespondieron, "Padrinos que respondieron") + tile(g.padrinosPendientes, "Padrinos pendientes") +
-      tile(g.r1, "R1 registrados") + tile(g.r2, "R2 registrados") + tile(g.otros, "Otros invitados registrados") +
+      tile(g.docentes, "Docentes registrados") + tile(g.egresados, "Egresados registrados") + tile(g.r1, "R1 registrados") + tile(g.r2, "R2 registrados") + tile(g.otros, "Otros invitados registrados") +
       tile(g.invitadosUnicos, "Invitados únicos", "10 padrinos + registrados") + tile(g.respuestas, "Respuestas registradas", "personas con al menos una respuesta") +
       tile(g.asistiranTres, "Asistirán a 3 actividades") + tile(g.asistiranDos, "Asistirán a 2") + tile(g.asistiranUna, "Asistirán a 1") +
       tile(g.graduandos, "Graduandos (anfitriones)", "fuera de las tasas de respuesta");
@@ -114,7 +116,7 @@
       const ovReg = p.oficial || p.registro;
       const ov = p.override === true ? "si" : p.override === false ? "no" : "";
       const verif = p.verificado ? '<span class="sello ok">Verificado</span>' : p.respondio ? '<span class="sello">Enlace general</span>' : "—";
-      const extras = (p.envios > 1 ? `<span class="sello aviso" title="Varias respuestas recibidas para esta persona">${p.envios} envíos</span>` : "") + (p.nota ? `<span class="sello aviso" title="${esc(p.nota)}">Nota</span>` : "");
+      const extras = (p.envios > 1 ? `<span class="sello aviso" title="Varias respuestas recibidas para esta persona">${p.envios} envíos</span>` : "") + (p.duplicado ? `<span class="sello aviso" title="Hay otro registro con el mismo nombre y categoría: revise y elimine el duplicado">Posible duplicado</span>` : "") + (p.nota ? `<span class="sello aviso" title="${esc(p.nota)}">Nota</span>` : "");
       return `<tr>
         <th scope="row"><span class="nom">${esc(p.nombre)}</span> ${extras}${p.nota ? `<small class="nota-reg">${esc(p.nota)}</small>` : ""}</th>
         <td>${CAT[p.categoria] || p.categoria}</td>${celdas}
@@ -152,7 +154,7 @@
       } else if (b.dataset.editar) {
         const p = R.personas.find((x) => x.registro && x.registro.id === b.dataset.editar);
         const fila = b.closest("tr");
-        fila.querySelector("th").innerHTML = `<form class="adm-edit"><input class="campo" value="${esc(p.nombre)}" maxlength="80" required><select class="campo">${["r1", "r2", "otro"].map((c) => `<option value="${c}"${c === p.categoria ? " selected" : ""}>${CAT[c]}</option>`).join("")}</select><button class="btn mini">Guardar</button></form>`;
+        fila.querySelector("th").innerHTML = `<form class="adm-edit"><input class="campo" value="${esc(p.nombre)}" maxlength="80" required><select class="campo">${["docente", "egresado", "r1", "r2", "otro"].map((c) => `<option value="${c}"${c === p.categoria ? " selected" : ""}>${CAT[c]}</option>`).join("")}</select><button class="btn mini">Guardar</button></form>`;
         fila.querySelector("form").addEventListener("submit", async (ev) => {
           ev.preventDefault();
           const [n, c] = ev.target.querySelectorAll("input,select");
@@ -183,14 +185,17 @@
     } catch (err) { toast(err.message); }
   });
 
-  /* ---------- Reglas de recepción ---------- */
+  /* ---------- Habilitación de actividades por categoría ---------- */
+  const reglaDe = (cat, act) => { const r = D.habilitaciones.find((h) => h.categoria === cat && h.actividad === act); return r ? !!r.habilitada : act !== "recepcion"; };
   function pintarReglas() {
-    $("#reglas").innerHTML = D.categorias.sort((a, b) => ["padrino", "r1", "r2", "otro"].indexOf(a.codigo) - ["padrino", "r1", "r2", "otro"].indexOf(b.codigo)).map((c) =>
-      `<label class="adm-regla"><input type="checkbox" data-cat="${c.codigo}"${c.recepcion_habilitada ? " checked" : ""}> ${esc(c.etiqueta)}</label>`).join("");
+    const cats = D.categorias.slice().sort((a, b) => ORDEN_CAT.indexOf(a.codigo) - ORDEN_CAT.indexOf(b.codigo));
+    $("#reglas").innerHTML = `<div class="adm-tabla-caja"><table class="adm-tabla adm-matriz"><thead><tr><th>Categoría</th>${D.actividades.map((a) => `<th>${esc(a.titulo)}<br><small>${esc(a.hora_texto)}</small></th>`).join("")}</tr></thead><tbody>`
+      + cats.map((c) => `<tr><th scope="row">${esc(c.etiqueta)}</th>${D.actividades.map((a) => `<td><label class="adm-regla"><input type="checkbox" data-cat="${c.codigo}" data-act="${a.codigo}"${reglaDe(c.codigo, a.codigo) ? " checked" : ""} aria-label="${esc(c.etiqueta)}: ${esc(a.titulo)}"> <span>${reglaDe(c.codigo, a.codigo) ? "Habilitada" : "No"}</span></label></td>`).join("")}</tr>`).join("")
+      + `</tbody></table></div>`;
   }
   $("#reglas").addEventListener("change", async (e) => {
-    const c = e.target.dataset.cat; if (!c) return;
-    try { await api(`categorias?codigo=eq.${c}`, { method: "PATCH", body: JSON.stringify({ recepcion_habilitada: e.target.checked }) }); await cargar(); toast("Regla de recepción actualizada"); }
+    const c = e.target.dataset.cat, a = e.target.dataset.act; if (!c || !a) return;
+    try { await api("habilitaciones", { method: "POST", headers: { Prefer: "resolution=merge-duplicates" }, body: JSON.stringify({ categoria: c, actividad: a, habilitada: e.target.checked }) }); await cargar(); toast("Habilitación actualizada"); }
     catch (err) { toast("No se guardó: " + err.message); }
   });
 

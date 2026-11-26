@@ -84,6 +84,43 @@ begin
   execute 'reset role';
   -- Las inserciones dentro del bloque fallido se revirtieron; se mantiene lo anterior.
 
+  -- ===== Docentes y egresados =====
+  execute 'set local role anon';
+  r := public.guardar_confirmacion(null, 'docente', null, 'Dr. Luis Ángel Núñez', '{"clase":"asistira","caravana":"por_confirmar","recepcion":"asistira"}');
+  perform public._ok('docente: registrado con clase y caravana', r->'invitacion'->>'categoria' = 'docente' and r->'invitacion'->'respuestas' = '{"clase":"asistira","caravana":"por_confirmar"}'::jsonb, (r->'invitacion'->'respuestas')::text);
+  perform public._ok('docente: recepción NO habilitada por defecto (no se asume)', not (r->'invitacion'->'actividades') ? 'recepcion');
+  r2 := public.guardar_confirmacion(null, 'egresado', null, 'Dra. Marta Rivas', '{"clase":"no_asistira"}');
+  perform public._ok('egresado: registrado', r2->'invitacion'->>'categoria' = 'egresado' and r2->'invitacion'->'respuestas'->>'clase' = 'no_asistira');
+  cfg := public.invitacion_config();
+  perform public._ok('config: matriz de habilitación con docente y egresado', cfg->'habilitaciones'->'docente'->>'recepcion' = 'false' and cfg->'habilitaciones'->'egresado'->>'clase' = 'true' and cfg->'habilitaciones'->'padrino'->>'recepcion' = 'true');
+  execute 'reset role';
+  -- Un organizador habilita la recepción para egresados y luego la retira
+  insert into public.administradores(user_id, email) values ('33333333-3333-3333-3333-333333333333', 'matriz@ejemplo.org');
+  execute 'set local role authenticated';
+  perform set_config('request.jwt.claim.sub', '33333333-3333-3333-3333-333333333333', true);
+  update public.habilitaciones set habilitada = true where categoria = 'egresado' and actividad = 'recepcion';
+  update public.habilitaciones set habilitada = false where categoria = 'docente' and actividad = 'caravana';
+  execute 'reset role';
+  execute 'set local role anon';
+  r2 := public.guardar_confirmacion(null, 'egresado', null, 'Dr. Pablo Mora', '{"recepcion":"asistira"}');
+  perform public._ok('egresado con recepción habilitada por el organizador', r2->'invitacion'->'respuestas'->>'recepcion' = 'asistira');
+  r2 := public.guardar_confirmacion(null, 'docente', null, 'Dra. Ana Soto', '{"caravana":"asistira","clase":"asistira"}');
+  perform public._ok('actividad deshabilitada por categoría: se ignora', not (r2->'invitacion'->'respuestas') ? 'caravana' and r2->'invitacion'->'respuestas'->>'clase' = 'asistira');
+  begin perform public.guardar_confirmacion(null, 'docente', null, 'Persona Rara', '{"clase":"quizas"}'); perform public._ok('docente: estado inválido rechazado', false);
+  exception when others then perform public._ok('docente: estado inválido rechazado', sqlerrm = 'estado_invalido'); end;
+  execute 'reset role';
+  execute 'set local role authenticated';
+  perform set_config('request.jwt.claim.sub', '33333333-3333-3333-3333-333333333333', true);
+  v_id := public.admin_crear_invitado('Dra. Rosa Lugo', 'docente');
+  perform public._ok('admin crea invitados docente/egresado', exists(select 1 from public.invitados where id = v_id and categoria = 'docente'));
+  execute 'reset role';
+  -- Restablecer las reglas para no alterar las pruebas siguientes
+  update public.habilitaciones set habilitada = false where categoria = 'egresado' and actividad = 'recepcion';
+  update public.habilitaciones set habilitada = true where categoria = 'docente' and actividad = 'caravana';
+  delete from public.invitados where categoria in ('docente','egresado');
+  delete from public.administradores where user_id = '33333333-3333-3333-3333-333333333333';
+  delete from public.intentos;
+
   -- ===== Administrador =====
   insert into public.administradores(user_id, email) values ('11111111-1111-1111-1111-111111111111', 'admin@ejemplo.org');
   execute 'set local role authenticated';
@@ -100,7 +137,7 @@ begin
   -- Excepción individual: el Dr. Viña sin recepción
   update public.invitados set recepcion_override = false where id = v_oficial;
   -- Regla por categoría: habilitar recepción a R2
-  update public.categorias set recepcion_habilitada = true where codigo = 'r2';
+  update public.habilitaciones set habilitada = true where categoria = 'r2' and actividad = 'recepcion';
   execute 'reset role';
 
   execute 'set local role anon';

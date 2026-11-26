@@ -26,10 +26,10 @@ const ok = (n, c, d = "") => { res.push({ n, ok: !!c, d }); if (!c) console.log(
     const et = `${w}×${h}`;
     await p.goto(BASE, { waitUntil: "networkidle" });
     // Bienvenida
-    const bv = await p.evaluate(() => ({ sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth, primerNombre: (() => { const r = document.querySelector("[data-padrino]").getBoundingClientRect(); return r.bottom <= innerHeight; })() }));
+    const bv = await p.evaluate(() => ({ sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth, primerNombre: (() => { const r = document.querySelector(".acceso").getBoundingClientRect(); return r.bottom <= innerHeight; })() }));
     ok(`${et} bienvenida sin desplazamiento horizontal`, bv.sw <= bv.cw, `${bv.sw}>${bv.cw}`);
-    ok(`${et} bienvenida: el selector de nombres es visible sin desplazar`, bv.primerNombre || h < 600);
-    await p.click('[data-padrino="falcon-analy"]'); await p.waitForTimeout(1900);
+    ok(`${et} bienvenida: los accesos son visibles sin desplazar`, bv.primerNombre || h < 600);
+    await p.click('[data-acceso="padrinos"]'); await p.click('[data-padrino="falcon-analy"]'); await p.waitForTimeout(1900);
 
     const vistaInv = await p.evaluate(() => {
       const q = (s) => document.querySelector(s).getBoundingClientRect();

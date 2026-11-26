@@ -8,7 +8,7 @@ const esperado = { fondo: "245,231,211", cara: "245,231,211" };
   const combos = [["sistema claro", [], "light"], ["sistema oscuro", [], "dark"], ["sistema oscuro + oscurecimiento automático", ["--blink-settings=forceDarkModeEnabled=true"], "dark"]];
   for (const [et, args, cs] of combos) for (const [dis, vp] of [["móvil", { width: 390, height: 844 }], ["escritorio", { width: 1366, height: 768 }]]) {
     const b = await chromium.launch({ args }); const p = await (await b.newContext({ viewport: vp, colorScheme: cs })).newPage();
-    await p.goto(BASE, { waitUntil: "networkidle" }); await p.click('[data-padrino="falcon-analy"]'); await p.waitForTimeout(6500);
+    await p.goto(BASE, { waitUntil: "networkidle" }); await p.click('[data-acceso="padrinos"]'); await p.click('[data-padrino="falcon-analy"]'); await p.waitForTimeout(6500);
     const px = async (x, y) => { const buf = await p.screenshot({ clip: { x, y, width: 1, height: 1 } }); return p.evaluate(async (s) => { const i = new Image(); i.src = "data:image/png;base64," + s; await i.decode(); const c = document.createElement("canvas"); c.width = c.height = 1; const g = c.getContext("2d"); g.drawImage(i, 0, 0); return [...g.getImageData(0, 0, 1, 1).data].slice(0, 3).join(","); }, buf.toString("base64")); };
     const r = await p.evaluate(() => { const c = document.getElementById("tarjeta").getBoundingClientRect(); return { x: Math.round(c.left + c.width * 0.5), y: Math.round(c.top + 8) }; });
     const fondo = await px(4, 300), cara = await px(r.x, r.y);

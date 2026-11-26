@@ -12,7 +12,10 @@ const BASE = process.argv[2] || "http://127.0.0.1:8765/";
     await p.waitForTimeout(1600);   // fin de la animación de entrada (se mide el estado estable)
     const bienvenida = await medir(p, "#bienvenida");
     bienvenida.forEach((r) => registrar(et, "bienvenida", r));
-    await p.click('[data-padrino="falcon-analy"]'); await p.waitForTimeout(1500);
+    await p.click('[data-acceso="docentes"]'); await p.click('[data-cat="docente"]'); await p.waitForTimeout(1100);
+    (await medir(p, "#bienvenida")).forEach((r) => registrar(et, "bienvenida-docentes", r));
+    await p.click("#btn-volver-lista"); await p.waitForTimeout(300);
+    await p.click('[data-acceso="padrinos"]'); await p.click('[data-padrino="falcon-analy"]'); await p.waitForTimeout(1500);
     for (const v of ["invitacion", "programa", "confirmar", "pase"]) {
       await p.evaluate((x) => { location.hash = x; }, v); await p.waitForTimeout(600);
       (await medir(p, `section[data-vista="${v}"], .barra, .nav-inferior`)).forEach((r) => registrar(et, v, r));

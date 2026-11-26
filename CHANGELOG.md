@@ -5,6 +5,17 @@ https://zarevich1492.github.io/invitacion-radiologia-2026/ (misma dirección sie
 Reversión: `git revert <commit>` o volver a una etiqueta: `git checkout -B main <etiqueta> && git push -f origin main`
 (solo con autorización expresa).
 
+## v2.5 · Docentes y egresados, cinco accesos y habilitación por actividad
+- Bienvenida con cinco accesos: Padrinos y madrinas · Docentes y egresados · Residentes R1 y R2 · Otros invitados ·
+  Especialistas 2026 (este último solo cuando el módulo de listones esté publicado; usa `#btn-integrante`).
+- Docentes y egresados: elección de subcategoría, nombre completo, invitación y confirmación. Tarjeta general (variante C).
+- Habilitación de actividades por categoría configurable en el panel (matriz categoría × actividad, tabla
+  `habilitaciones`); sin regla, la recepción NO se asume. Se conserva la excepción individual de la recepción.
+- Panel: indicadores, filtros, tabla y CSV con Docente y Egresado; aviso de posibles duplicados (mismo nombre y categoría).
+- Supabase: categorías `docente` y `egresado`, tabla `habilitaciones`, funciones actualizadas; la semilla es idempotente
+  y conserva los cambios de los organizadores.
+- Pruebas: 46 SQL (+4 de renombrado), 21 indicadores, 113 aceptación, 244 responsive, 315 contraste, 6 apariencia.
+
 ## v2.4 · Recorrido por clic y apellido corregido
 - Clic sobre la tarjeta: portada → abre; interior → cierra y gira a la contraportada; contraportada → vuelve
   a la portada. Los botones son alternativos. El visor de ampliación no se reincorpora.

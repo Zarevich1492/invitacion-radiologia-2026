@@ -24,13 +24,13 @@
   async function iniciar() {
     EV = await window.API.evento();
     $("#btn-integrante").hidden = !(EV.modulos && EV.modulos.listones);   // módulo de listones: visible solo cuando está publicado
-    CFG = { padrinos: EV.padrinos, recepcion: EV.recepcion_por_defecto, recepcion_padrinos: {}, remoto: false };
+    CFG = { padrinos: EV.padrinos, habilitaciones: EV.habilitacion_por_defecto, recepcion_padrinos: {}, remoto: false };
     pintarLista("");
     if (window.API.configurado) {
       try {
         const c = await window.API.config();
         if (c && Array.isArray(c.padrinos) && c.padrinos.length) {
-          CFG = { padrinos: c.padrinos, recepcion: c.recepcion || CFG.recepcion, recepcion_padrinos: c.recepcion_padrinos || {}, remoto: true };
+          CFG = { padrinos: c.padrinos, habilitaciones: Object.assign({}, CFG.habilitaciones, c.habilitaciones || {}), recepcion_padrinos: c.recepcion_padrinos || {}, remoto: true };
           pintarLista($("#buscar-nombre").value);
         }
       } catch (e) { /* sin conexión: se usa la lista local; la invitación sigue disponible */ }
@@ -58,7 +58,7 @@
   buscar.addEventListener("input", () => pintarLista(buscar.value));
   lista.addEventListener("click", (e) => {
     const b = e.target.closest("button"); if (!b) return;
-    if (b.id === "btn-no-aparece") { mostrarPaso("categoria"); return; }
+    if (b.id === "btn-no-aparece") { mostrarPaso("acceso", true); return; }
     const p = CFG.padrinos.find((x) => x.id === b.dataset.padrino);
     if (p) entrar({ categoria: "padrino", padrinoId: p.id, nombre: p.nombre });
   });
@@ -77,12 +77,28 @@
     const g = EV.graduandos_lista.find((x) => x.id === b.dataset.graduando);
     if (g) entrar({ categoria: "graduando", graduandoId: g.id, nombre: g.nombre });
   });
-  $("#btn-volver-lista-2").addEventListener("click", () => mostrarPaso("lista"));
-
+  
   let categoriaElegida = null;
-  function mostrarPaso(p) {
-    $("#paso-lista").hidden = p !== "lista"; $("#paso-categoria").hidden = p !== "categoria"; $("#paso-token").hidden = p !== "token"; $("#paso-graduando").hidden = p !== "graduando";
-    if (p === "categoria") { const prev = leerID(); if (prev && ["r1", "r2", "otro"].includes(prev.categoria)) elegirCategoria(prev.categoria); }
+  function mostrarPaso(p, aviso) {
+    for (const n of ["acceso", "lista", "categoria", "token", "graduando"]) $("#paso-" + n).hidden = p !== n;
+    if (p === "acceso") $("#acceso-pregunta").textContent = aviso ? "Tu nombre no aparece en el listado de padrinos. Elige cómo nos acompañas:" : "¿Cómo nos acompañas en esta celebración?";
+  }
+  // Subcategorías por acceso (la categoría final se guarda en la base de datos como docente, egresado, r1, r2 u otro)
+  const ACCESOS = {
+    docentes: { pregunta: "Docentes y egresados", opciones: [["docente", "Docente", "Docente del postgrado de Radiología"], ["egresado", "Egresado", "Egresado del postgrado de Radiología"]] },
+    residentes: { pregunta: "Residentes R1 y R2", opciones: [["r1", "Residente de primer año", "R1 · Postgrado de Radiología"], ["r2", "Residente de segundo año", "R2 · Postgrado de Radiología"]] },
+    otros: { pregunta: "Otros invitados", opciones: null, categoria: "otro" },
+  };
+  function mostrarAcceso(id) {
+    const a = ACCESOS[id]; categoriaElegida = null;
+    $("#categoria-pregunta").textContent = a.pregunta;
+    $("#opciones-cat").hidden = !a.opciones;
+    $("#opciones-cat").innerHTML = (a.opciones || []).map(([c, t, d]) => `<button class="opcion-cat" type="button" role="radio" aria-checked="false" data-cat="${c}"><b>${t}</b><span>${d}</span></button>`).join("");
+    $("#form-nombre").hidden = true; $("#campo-nombre").value = "";
+    mostrarPaso("categoria");
+    const previo = leerID();
+    if (!a.opciones) elegirCategoria(a.categoria);
+    else if (previo && a.opciones.some((o) => o[0] === previo.categoria)) { elegirCategoria(previo.categoria); $("#campo-nombre").value = previo.nombre || ""; }
   }
   function elegirCategoria(c) {
     categoriaElegida = c;
@@ -90,12 +106,18 @@
     $("#form-nombre").hidden = false;
     setTimeout(() => $("#campo-nombre").focus(), 30);
   }
-  document.querySelectorAll(".opcion-cat").forEach((b) => b.addEventListener("click", () => elegirCategoria(b.dataset.cat)));
-  $("#btn-volver-lista").addEventListener("click", () => mostrarPaso("lista"));
+  $("#opciones-cat").addEventListener("click", (e) => { const b = e.target.closest(".opcion-cat"); if (b) elegirCategoria(b.dataset.cat); });
+  document.querySelectorAll(".acceso").forEach((b) => b.addEventListener("click", () => {
+    const id = b.dataset.acceso;
+    if (id === "padrinos") { mostrarPaso("lista"); setTimeout(() => $("#buscar-nombre").focus(), 30); }
+    else if (id === "especialistas") { /* lo gestiona el módulo de listones (#btn-integrante) */ }
+    else mostrarAcceso(id);
+  }));
+  for (const id of ["btn-volver-acceso-1", "btn-volver-lista", "btn-volver-lista-2"]) $("#" + id).addEventListener("click", () => mostrarPaso("acceso"));
   $("#form-nombre").addEventListener("submit", (e) => {
     e.preventDefault();
     const n = limpiar($("#campo-nombre").value);
-    if (n.length < 2 || !categoriaElegida) { $("#campo-nombre").setCustomValidity("Escribe tu nombre y apellido."); $("#campo-nombre").reportValidity(); return; }
+    if (n.length < 2 || !categoriaElegida) { $("#campo-nombre").setCustomValidity("Escribe tu nombre completo."); $("#campo-nombre").reportValidity(); return; }
     $("#campo-nombre").setCustomValidity("");
     entrar({ categoria: categoriaElegida, nombre: n });
   });
@@ -105,26 +127,27 @@
   async function usarToken(token) {
     try {
       const v = await window.API.miInvitacion(token);
-      if (!v) { mostrarPaso("lista"); return; }
+      if (!v) { mostrarPaso("acceso"); return; }
       const id = { categoria: v.categoria, padrinoId: v.padrino_id, nombre: v.nombre };
       window.API.recordarToken(claveIdentidad(id), token);
       servidor = v;
       $("#token-saludo").textContent = `Hola, ${v.nombre}.`;
       mostrarPaso("token");
       $("#btn-token-continuar").onclick = () => entrar(id, v);
-      $("#btn-token-otro").onclick = () => { servidor = null; mostrarPaso("lista"); };
-    } catch (e) { mostrarPaso("lista"); }
+      $("#btn-token-otro").onclick = () => { servidor = null; mostrarPaso("acceso"); };
+    } catch (e) { mostrarPaso("acceso"); }
   }
 
   /* ---------- Elegibilidad y variante ---------- */
   function actividadesDe(id) {
     if (id.categoria === "graduando") return EV.actividades.slice();
     if (servidor && servidor.actividades && id.categoria !== "general") return EV.actividades.filter((a) => servidor.actividades.includes(a.codigo));
-    let rec;
-    if (id.categoria === "padrino") rec = id.padrinoId in CFG.recepcion_padrinos ? CFG.recepcion_padrinos[id.padrinoId] : CFG.recepcion.padrino;
-    else if (id.categoria === "general") rec = false;   // vista sin personalizar: la recepción depende de cada invitación
-    else rec = !!CFG.recepcion[id.categoria];
-    return EV.actividades.filter((a) => a.codigo !== "recepcion" || rec);
+    const reglas = (CFG.habilitaciones && CFG.habilitaciones[id.categoria]) || {};
+    return EV.actividades.filter((a) => {
+      if (id.categoria === "general") return a.codigo !== "recepcion";   // vista sin personalizar: la recepción no se asume
+      if (a.codigo === "recepcion" && id.categoria === "padrino" && id.padrinoId in CFG.recepcion_padrinos) return !!CFG.recepcion_padrinos[id.padrinoId];
+      return reglas[a.codigo] === undefined ? a.codigo !== "recepcion" : !!reglas[a.codigo];   // sin regla: la recepción no se asume
+    });
   }
   // Denominación personalizada: «Madrina de promoción» o «Padrino de promoción» (nunca ambas)
   function denominacionPadrino(id) { const p = EV.padrinos.find((x) => x.id === id.padrinoId); return p && p.denominacion ? p.denominacion : (/^Dra\./.test(id.nombre || "") ? "MADRINA DE PROMOCIÓN" : "PADRINO DE PROMOCIÓN"); }
@@ -185,7 +208,7 @@
     const bv = $("#bienvenida"); bv.hidden = false; bv.removeAttribute("aria-hidden");
     requestAnimationFrame(() => bv.classList.remove("saliendo"));
     $("#experiencia").setAttribute("aria-hidden", "true");
-    mostrarPaso("lista"); buscar.value = ""; pintarLista(""); if (ID) marcarPrevio(ID);
+    mostrarPaso("acceso"); buscar.value = ""; pintarLista(""); if (ID) marcarPrevio(ID);
   });
 
   /* ---------- Vistas: Invitación · Programa · Confirmar · Mi pase ----------

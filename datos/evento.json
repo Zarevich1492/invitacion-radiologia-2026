@@ -78,6 +78,16 @@
       "pase": "PADRINO O MADRINA DE PROMOCIÓN",
       "variante": "A"
     },
+    "docente": {
+      "etiqueta": "Docente",
+      "pase": "DOCENTE DE RADIOLOGÍA",
+      "variante": "C"
+    },
+    "egresado": {
+      "etiqueta": "Egresado",
+      "pase": "EGRESADO DE RADIOLOGÍA",
+      "variante": "C"
+    },
     "r1": {
       "etiqueta": "Residente de primer año (R1)",
       "pase": "RESIDENTE DE RADIOLOGÍA · R1",
@@ -179,12 +189,6 @@
       "denominacion": "PADRINO DE PROMOCIÓN"
     }
   ],
-  "recepcion_por_defecto": {
-    "padrino": true,
-    "r1": false,
-    "r2": false,
-    "otro": false
-  },
   "graduandos_lista": [
     {
       "id": "arrieta-jorge",
@@ -239,5 +243,37 @@
   "modulos": {
     "_nota": "Interruptores de publicación: un módulo solo se muestra en la web pública cuando está completo y verificado.",
     "listones": false
+  },
+  "habilitacion_por_defecto": {
+    "padrino": {
+      "clase": true,
+      "caravana": true,
+      "recepcion": true
+    },
+    "docente": {
+      "clase": true,
+      "caravana": true,
+      "recepcion": false
+    },
+    "egresado": {
+      "clase": true,
+      "caravana": true,
+      "recepcion": false
+    },
+    "r1": {
+      "clase": true,
+      "caravana": true,
+      "recepcion": false
+    },
+    "r2": {
+      "clase": true,
+      "caravana": true,
+      "recepcion": false
+    },
+    "otro": {
+      "clase": true,
+      "caravana": true,
+      "recepcion": false
+    }
   }
 }

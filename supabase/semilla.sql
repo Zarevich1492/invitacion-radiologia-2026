@@ -7,14 +7,36 @@ insert into public.actividades(codigo, orden, titulo, hora_texto, inicio, lugar)
 insert into public.actividades(codigo, orden, titulo, hora_texto, inicio, lugar) values ('recepcion', 3, 'Recepción de los nuevos especialistas', '9:00 p. m.', '2026-11-28T21:00:00-04:00', 'Centro de Convenciones Mucumbarila')
   on conflict (codigo) do update set orden = excluded.orden, titulo = excluded.titulo, hora_texto = excluded.hora_texto, inicio = excluded.inicio, lugar = excluded.lugar;
 delete from public.actividades where codigo not in ('clase', 'caravana', 'recepcion');
-insert into public.categorias(codigo, etiqueta, recepcion_habilitada) values ('padrino', 'Padrino o madrina de promoción', true)
+insert into public.categorias(codigo, etiqueta) values ('padrino', 'Padrino o madrina de promoción')
   on conflict (codigo) do update set etiqueta = excluded.etiqueta;
-insert into public.categorias(codigo, etiqueta, recepcion_habilitada) values ('r1', 'Residente de primer año (R1)', false)
+insert into public.categorias(codigo, etiqueta) values ('docente', 'Docente')
   on conflict (codigo) do update set etiqueta = excluded.etiqueta;
-insert into public.categorias(codigo, etiqueta, recepcion_habilitada) values ('r2', 'Residente de segundo año (R2)', false)
+insert into public.categorias(codigo, etiqueta) values ('egresado', 'Egresado')
   on conflict (codigo) do update set etiqueta = excluded.etiqueta;
-insert into public.categorias(codigo, etiqueta, recepcion_habilitada) values ('otro', 'Otro invitado', false)
+insert into public.categorias(codigo, etiqueta) values ('r1', 'Residente de primer año (R1)')
   on conflict (codigo) do update set etiqueta = excluded.etiqueta;
+insert into public.categorias(codigo, etiqueta) values ('r2', 'Residente de segundo año (R2)')
+  on conflict (codigo) do update set etiqueta = excluded.etiqueta;
+insert into public.categorias(codigo, etiqueta) values ('otro', 'Otro invitado')
+  on conflict (codigo) do update set etiqueta = excluded.etiqueta;
+insert into public.habilitaciones(categoria, actividad, habilitada) values ('padrino', 'clase', true) on conflict (categoria, actividad) do nothing;
+insert into public.habilitaciones(categoria, actividad, habilitada) values ('padrino', 'caravana', true) on conflict (categoria, actividad) do nothing;
+insert into public.habilitaciones(categoria, actividad, habilitada) values ('padrino', 'recepcion', true) on conflict (categoria, actividad) do nothing;
+insert into public.habilitaciones(categoria, actividad, habilitada) values ('docente', 'clase', true) on conflict (categoria, actividad) do nothing;
+insert into public.habilitaciones(categoria, actividad, habilitada) values ('docente', 'caravana', true) on conflict (categoria, actividad) do nothing;
+insert into public.habilitaciones(categoria, actividad, habilitada) values ('docente', 'recepcion', false) on conflict (categoria, actividad) do nothing;
+insert into public.habilitaciones(categoria, actividad, habilitada) values ('egresado', 'clase', true) on conflict (categoria, actividad) do nothing;
+insert into public.habilitaciones(categoria, actividad, habilitada) values ('egresado', 'caravana', true) on conflict (categoria, actividad) do nothing;
+insert into public.habilitaciones(categoria, actividad, habilitada) values ('egresado', 'recepcion', false) on conflict (categoria, actividad) do nothing;
+insert into public.habilitaciones(categoria, actividad, habilitada) values ('r1', 'clase', true) on conflict (categoria, actividad) do nothing;
+insert into public.habilitaciones(categoria, actividad, habilitada) values ('r1', 'caravana', true) on conflict (categoria, actividad) do nothing;
+insert into public.habilitaciones(categoria, actividad, habilitada) values ('r1', 'recepcion', false) on conflict (categoria, actividad) do nothing;
+insert into public.habilitaciones(categoria, actividad, habilitada) values ('r2', 'clase', true) on conflict (categoria, actividad) do nothing;
+insert into public.habilitaciones(categoria, actividad, habilitada) values ('r2', 'caravana', true) on conflict (categoria, actividad) do nothing;
+insert into public.habilitaciones(categoria, actividad, habilitada) values ('r2', 'recepcion', false) on conflict (categoria, actividad) do nothing;
+insert into public.habilitaciones(categoria, actividad, habilitada) values ('otro', 'clase', true) on conflict (categoria, actividad) do nothing;
+insert into public.habilitaciones(categoria, actividad, habilitada) values ('otro', 'caravana', true) on conflict (categoria, actividad) do nothing;
+insert into public.habilitaciones(categoria, actividad, habilitada) values ('otro', 'recepcion', false) on conflict (categoria, actividad) do nothing;
 insert into public.padrinos(id, nombre, apellido) values ('berrio-omaira', 'Dra. Omaira Berrios', 'Berrios')
   on conflict (id) do update set nombre = excluded.nombre, apellido = excluded.apellido;
 insert into public.padrinos(id, nombre, apellido) values ('falcon-analy', 'Dra. Analy Falcón', 'Falcón')

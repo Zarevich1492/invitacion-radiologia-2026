@@ -44,10 +44,13 @@ async function irVista(p, v) {
   await p.waitForFunction((x) => document.body.dataset.vistaActiva === x, v, { timeout: 5000 });
   await p.waitForTimeout(450); // transición de entrada de la vista (0,35 s)
 }
-async function elegirPadrino(p, id) { await p.goto(BASE, { waitUntil: "networkidle" }); await p.click(`[data-padrino="${id}"]`); await p.waitForTimeout(2300); }
+async function elegirPadrino(p, id) { await p.goto(BASE, { waitUntil: "networkidle" }); await p.click('[data-acceso="padrinos"]'); await p.click(`[data-padrino="${id}"]`); await p.waitForTimeout(2300); }
 async function rutaB(p, cat, nombre) {
   await p.goto(BASE, { waitUntil: "networkidle" });
-  await p.click("#btn-no-aparece"); await p.click(`[data-cat="${cat}"]`); await p.fill("#campo-nombre", nombre);
+  const acceso = { r1: "residentes", r2: "residentes", otro: "otros", docente: "docentes", egresado: "docentes" }[cat];
+  await p.click(`[data-acceso="${acceso}"]`);
+  if (cat !== "otro") await p.click(`[data-cat="${cat}"]`);
+  await p.fill("#campo-nombre", nombre);
   await p.click("#form-nombre button[type=submit]"); await p.waitForTimeout(2300);
 }
 async function responder(p, resp) {
@@ -69,6 +72,11 @@ async function responder(p, resp) {
   await p.waitForTimeout(500);
   await p.screenshot({ path: `${OUT}/01-bienvenida-movil.png` });
 
+  // Pantalla inicial: accesos diferenciados (Especialistas 2026 solo si el módulo de listones está publicado)
+  const accesos = await p.$$eval(".acceso", (a) => a.filter((x) => !x.hidden && x.getBoundingClientRect().width > 0).map((x) => x.querySelector("b").textContent));
+  const modulo = !!(EV.modulos && EV.modulos.listones);
+  ok("Bienvenida: accesos diferenciados", accesos.join("|") === ["Padrinos y madrinas", "Docentes y egresados", "Residentes R1 y R2", "Otros invitados"].concat(modulo ? ["Especialistas 2026"] : []).join("|"), accesos.join("|"));
+  await p.click('[data-acceso="padrinos"]');
   // Identificación
   const nombres = await p.$$eval("#lista-nombres [data-padrino]", (e) => e.map((x) => x.textContent));
   ok("Selector: 10 padrinos y madrinas", nombres.length === 10, nombres.length);
@@ -244,19 +252,19 @@ async function responder(p, resp) {
   await elegirPadrino(p, "rojas-gustavo"); await irVista(p, "confirmar");
   await p.check('input[name="r-clase"][value="no_asistira"]', { force: true });
   ok("Resumen de respuestas se actualiza", /Clase magistral\s*No podré asistir/.test(await p.textContent("#rsvp-resumen")));
-  await p.click("#btn-cambiar-nombre"); await p.click("#btn-no-aparece"); await p.click('[data-cat="r2"]');
+  await p.click("#btn-cambiar-nombre"); await p.click('[data-acceso="residentes"]'); await p.click('[data-cat="r2"]');
   await p.fill("#campo-nombre", "Persona Distinta"); await p.click("#form-nombre button[type=submit]"); await p.waitForTimeout(1500);
   await irVista(p, "confirmar");
   ok("Cambio de identidad: formulario limpio", (await p.$$("#rsvp-actividades input:checked")).length === 0);
   await p.close();
   // Acceso directo a un apartado
   p = await nuevaPagina(ctx, errores, externos);
-  await p.goto(BASE + "#programa", { waitUntil: "networkidle" }); await p.click('[data-padrino="moreno-franklin"]'); await p.waitForTimeout(1500);
+  await p.goto(BASE + "#programa", { waitUntil: "networkidle" }); await p.click('[data-acceso="padrinos"]'); await p.click('[data-padrino="moreno-franklin"]'); await p.waitForTimeout(1500);
   ok("Acceso directo: #programa abre el apartado tras identificarse", (await p.evaluate(() => document.body.dataset.vistaActiva)) === "programa");
   await p.close();
   // Sin base de datos configurada: aviso temprano y formulario deshabilitado (sin simular)
   const p0 = await ctx.newPage();
-  await p0.goto(BASE, { waitUntil: "networkidle" }); await p0.click('[data-padrino="sosa-angel"]'); await p0.waitForTimeout(1500);
+  await p0.goto(BASE, { waitUntil: "networkidle" }); await p0.click('[data-acceso="padrinos"]'); await p0.click('[data-padrino="sosa-angel"]'); await p0.waitForTimeout(1500);
   await irVista(p0, "confirmar");
   ok("Sin Supabase: aviso visible antes del formulario y campos deshabilitados", (await p0.isVisible("#rsvp-aviso")) && (await p0.$eval("#rsvp-campos", (f) => f.disabled)) && (await p0.$eval("#btn-rsvp", (b) => b.disabled)));
   await p0.screenshot({ path: `${OUT}/15-confirmacion-sin-base-de-datos.png` });
@@ -305,6 +313,29 @@ async function responder(p, resp) {
   }
   p = await nuevaPagina(ctx, errores, externos);
 
+  // Docentes y egresados
+  p = await nuevaPagina(ctx, errores, externos);
+  await p.goto(BASE, { waitUntil: "networkidle" }); await p.click('[data-acceso="docentes"]');
+  const subs = await p.$$eval("#opciones-cat .opcion-cat b", (b) => b.map((x) => x.textContent).join("|"));
+  ok("Docentes y egresados: elegir entre Docente y Egresado", subs === "Docente|Egresado", subs);
+  await p.click('[data-cat="docente"]'); await p.fill("#campo-nombre", "Dr. Luis Ángel Núñez"); await p.click("#form-nombre button[type=submit]"); await p.waitForTimeout(2300);
+  ok("Docente: invitación personalizada y variante general", (await p.textContent("#saludo-eyebrow")) === "Docente" && (await p.textContent("#saludo-nombre")) === "Dr. Luis Ángel Núñez" && (await p.evaluate(() => window.__flujo.identidad.variante)) === "C");
+  ok("Docente: la recepción no se asume (solo clase y caravana)", (await p.evaluate(() => window.__flujo.actividades.join())) === "clase,caravana");
+  const rd = await responder(p, { clase: "asistira", caravana: "por_confirmar" });
+  ok("Docente: confirmación guardada", rd.clase.includes("exito"), rd.texto);
+  await irVista(p, "pase"); await p.waitForFunction(() => document.getElementById("pase-vista").naturalWidth > 0, null, { timeout: 15000 });
+  ok("Docente: pase con su categoría", true);
+  await p.close();
+  p = await nuevaPagina(ctx, errores, externos);
+  await rutaB(p, "egresado", "Dra. Marta Rivas");
+  ok("Egresado: invitación y confirmación", (await p.textContent("#saludo-eyebrow")) === "Egresado" && (await responder(p, { clase: "no_asistira" })).clase.includes("exito"));
+  await p.close();
+  p = await nuevaPagina(ctx, errores, externos);
+  await p.goto(BASE, { waitUntil: "networkidle" }); await p.click('[data-acceso="padrinos"]'); await p.click("#btn-no-aparece");
+  ok("«Mi nombre no aparece» vuelve al menú de accesos", await p.isVisible('[data-acceso="docentes"]'));
+  await p.close();
+  p = await nuevaPagina(ctx, errores, externos);
+
   // Seguridad: lectura directa
   const directo = await p.evaluate(async (api) => (await fetch(api + "/rest/v1/invitados?select=*", { headers: { apikey: "x" } })).status, API);
   ok("Público no puede leer registros", directo === 403, directo);
@@ -336,7 +367,7 @@ async function responder(p, resp) {
   ok("Panel: graduandos fuera de tasas", tiles["Graduandos (anfitriones)"] === 7);
   const acts = await a.$$eval(".adm-act", (x) => x.map((e) => [e.querySelector("h3").textContent, [...e.querySelectorAll("dd")].map((d) => +d.textContent)]));
   const clase = acts.find((x) => x[0] === "Clase magistral")[1];
-  ok("Panel clase: confirmados 2 (padrino + R1), total previsto = 2 + 7", clase[1] === 2 && clase[5] === 9, JSON.stringify(clase));
+  ok("Panel clase: confirmados 3 (padrino, R1, docente), total previsto = 3 + 7 graduandos", clase[0] === 14 && clase[1] === 3 && clase[2] === 1 && clase[3] === 1 && clase[5] === 10, JSON.stringify(clase));
   const rec = acts.find((x) => /Recepción/.test(x[0]))[1];
   ok("Panel recepción: habilitados = 10 padrinos (R1 y otro no aplican)", rec[0] === 10 && rec[2] === 1, JSON.stringify(rec));
   await a.screenshot({ path: `${OUT}/13-panel.png`, fullPage: true });
@@ -353,14 +384,32 @@ async function responder(p, resp) {
   const txt = fs.readFileSync(rcsv, "utf8");
   ok("CSV compatible con Excel (BOM UTF-8, «;»)", txt.charCodeAt(0) === 0xfeff && txt.split("\r\n")[0].includes(";") && txt.includes("Dra. Analy Falcón"), txt.split("\r\n")[0]);
 
-  // Elegibilidad de recepción por categoría
+  const tD = await a.$$eval(".adm-tile", (t) => Object.fromEntries(t.map((x) => [x.querySelector("span").textContent, +x.querySelector("b").textContent])));
+  ok("Panel: docentes y egresados en los indicadores", tD["Docentes registrados"] === 1 && tD["Egresados registrados"] === 1, JSON.stringify({ d: tD["Docentes registrados"], e: tD["Egresados registrados"] }));
+  await a.selectOption("#f-cat", "egresado");
+  ok("Panel: filtro por categoría Egresado", (await a.$$("#tabla tbody tr")).length === 1);
+  await a.selectOption("#f-cat", "docente");
+  ok("Panel: filtro por categoría Docente", (await a.$$("#tabla tbody tr")).length === 1 && /Docente/.test(await a.textContent("#tabla tbody")));
+  await a.selectOption("#f-cat", "");
+  const dcsv2 = a.waitForEvent("download"); await a.click("#exportar"); const csv2 = await dcsv2; await csv2.saveAs(`${OUT}/confirmaciones-2.csv`);
+  const txt2 = fs.readFileSync(`${OUT}/confirmaciones-2.csv`, "utf8");
+  ok("CSV incluye docentes y egresados con su categoría", /Dr\. Luis Ángel Núñez";"Docente"/.test(txt2) && /Dra\. Marta Rivas";"Egresado"/.test(txt2));
   await a.click("details:has(#reglas) summary");
-  await a.check('#reglas input[data-cat="r1"]'); await a.waitForTimeout(1500);
+  const matriz = await a.$$eval("#reglas tbody tr", (f) => f.map((r) => r.querySelector("th").textContent.trim()));
+  ok("Panel: matriz de habilitación con las seis categorías", matriz.length === 6 && matriz.some((m) => /Docente/.test(m)) && matriz.some((m) => /Egresado/.test(m)), matriz.join(" | "));
+  await a.check('#reglas input[data-cat="docente"][data-act="recepcion"]'); await a.waitForTimeout(1500);
+  const pdoc = await nuevaPagina(ctx, errores, externos);
+  await rutaB(pdoc, "docente", "Dra. Ana Soto");
+  ok("Matriz: el organizador habilita la recepción para docentes", (await pdoc.evaluate(() => window.__flujo.actividades.join())) === "clase,caravana,recepcion");
+  await pdoc.close();
+  await a.uncheck('#reglas input[data-cat="docente"][data-act="recepcion"]'); await a.waitForTimeout(1200);
+  // Elegibilidad de recepción por categoría (el apartado ya está abierto)
+  await a.check('#reglas input[data-cat="r1"][data-act="recepcion"]'); await a.waitForTimeout(1500);
   const pr = await nuevaPagina(ctx, errores, externos);
   await rutaB(pr, "r1", "Nuevo Residente");
   ok("Regla por categoría aplicada en la app (R1 con recepción)", (await pr.evaluate(() => window.__flujo.actividades.join())) === "clase,caravana,recepcion");
   await pr.close();
-  await a.uncheck('#reglas input[data-cat="r1"]'); await a.waitForTimeout(1200);
+  await a.uncheck('#reglas input[data-cat="r1"][data-act="recepcion"]'); await a.waitForTimeout(1200);
 
   // Enlace individual para un padrino → verificado
   const fila = a.locator("#tabla tbody tr", { hasText: "Dra. Jenny Sosa" });

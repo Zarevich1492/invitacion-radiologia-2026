@@ -13,9 +13,15 @@ for a in E["actividades"]:
     L.append(f"insert into public.actividades(codigo, orden, titulo, hora_texto, inicio, lugar) values ({q(a['codigo'])}, {a['orden']}, {q(a['titulo'])}, {q(a['hora_texto'])}, {q(a['inicio'])}, {q(a['lugar'])})\n  on conflict (codigo) do update set orden = excluded.orden, titulo = excluded.titulo, hora_texto = excluded.hora_texto, inicio = excluded.inicio, lugar = excluded.lugar;")
 codigos = ", ".join(q(a["codigo"]) for a in E["actividades"])
 L.append(f"delete from public.actividades where codigo not in ({codigos});")
-for c, d in ((c, d) for c, d in E["categorias"].items() if c in ("padrino", "r1", "r2", "otro")):  # los graduandos no son invitados (no se registran)
-    # La regla de recepción solo se fija al crear la categoría; después se administra desde el panel.
-    L.append(f"insert into public.categorias(codigo, etiqueta, recepcion_habilitada) values ({q(c)}, {q(d['etiqueta'])}, {str(E['recepcion_por_defecto'][c]).lower()})\n  on conflict (codigo) do update set etiqueta = excluded.etiqueta;")
+CATS = ("padrino", "docente", "egresado", "r1", "r2", "otro")   # los graduandos no son invitados (no se registran)
+for c in CATS:
+    d = E["categorias"][c]
+    L.append(f"insert into public.categorias(codigo, etiqueta) values ({q(c)}, {q(d['etiqueta'])})\n  on conflict (codigo) do update set etiqueta = excluded.etiqueta;")
+# Valores iniciales de habilitación: solo se crean si no existen (los cambios de los organizadores se conservan)
+for c in CATS:
+    for a in E["actividades"]:
+        v = str(E["habilitacion_por_defecto"][c][a["codigo"]]).lower()
+        L.append(f"insert into public.habilitaciones(categoria, actividad, habilitada) values ({q(c)}, {q(a['codigo'])}, {v}) on conflict (categoria, actividad) do nothing;")
 for p in E["padrinos"]:
     L.append(f"insert into public.padrinos(id, nombre, apellido) values ({q(p['id'])}, {q(p['nombre'])}, {q(p['apellido'])})\n  on conflict (id) do update set nombre = excluded.nombre, apellido = excluded.apellido;")
 L.append("select public.admin_sincronizar_padrinos();")

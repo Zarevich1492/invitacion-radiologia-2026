@@ -64,7 +64,7 @@ http.createServer(async (req, res) => {
     return json(res, 200, r.salida ? JSON.parse(r.salida) : null);
   }
   // ---- Tablas (subconjunto que usa el panel) ----
-  const mt = url.pathname.match(/^\/rest\/v1\/(invitados|padrinos|categorias|actividades|confirmaciones)$/);
+  const mt = url.pathname.match(/^\/rest\/v1\/(invitados|padrinos|categorias|habilitaciones|actividades|confirmaciones)$/);
   if (mt) {
     const t = mt[1];
     const filtro = [...url.searchParams].filter(([k, v]) => /^eq\./.test(v)).map(([k, v], i) => { return { k, v: v.slice(3), i }; });
@@ -78,7 +78,7 @@ http.createServer(async (req, res) => {
       vars.b = cuerpo; q = `update public.${t} x set ${Object.keys(JSON.parse(cuerpo)).map((k) => `${k} = (jsonb_populate_record(null::public.${t}, :'b'::jsonb)).${k}`).join(", ")}${where.replace(/ (\w+)::text/g, " x.$1::text")};`;
     } else if (req.method === "POST") {
       vars.b = cuerpo; const cols = Object.keys(JSON.parse(cuerpo));
-      const conflicto = t === "confirmaciones" ? " on conflict (invitado_id, actividad) do update set estado = excluded.estado, actualizado = excluded.actualizado" : "";
+      const conflicto = t === "confirmaciones" ? " on conflict (invitado_id, actividad) do update set estado = excluded.estado, actualizado = excluded.actualizado" : t === "habilitaciones" ? " on conflict (categoria, actividad) do update set habilitada = excluded.habilitada" : "";
       q = `insert into public.${t}(${cols.join(",")}) select ${cols.join(",")} from jsonb_populate_record(null::public.${t}, :'b'::jsonb)${conflicto};`;
     } else if (req.method === "DELETE") q = `delete from public.${t}${where};`;
     const r = sql(rol, sub, q, vars);

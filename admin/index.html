@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="version-recursos" content="202611260128">
+<meta name="version-recursos" content="202611260148">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Panel de confirmaciones · XXIV Promoción</title>
 <meta name="robots" content="noindex,nofollow,noarchive">
@@ -11,8 +11,8 @@
 <meta name="supported-color-schemes" content="light">
 <meta name="darkreader-lock">
 <link rel="icon" href="../assets/logos/promocion-xxiv-560.jpg" type="image/jpeg">
-<link rel="stylesheet" href="../css/estilos.css?v=202611260128">
-<link rel="stylesheet" href="../css/admin.css?v=202611260128">
+<link rel="stylesheet" href="../css/estilos.css?v=202611260148">
+<link rel="stylesheet" href="../css/admin.css?v=202611260148">
 </head>
 <body class="admin">
 <main class="envoltura">
@@ -46,7 +46,7 @@
     <h2 class="adm-h2">Registros</h2>
     <div class="adm-filtros">
       <input class="campo" id="f-buscar" type="search" placeholder="Buscar por nombre">
-      <select class="campo" id="f-cat"><option value="">Todas las categorías</option><option value="padrino">Padrinos y madrinas</option><option value="r1">R1</option><option value="r2">R2</option><option value="otro">Otros invitados</option></select>
+      <select class="campo" id="f-cat"><option value="">Todas las categorías</option><option value="padrino">Padrinos y madrinas</option><option value="docente">Docentes</option><option value="egresado">Egresados</option><option value="r1">R1</option><option value="r2">R2</option><option value="otro">Otros invitados</option></select>
       <select class="campo" id="f-act"><option value="">Cualquier actividad</option></select>
       <select class="campo" id="f-estado"><option value="">Cualquier estado</option><option value="asistira">Asistirá</option><option value="no_asistira">No asistirá</option><option value="por_confirmar">Por confirmar</option><option value="sin_responder">Sin responder</option><option value="no_aplica">No aplica</option></select>
       <button class="btn" type="button" id="exportar">Exportar CSV (Excel)</button>
@@ -55,8 +55,8 @@
     <div class="adm-tabla-caja"><table class="adm-tabla" id="tabla"></table></div>
 
     <details class="adm-tarjeta">
-      <summary><h2 class="adm-h2">Recepción: elegibilidad por categoría</h2></summary>
-      <p class="nota">Define quiénes reciben la invitación a la recepción. Las excepciones individuales se ajustan en cada registro (columna «Recepción»). Si no está habilitada para una persona, no se le ofrece confirmar, no aparece en su pase ni en su calendario.</p>
+      <summary><h2 class="adm-h2">Habilitación de actividades por categoría</h2></summary>
+      <p class="nota">Marque qué actividades se ofrecen a cada categoría. Una actividad deshabilitada no se ofrece para confirmar, no aparece en el pase ni en el calendario y no cuenta como pendiente. La recepción no se asume para nadie. Las excepciones individuales de la recepción se ajustan en la columna «Recepción» de la tabla.</p>
       <div id="reglas"></div>
     </details>
 
@@ -75,7 +75,7 @@
       <p class="nota">Cree un registro para un residente u otro invitado y genere su enlace personal. Para padrinos, use el botón «Enlace» de su fila. Las respuestas enviadas desde un enlace individual quedan como verificadas. Cada enlace se muestra una sola vez: generar otro invalida el anterior.</p>
       <form id="form-invitado" class="adm-fila">
         <input class="campo" id="ni-nombre" placeholder="Nombre y apellido" required>
-        <select class="campo" id="ni-cat"><option value="r1">R1</option><option value="r2">R2</option><option value="otro">Otro invitado</option></select>
+        <select class="campo" id="ni-cat"><option value="docente">Docente</option><option value="egresado">Egresado</option><option value="r1">R1</option><option value="r2">R2</option><option value="otro">Otro invitado</option></select>
         <button class="btn" type="submit">Crear y generar enlace</button>
       </form>
     </details>
@@ -101,8 +101,8 @@
 </dialog>
 
 <p class="nota adm-toast" id="toast" role="status" aria-live="polite"></p>
-<script src="../js/config.js?v=202611260128"></script>
-<script src="../js/metricas.js?v=202611260128"></script>
-<script src="../js/admin.js?v=202611260128"></script>
+<script src="../js/config.js?v=202611260148"></script>
+<script src="../js/metricas.js?v=202611260148"></script>
+<script src="../js/admin.js?v=202611260148"></script>
 </body>
 </html>

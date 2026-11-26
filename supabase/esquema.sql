@@ -35,9 +35,17 @@ create table if not exists public.padrinos (
 );
 
 create table if not exists public.categorias (
-  codigo              text primary key check (codigo in ('padrino','r1','r2','otro')),
-  etiqueta            text not null,
-  recepcion_habilitada boolean not null default false
+  codigo   text primary key check (codigo in ('padrino','docente','egresado','r1','r2','otro')),
+  etiqueta text not null
+);
+
+-- Habilitación de cada actividad por categoría (configurable desde el panel). Sin fila: clase y caravana
+-- habilitadas, recepción NO habilitada (no se asume acceso a la recepción).
+create table if not exists public.habilitaciones (
+  categoria text not null references public.categorias(codigo) on delete cascade,
+  actividad text not null references public.actividades(codigo) on delete cascade,
+  habilitada boolean not null,
+  primary key (categoria, actividad)
 );
 
 -- ---------- Personas y respuestas ----------
@@ -85,6 +93,7 @@ create index if not exists ix_intentos on public.intentos(ip, creado);
 alter table public.actividades     enable row level security;
 alter table public.padrinos        enable row level security;
 alter table public.categorias      enable row level security;
+alter table public.habilitaciones  enable row level security;
 alter table public.invitados       enable row level security;
 alter table public.confirmaciones  enable row level security;
 alter table public.administradores enable row level security;
@@ -105,7 +114,7 @@ create policy lectura_publica on public.categorias for select using (true);
 
 -- Administración completa solo para administradores.
 do $$ declare t text; begin
-  foreach t in array array['actividades','padrinos','categorias','invitados','confirmaciones'] loop
+  foreach t in array array['actividades','padrinos','categorias','habilitaciones','invitados','confirmaciones'] loop
     execute format('drop policy if exists admin_todo on public.%I', t);
     execute format('create policy admin_todo on public.%I for all to authenticated using (public.es_admin()) with check (public.es_admin())', t);
   end loop;
@@ -116,7 +125,7 @@ create policy admin_lectura on public.administradores for select to authenticate
 
 revoke all on public.invitados, public.confirmaciones, public.intentos, public.administradores from anon;
 grant select on public.actividades, public.padrinos, public.categorias to anon, authenticated;
-grant select, insert, update, delete on public.actividades, public.padrinos, public.categorias, public.invitados, public.confirmaciones to authenticated;
+grant select, insert, update, delete on public.actividades, public.padrinos, public.categorias, public.habilitaciones, public.invitados, public.confirmaciones to authenticated;
 grant select on public.administradores to authenticated;
 
 -- ---------- Utilidades ----------
@@ -139,9 +148,11 @@ $$;
 create or replace function public._habilitadas(p_categoria text, p_override boolean) returns text[]
 language sql stable security definer set search_path = public as $$
   select array_agg(a.codigo order by a.orden)
-  from public.actividades a, public.categorias c
-  where c.codigo = p_categoria
-    and (a.codigo <> 'recepcion' or coalesce(p_override, c.recepcion_habilitada));
+  from public.actividades a
+  where coalesce(
+          case when a.codigo = 'recepcion' then p_override end,                                           -- excepción individual (solo recepción)
+          (select h.habilitada from public.habilitaciones h where h.categoria = p_categoria and h.actividad = a.codigo),
+          a.codigo <> 'recepcion');                                                                          -- sin regla: la recepción no se asume
 $$;
 
 create or replace function public._override_de(p_inv public.invitados) returns boolean
@@ -172,7 +183,8 @@ language sql stable security definer set search_path = public as $$
   select jsonb_build_object(
     'padrinos', coalesce((select jsonb_agg(jsonb_build_object('id', id, 'nombre', nombre, 'apellido', apellido) order by apellido, nombre) from public.padrinos where activo), '[]'),
     'actividades', coalesce((select jsonb_agg(jsonb_build_object('codigo', codigo, 'titulo', titulo, 'hora_texto', hora_texto, 'inicio', inicio, 'lugar', lugar) order by orden) from public.actividades), '[]'),
-    'recepcion', coalesce((select jsonb_object_agg(codigo, recepcion_habilitada) from public.categorias), '{}'),
+    'habilitaciones', coalesce((select jsonb_object_agg(categoria, reglas) from (select categoria, jsonb_object_agg(actividad, habilitada) reglas from public.habilitaciones group by categoria) x), '{}'),
+    'recepcion', coalesce((select jsonb_object_agg(categoria, habilitada) from public.habilitaciones where actividad = 'recepcion'), '{}'),
     -- Excepciones individuales de padrinos (solo el booleano, sin datos personales adicionales)
     'recepcion_padrinos', coalesce((select jsonb_object_agg(padrino_id, recepcion_override) from public.invitados where origen = 'oficial' and recepcion_override is not null), '{}')
   );
@@ -222,7 +234,7 @@ begin
     insert into public.intentos(ip) values (v_ip);
     delete from public.intentos where creado < now() - interval '1 day';
 
-    if p_categoria not in ('padrino','r1','r2','otro') then raise exception 'categoria_invalida' using errcode = 'P0001'; end if;
+    if p_categoria not in ('padrino','docente','egresado','r1','r2','otro') then raise exception 'categoria_invalida' using errcode = 'P0001'; end if;
     if p_categoria = 'padrino' then
       select nombre into v_nombre from public.padrinos where id = p_padrino_id and activo;
       if v_nombre is null then raise exception 'padrino_invalido' using errcode = 'P0001'; end if;
@@ -282,7 +294,7 @@ language plpgsql volatile security definer set search_path = public as $$
 declare v_id uuid;
 begin
   if not public.es_admin() then raise exception 'no_autorizado' using errcode = '42501'; end if;
-  if p_categoria not in ('r1','r2','otro') then raise exception 'categoria_invalida' using errcode = 'P0001'; end if;
+  if p_categoria not in ('docente','egresado','r1','r2','otro') then raise exception 'categoria_invalida' using errcode = 'P0001'; end if;
   insert into public.invitados(categoria, nombre, origen) values (p_categoria, left(public._limpiar(p_nombre), 80), 'registro_admin') returning id into v_id;
   return v_id;
 end $$;

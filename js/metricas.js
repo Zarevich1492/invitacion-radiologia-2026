@@ -10,13 +10,18 @@
   const respuestasDe = (reg) => Object.fromEntries((reg && reg.confirmaciones || []).map((c) => [c.actividad, c.estado]));
   const tieneRespuesta = (reg) => !!(reg && reg.confirmaciones && reg.confirmaciones.length);
 
-  function habilitadas(actividades, categorias, categoria, override) {
-    const reglaRecepcion = override === null || override === undefined ? !!(categorias[categoria] && categorias[categoria].recepcion_habilitada) : override;
-    return actividades.filter((a) => a.codigo !== "recepcion" || reglaRecepcion).map((a) => a.codigo);
+  // Habilitación por categoría y actividad (tabla «habilitaciones»). Sin regla: clase y caravana sí; la recepción NO se asume.
+  function reglaDe(hab, categoria, codigo) {
+    const r = (hab || []).find((h) => h.categoria === categoria && h.actividad === codigo);
+    return r ? !!r.habilitada : codigo !== "recepcion";
   }
+  function habilitadas(actividades, hab, categoria, override) {
+    return actividades.filter((a) => (a.codigo === "recepcion" && override !== null && override !== undefined) ? !!override : reglaDe(hab, categoria, a.codigo)).map((a) => a.codigo);
+  }
+  const normal = (t) => String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[.,]/g, "").replace(/\s+/g, " ").trim();
 
   function personas(d) {
-    const cats = Object.fromEntries(d.categorias.map((c) => [c.codigo, c]));
+    const hab = d.habilitaciones || [];
     const out = [];
     for (const p of d.padrinos.filter((x) => x.activo !== false)) {
       const regs = d.invitados.filter((i) => i.padrino_id === p.id);
@@ -26,7 +31,7 @@
       const override = oficial ? oficial.recepcion_override : null;
       out.push({
         clave: "padrino:" + p.id, tipo: "padrino", categoria: "padrino", nombre: p.nombre, registro: efectivo, oficial,
-        habilitadas: habilitadas(d.actividades, cats, "padrino", override), override,
+        habilitadas: habilitadas(d.actividades, hab, "padrino", override), override,
         respuestas: respuestasDe(efectivo), verificado: !!(efectivo && efectivo.verificado),
         envios: regs.filter(tieneRespuesta).length, nota: regs.map((r) => r.nota_omision).filter(Boolean).join(" · "),
       });
@@ -34,7 +39,7 @@
     for (const i of d.invitados.filter((x) => !x.padrino_id && x.categoria !== "padrino")) {
       out.push({
         clave: "inv:" + i.id, tipo: "invitado", categoria: i.categoria, nombre: i.nombre, registro: i, oficial: null,
-        habilitadas: habilitadas(d.actividades, cats, i.categoria, i.recepcion_override), override: i.recepcion_override,
+        habilitadas: habilitadas(d.actividades, hab, i.categoria, i.recepcion_override), override: i.recepcion_override,
         respuestas: respuestasDe(i), verificado: !!i.verificado, envios: tieneRespuesta(i) ? 1 : 0, nota: i.nota_omision || "",
       });
     }
@@ -43,6 +48,9 @@
       x.respondio = Object.keys(x.respuestas).length > 0;
       x.asistira = Object.values(x.estados).filter((e) => e === "asistira").length;
     }
+    const vistos = {};
+    for (const x of out.filter((y) => y.tipo === "invitado")) (vistos[x.categoria + "|" + normal(x.nombre)] = vistos[x.categoria + "|" + normal(x.nombre)] || []).push(x);
+    for (const grupo of Object.values(vistos)) if (grupo.length > 1) grupo.forEach((x) => { x.duplicado = true; });
     return out;
   }
 
@@ -55,6 +63,9 @@
       padrinosPendientes: pad.filter((x) => !x.respondio).length,
       r1: P.filter((x) => x.categoria === "r1").length,
       r2: P.filter((x) => x.categoria === "r2").length,
+      docentes: P.filter((x) => x.categoria === "docente").length,
+      egresados: P.filter((x) => x.categoria === "egresado").length,
+      posiblesDuplicados: P.filter((x) => x.duplicado).length,
       otros: P.filter((x) => x.categoria === "otro").length,
       invitadosUnicos: P.length,
       respuestas: P.filter((x) => x.respondio).length,
