@@ -52,13 +52,13 @@
       await cargar();
     } catch (err) { est.textContent = err.message; est.className = "rsvp-estado error"; }
   });
-  function salir() { sesion = null; try { sessionStorage.removeItem(CLAVE_SESION); } catch (e) {} $("#panel").hidden = true; $("#acceso").hidden = false; $("#salir").hidden = true; }
+  function salir() { limpiarCodigos(); sesion = null; try { sessionStorage.removeItem(CLAVE_SESION); } catch (e) {} $("#panel").hidden = true; $("#acceso").hidden = false; $("#salir").hidden = true; }
   $("#salir").addEventListener("click", salir);
 
   /* ---------- Carga ---------- */
   async function cargar() {
     const [invitados, padrinos, categorias, habilitaciones, actividades, soyAdmin] = await Promise.all([
-      api("invitados?select=id,categoria,padrino_id,nombre,origen,token_admin,verificado,recepcion_override,nota_omision,creado,actualizado,respondido,confirmaciones(actividad,estado,actualizado)&order=creado.asc"),
+      api("invitados?select=id,categoria,padrino_id,nombre,origen,token_admin,verificado,recepcion_override,nota_omision,creado,actualizado,respondido,confirmaciones(actividad,estado,actualizado),autorizaciones(actividad,habilitada)&order=creado.asc"),
       api("padrinos?select=*&order=apellido.asc,nombre.asc"),
       api("categorias?select=*"),
       api("habilitaciones?select=*"),
@@ -71,6 +71,7 @@
     $("#acceso").hidden = true; $("#panel").hidden = false; $("#salir").hidden = false;
     $("#actualizado").textContent = `Datos al ${fecha(new Date())} · sesión: ${sesion.email || ""}`;
     pintar();
+    cargarCI().catch((e) => toast("Centro de invitaciones: ejecute supabase/invitaciones.sql (" + e.message + ")"));
     cargarModulos().catch((e) => { $("#mod-aviso").textContent = "Módulos de dedicatorias y aportes no disponibles: ejecute supabase/dedicatorias.sql (" + e.message + ")"; });
   }
   $("#recargar").addEventListener("click", () => cargar().then(() => toast("Datos actualizados")).catch((e) => toast(e.message)));
@@ -241,6 +242,125 @@
     catch (err) { toast(err.message === "confirmacion_requerida" ? "Escriba ELIMINAR TODO para confirmar" : err.message); }
   });
 
+
+
+  /* ---------- Centro de invitaciones ---------- */
+  const GRUPO_DE = { padrino: ["padrinos", "Padrinos y madrinas"], docente: ["docentes", "Docentes y egresados"], egresado: ["docentes", "Docentes y egresados"], r1: ["residentes", "Residentes R1 y R2"], r2: ["residentes", "Residentes R1 y R2"], otro: ["otros", "Otros invitados"], graduando: ["especialistas", "Especialistas 2026"] };
+  const GRUPOS_COD = [["padrinos", "Padrinos y madrinas"], ["docentes", "Docentes y egresados"], ["residentes", "Residentes R1 y R2"], ["especialistas", "Especialistas 2026"]];
+  const ACT_NOM = { clase: "Clase magistral", caravana: "Caravana", recepcion: "Recepción" };
+  let CODIGOS = {};           // solo en memoria durante la sesión del panel (nunca en almacenamiento)
+  let ENL = new Map();        // id → { token, enviado_en }
+  const SEL = new Set();
+  const SITIO = () => location.origin + location.pathname.replace(/admin\/?(index\.html)?$/, "");
+  const enlaceDe = (id) => { const e = ENL.get(id); return e ? `${SITIO()}#t=${e.token}` : ""; };
+  function limpiarCodigos() { CODIGOS = {}; SEL.clear(); ENL = new Map(); }
+  const msgInst = (nombre, url) => `${nombre}, has recibido una invitación especial.\nLa XXIV Promoción de Radiólogos de la Universidad de Los Andes desea compartir contigo este momento tan significativo.\n28 de noviembre de 2026.\n${url}\nHay momentos que merecen ser compartidos`;
+  function msgRes(cat) {
+    const [g, tarjeta] = GRUPO_DE[cat];
+    if (g === "otros") return `Acceso · ${tarjeta}\nEste acceso es libre: no requiere contraseña.\n1. Abre la invitación: ${SITIO()}\n2. Elige «${tarjeta}» y disfruta la invitación.`;
+    return `Acceso reservado · ${tarjeta}\nContraseña vigente: ${CODIGOS[g]}\n1. Abre la invitación: ${SITIO()}\n2. Elige «${tarjeta}» y escribe la contraseña.\n3. Selecciona tu nombre y disfruta tu invitación.`;
+  }
+  function personasCI() {
+    return (R ? R.personas : []).map((p) => { const reg = p.tipo === "padrino" ? p.oficial : p.registro; return reg ? { id: reg.id, nombre: p.nombre, categoria: p.categoria, acts: p.habilitadas } : null; }).filter(Boolean);
+  }
+  function visiblesCI() {
+    const q = ($("#ci-buscar").value || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase(), c = $("#ci-cat").value, e = $("#ci-estado").value;
+    return personasCI().filter((p) => (!c || p.categoria === c) && (!q || p.nombre.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().includes(q)) &&
+      (!e || (e === "sin" ? !ENL.has(p.id) : e === "vigente" ? ENL.has(p.id) && !ENL.get(p.id).enviado_en : ENL.has(p.id) && !!ENL.get(p.id).enviado_en)));
+  }
+  const seleccion = () => personasCI().filter((p) => SEL.has(p.id));
+  function pintarCI() {
+    if (!$("#ci-tabla")) return;
+    $("#ci-codigos").innerHTML = GRUPOS_COD.map(([g, t]) => `<div class="ci-cod"><label for="ci-c-${g}">${t}</label><input class="campo" id="ci-c-${g}" type="password" autocomplete="off" ${CODIGOS[g] ? "disabled placeholder=\"validada ✔\"" : ""}><button class="btn" type="button" data-cod="${g}" ${CODIGOS[g] ? "disabled" : ""}>${CODIGOS[g] ? "Validada" : "Validar"}</button></div>`).join("");
+    const v = visiblesCI();
+    $("#ci-tabla").innerHTML = `<thead><tr><th></th><th>Destinatario</th><th>Categoría</th><th>Actividades autorizadas</th><th>Enlace</th><th>Distribución</th></tr></thead><tbody>` +
+      v.map((p) => { const e = ENL.get(p.id); return `<tr><td><input type="checkbox" data-sel="${esc(p.id)}" aria-label="Seleccionar ${esc(p.nombre)}" ${SEL.has(p.id) ? "checked" : ""}></td><td>${esc(p.nombre)}</td><td>${esc(CAT[p.categoria])}</td><td>${p.acts.length ? p.acts.map((a) => esc(ACT_NOM[a] || a)).join(" · ") : "Ninguna"}</td><td>${e ? "Vigente" : "Sin enlace"}</td><td>${e ? (e.enviado_en ? "Enviado " + esc(fecha(e.enviado_en)) : "Sin enviar") : "—"}</td></tr>`; }).join("") + `</tbody>`;
+    $("#ci-n").textContent = `${SEL.size} seleccionados de ${personasCI().length}`;
+    $("#ci-todos").checked = v.length > 0 && v.every((p) => SEL.has(p.id));
+  }
+  async function cargarCI() {
+    ENL = new Map((await rpc("admin_enlaces")).map((e) => [e.id, e]));
+    pintarCI();
+  }
+  for (const id of ["#ci-buscar", "#ci-cat", "#ci-estado"]) $(id).addEventListener("input", pintarCI);
+  $("#ci-todos").addEventListener("change", (e) => { for (const p of visiblesCI()) e.target.checked ? SEL.add(p.id) : SEL.delete(p.id); pintarCI(); });
+  $("#ci-tabla").addEventListener("change", (e) => { const c = e.target.closest("[data-sel]"); if (!c) return; c.checked ? SEL.add(c.dataset.sel) : SEL.delete(c.dataset.sel); pintarCI(); });
+  $("#ci-codigos").addEventListener("click", async (e) => {
+    const b = e.target.closest("[data-cod]"); if (!b) return;
+    const g = b.dataset.cod, inp = $("#ci-c-" + g);
+    try {
+      if (!(await rpc("admin_verificar_codigo", { p_grupo: g, p_codigo: inp.value }))) { toast("La contraseña no coincide con la vigente."); return; }
+      CODIGOS[g] = inp.value; inp.value = ""; pintarCI(); toast("Contraseña validada para esta sesión");
+    } catch (err) { toast(err.message); }
+  });
+  const exigirSel = () => { const s = seleccion(); if (!s.length) { toast("Seleccione al menos un destinatario."); return null; } return s; };
+  async function asegurarEnlaces(items, regenerar = false) {
+    const falt = items.filter((p) => regenerar || !ENL.has(p.id));
+    if (!falt.length) return;
+    const r = await rpc("admin_generar_enlaces", { p_ids: falt.map((p) => p.id), p_regenerar: regenerar });
+    for (const x of r) ENL.set(x.id, { token: x.token, enviado_en: x.nuevo ? null : (ENL.get(x.id) || {}).enviado_en || null });
+    await cargarCI();
+  }
+  $("#ci-generar").addEventListener("click", async () => { const s = exigirSel(); if (!s) return; try { const nuevos = s.filter((p) => !ENL.has(p.id)).length; await asegurarEnlaces(s); toast(`${s.length} enlaces listos (${nuevos} nuevos, ${s.length - nuevos} reutilizados)`); } catch (err) { toast(err.message); } });
+  $("#ci-regenerar").addEventListener("click", async () => { const s = exigirSel(); if (!s) return; if (!confirm(`Regenerar ${s.length} enlace(s) invalida los anteriores. ¿Continuar?`)) return; try { await asegurarEnlaces(s, true); toast("Enlaces regenerados"); } catch (err) { toast(err.message); } });
+  $("#ci-revocar").addEventListener("click", async () => { const s = exigirSel(); if (!s) return; if (!confirm(`Revocar el enlace de ${s.length} persona(s)? Dejarán de funcionar de inmediato.`)) return; try { const n = await rpc("admin_revocar_enlaces", { p_ids: s.map((p) => p.id) }); await cargarCI(); toast(`${n} enlaces revocados`); } catch (err) { toast(err.message); } });
+  function faltanCodigos(items) { return [...new Set(items.map((p) => GRUPO_DE[p.categoria][0]).filter((g) => g !== "otros" && !CODIGOS[g]))]; }
+  async function copiarTexto(t, ok) { try { await navigator.clipboard.writeText(t); } catch (e) { const ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); } catch (e2) {} ta.remove(); } toast(ok); }
+  $("#ci-copiar-inst").addEventListener("click", async () => { const s = exigirSel(); if (!s) return; try { await asegurarEnlaces(s); await copiarTexto(s.map((p) => msgInst(p.nombre, enlaceDe(p.id))).join("\n\n———\n\n"), `${s.length} mensajes institucionales copiados`); } catch (err) { toast(err.message); } });
+  $("#ci-copiar-res").addEventListener("click", async () => { const s = exigirSel(); if (!s) return; const f = faltanCodigos(s); if (f.length) { toast("Valide primero la contraseña de: " + f.join(", ")); return; } await copiarTexto(s.map((p) => `${p.nombre}\n${msgRes(p.categoria)}`).join("\n\n———\n\n"), `${s.length} mensajes de acceso reservado copiados`); });
+  $("#ci-colectivos").addEventListener("click", () => {
+    const caja = $("#ci-colect-caja"); caja.hidden = !caja.hidden; if (caja.hidden) return;
+    caja.innerHTML = `<p class="nota">Mensajes sin nombre ni enlace individual, para grupos o difusión por categoría.</p>` + Object.values(Object.fromEntries(Object.entries(GRUPO_DE).map(([c, [g, t]]) => [g, [c, g, t]]))).map(([c, g, t]) => `<div class="ci-col"><b>${esc(t)}</b><button class="btn" type="button" data-col="inst" data-c="${c}">Copiar institucional</button><button class="btn" type="button" data-col="res" data-c="${c}">Copiar acceso reservado</button></div>`).join("");
+  });
+  $("#ci-colect-caja").addEventListener("click", async (e) => {
+    const b = e.target.closest("[data-col]"); if (!b) return; const c = b.dataset.c, g = GRUPO_DE[c][0];
+    if (b.dataset.col === "inst") return copiarTexto(`Has recibido una invitación especial.\nLa XXIV Promoción de Radiólogos de la Universidad de Los Andes desea compartir contigo este momento tan significativo.\n28 de noviembre de 2026.\n${SITIO()}\nHay momentos que merecen ser compartidos`, "Mensaje institucional colectivo copiado");
+    if (g !== "otros" && !CODIGOS[g]) return toast("Valide primero la contraseña de " + GRUPO_DE[c][1]);
+    copiarTexto(msgRes(c), "Mensaje de acceso reservado copiado");
+  });
+  // Autorizaciones individuales o masivas (el enlace y las confirmaciones no cambian)
+  async function autorizar(acts, modo) {
+    const s = exigirSel(); if (!s) return;
+    try { const n = await rpc("admin_autorizar", { p_ids: s.map((p) => p.id), p_actividades: acts, p_modo: modo }); await cargar(); toast(`Autorizaciones actualizadas (${n}). Los enlaces siguen vigentes.`); } catch (err) { toast(err.message); }
+  }
+  $("#ci-aplicar").addEventListener("click", () => autorizar([...document.querySelectorAll("[data-ci-act]:checked")].map((c) => c.dataset.ciAct), "fijar"));
+  $("#ci-tres").addEventListener("click", () => { document.querySelectorAll("[data-ci-act]").forEach((c) => { c.checked = true; }); autorizar(["clase", "caravana", "recepcion"], "fijar"); });
+  $("#ci-restablecer").addEventListener("click", () => autorizar(null, "restablecer"));
+  // CSV (enlaces secretos: manejar con cuidado)
+  $("#ci-csv").addEventListener("click", async () => {
+    const s = seleccion().length ? seleccion() : visiblesCI(); if (!s.length) return toast("No hay destinatarios.");
+    try { await asegurarEnlaces(s); } catch (err) { return toast(err.message); }
+    const cab = ["Nombre", "Categoría", "Clase magistral", "Caravana", "Recepción", "Enlace", "Estado de distribución", "Mensaje institucional"];
+    const filas = s.map((p) => [p.nombre, CAT[p.categoria], ...["clase", "caravana", "recepcion"].map((a) => (p.acts.includes(a) ? "Autorizada" : "No autorizada")), enlaceDe(p.id), ENL.get(p.id) && ENL.get(p.id).enviado_en ? "Enviado" : "Sin enviar", msgInst(p.nombre, enlaceDe(p.id))]);
+    const csv = "﻿" + [cab, ...filas].map((f) => f.map((v) => `"${csvSeguro(v).replace(/"/g, '""')}"`).join(";")).join("\r\n");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    const a = document.createElement("a"); a.href = url; a.download = `invitaciones-xxiv-promocion-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 30000);
+    toast("CSV exportado. Contiene enlaces privados: no lo comparta.");
+  });
+  // WhatsApp consecutivo: los enlaces se generan antes; no hay que volver al panel entre mensajes (sin servicios de pago)
+  let COLA = [], IDX = 0;
+  const textoWA = (p) => ($("input[name=wa-tipo]:checked").value === "inst" ? msgInst(p.nombre, enlaceDe(p.id)) : msgRes(p.categoria));
+  function pintarWA() {
+    const dlg = $("#dlg-wa");
+    if (IDX >= COLA.length) { $("#wa-progreso").textContent = `Terminado: ${COLA.length} mensajes.`; $("#wa-nombre").textContent = ""; $("#wa-texto").textContent = ""; $("#wa-abrir").disabled = $("#wa-sig").disabled = $("#wa-omitir").disabled = true; return; }
+    const p = COLA[IDX];
+    $("#wa-progreso").textContent = `Mensaje ${IDX + 1} de ${COLA.length}`; $("#wa-nombre").textContent = `${p.nombre} · ${CAT[p.categoria]}`; $("#wa-texto").textContent = textoWA(p);
+    $("#wa-abrir").disabled = $("#wa-sig").disabled = $("#wa-omitir").disabled = false;
+  }
+  $("#ci-wa").addEventListener("click", async () => {
+    const s = exigirSel(); if (!s) return;
+    try { await asegurarEnlaces(s); } catch (err) { return toast(err.message); }
+    COLA = s; IDX = 0; pintarWA(); $("#dlg-wa").showModal();
+  });
+  document.querySelectorAll("input[name=wa-tipo]").forEach((r) => r.addEventListener("change", () => { if ($("input[name=wa-tipo]:checked").value === "res") { const f = faltanCodigos(COLA); if (f.length) { toast("Valide primero la contraseña de: " + f.join(", ")); document.querySelector("input[name=wa-tipo][value=inst]").checked = true; } } pintarWA(); }));
+  $("#wa-abrir").addEventListener("click", () => { window.open("https://wa.me/?text=" + encodeURIComponent(textoWA(COLA[IDX])), "_blank", "noopener"); });
+  $("#wa-sig").addEventListener("click", async () => { try { await rpc("admin_marcar_enviado", { p_ids: [COLA[IDX].id], p_enviado: true }); const e = ENL.get(COLA[IDX].id); if (e) e.enviado_en = new Date().toISOString(); } catch (err) { toast(err.message); } IDX++; pintarWA(); pintarCI(); });
+  $("#wa-omitir").addEventListener("click", () => { IDX++; pintarWA(); });
+  $("#ci-bitacora-ver").addEventListener("click", async () => {
+    const ul = $("#ci-bitacora"); ul.hidden = !ul.hidden; if (ul.hidden) return;
+    try { const b = await rpc("admin_bitacora", { p_limite: 50 }); ul.innerHTML = b.map((x) => `<li><b>${esc(fecha(x.cuando))}</b> · ${esc(x.admin || "")} · ${esc(x.accion)} <small>${esc(JSON.stringify(x.detalle))}</small></li>`).join("") || "<li>Sin registros.</li>"; } catch (err) { toast(err.message); }
+  });
 
   /* ---------- Dedicatorias y aportes voluntarios ---------- */
   let DD = [];

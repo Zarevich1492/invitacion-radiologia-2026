@@ -5,6 +5,13 @@ https://zarevich1492.github.io/invitacion-radiologia-2026/ (misma dirección sie
 Reversión: `git revert <commit>` o volver a una etiqueta: `git checkout -B main <etiqueta> && git push -f origin main`
 (solo con autorización expresa).
 
+## v2.11 · Centro de invitaciones (rama `acceso-por-codigo`; pendiente de publicar tras la migración SQL)
+- Generación masiva de enlaces individuales únicos, privados, reutilizables y revocables (selección múltiple, filtros, «Seleccionar todos»).
+- Autorización de actividades por invitado (individual o masiva, «Autorizar las tres», «Restablecer según categoría») sin cambiar el enlace ni las confirmaciones; el servidor aplica los permisos vigentes y se registra en una bitácora; los indicadores los reflejan.
+- Mensajes independientes: institucional (texto aprobado) y de acceso reservado (contraseña validada una vez por sesión del panel y solo en memoria); invitaciones colectivas por categoría; WhatsApp consecutivo (wa.me, sin servicios de pago); exportación CSV protegida.
+- Bienvenida del destinatario: «Has recibido una invitación especial», nombre y «Abrir mi invitación»; enlace revocado muestra aviso.
+- Pruebas: SQL 23 nuevas (centro de invitaciones), aceptación 178, responsive 244.
+
 ## v2.10 · Dedicatorias («Palabras que nos acompañan») y Aportes voluntarios (rama `acceso-por-codigo`; pendiente de publicar)
 - Secciones públicas para todos los visitantes (también desde la bienvenida, sin código): libro de dedicatorias con estética de papel y tipografía manuscrita (Caveat, autoalojada, licencia OFL), destinatario (promoción o uno de los 7 especialistas), 500 caracteres, nombre, teléfono internacional privado, hasta 2 de 6 stickers de línea propios, vista previa en vivo y aviso de revisión.
 - Antispam gratuito: Cloudflare Turnstile validado en el servidor (clave secreta solo en la base), campo trampa, límites por IP (5/h) y por teléfono (3/día), duplicados, saneamiento de texto y teléfonos normalizados. Sin Turnstile configurado el formulario no se habilita.

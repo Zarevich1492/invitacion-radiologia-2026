@@ -15,8 +15,13 @@
     const r = (hab || []).find((h) => h.categoria === categoria && h.actividad === codigo);
     return r ? !!r.habilitada : codigo !== "recepcion";
   }
-  function habilitadas(actividades, hab, categoria, override) {
-    return actividades.filter((a) => (a.codigo === "recepcion" && override !== null && override !== undefined) ? !!override : reglaDe(hab, categoria, a.codigo)).map((a) => a.codigo);
+  // Prioridad: autorización individual (centro de invitaciones) > excepción de recepción > regla de la categoría
+  function habilitadas(actividades, hab, categoria, override, aut) {
+    return actividades.filter((a) => {
+      const x = (aut || []).find((y) => y.actividad === a.codigo);
+      if (x) return !!x.habilitada;
+      return (a.codigo === "recepcion" && override !== null && override !== undefined) ? !!override : reglaDe(hab, categoria, a.codigo);
+    }).map((a) => a.codigo);
   }
   const normal = (t) => String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[.,]/g, "").replace(/\s+/g, " ").trim();
 
@@ -31,7 +36,7 @@
       const override = oficial ? oficial.recepcion_override : null;
       out.push({
         clave: "padrino:" + p.id, tipo: "padrino", categoria: "padrino", nombre: p.nombre, registro: efectivo, oficial,
-        habilitadas: habilitadas(d.actividades, hab, "padrino", override), override,
+        habilitadas: habilitadas(d.actividades, hab, "padrino", override, oficial && oficial.autorizaciones), override,
         respuestas: respuestasDe(efectivo), verificado: !!(efectivo && efectivo.verificado),
         envios: regs.filter(tieneRespuesta).length, nota: regs.map((r) => r.nota_omision).filter(Boolean).join(" · "),
       });
@@ -39,7 +44,7 @@
     for (const i of d.invitados.filter((x) => !x.padrino_id && x.categoria !== "padrino")) {
       out.push({
         clave: "inv:" + i.id, tipo: "invitado", categoria: i.categoria, nombre: i.nombre, registro: i, oficial: null,
-        habilitadas: habilitadas(d.actividades, hab, i.categoria, i.recepcion_override), override: i.recepcion_override,
+        habilitadas: habilitadas(d.actividades, hab, i.categoria, i.recepcion_override, i.autorizaciones), override: i.recepcion_override,
         respuestas: respuestasDe(i), verificado: !!i.verificado, envios: tieneRespuesta(i) ? 1 : 0, nota: i.nota_omision || "",
       });
     }

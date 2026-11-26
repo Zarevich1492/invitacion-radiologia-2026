@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="version-recursos" content="202611260510">
+<meta name="version-recursos" content="202611260533">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Panel de confirmaciones · XXIV Promoción</title>
 <meta name="robots" content="noindex,nofollow,noarchive">
@@ -11,8 +11,8 @@
 <meta name="supported-color-schemes" content="light">
 <meta name="darkreader-lock">
 <link rel="icon" href="../assets/logos/promocion-xxiv-560.jpg" type="image/jpeg">
-<link rel="stylesheet" href="../css/estilos.css?v=202611260510">
-<link rel="stylesheet" href="../css/admin.css?v=202611260510">
+<link rel="stylesheet" href="../css/estilos.css?v=202611260533">
+<link rel="stylesheet" href="../css/admin.css?v=202611260533">
 </head>
 <body class="admin">
 <main class="envoltura">
@@ -80,6 +80,42 @@
       </form>
     </details>
 
+    <details class="adm-tarjeta" id="ci">
+      <summary><h2 class="adm-h2">Centro de invitaciones</h2></summary>
+      <p class="nota" id="ci-aviso">Seleccione destinatarios para generar enlaces individuales (únicos, privados y revocables; se reutilizan los vigentes), personalizar sus actividades y preparar mensajes. Los enlaces son secretos: quien los tenga abre esa invitación.</p>
+      <h3>Contraseñas vigentes <small class="nota">(se validan una vez por sesión y no se guardan)</small></h3>
+      <div class="ci-codigos" id="ci-codigos"></div>
+      <div class="adm-filtros">
+        <input class="campo" id="ci-buscar" type="search" placeholder="Buscar destinatario" aria-label="Buscar destinatario">
+        <select class="campo" id="ci-cat" aria-label="Categoría"><option value="">Todas las categorías</option><option value="padrino">Padrinos y madrinas</option><option value="docente">Docentes</option><option value="egresado">Egresados</option><option value="r1">R1</option><option value="r2">R2</option><option value="otro">Otros invitados</option></select>
+        <select class="campo" id="ci-estado" aria-label="Estado de distribución"><option value="">Cualquier estado</option><option value="sin">Sin enlace</option><option value="vigente">Enlace vigente</option><option value="enviado">Enviado</option></select>
+        <label class="adm-check"><input type="checkbox" id="ci-todos"> Seleccionar todos (los visibles)</label>
+        <span class="nota" id="ci-n" role="status"></span>
+      </div>
+      <div class="ci-acciones">
+        <button class="btn btn-primario" type="button" id="ci-generar">Generar enlaces</button>
+        <button class="btn" type="button" id="ci-copiar-inst">Copiar mensajes institucionales</button>
+        <button class="btn" type="button" id="ci-copiar-res">Copiar mensajes de acceso reservado</button>
+        <button class="btn" type="button" id="ci-wa">WhatsApp consecutivo</button>
+        <button class="btn" type="button" id="ci-csv">Exportar CSV</button>
+        <button class="btn" type="button" id="ci-colectivos">Invitaciones colectivas</button>
+        <button class="btn" type="button" id="ci-regenerar">Regenerar enlaces</button>
+        <button class="btn" type="button" id="ci-revocar">Revocar enlaces</button>
+      </div>
+      <fieldset class="ci-autorizar"><legend>Actividades autorizadas (a los seleccionados)</legend>
+        <label class="adm-check"><input type="checkbox" data-ci-act="clase"> Clase magistral</label>
+        <label class="adm-check"><input type="checkbox" data-ci-act="caravana"> Caravana</label>
+        <label class="adm-check"><input type="checkbox" data-ci-act="recepcion"> Recepción</label>
+        <button class="btn btn-primario" type="button" id="ci-aplicar">Aplicar</button>
+        <button class="btn" type="button" id="ci-tres">Autorizar las tres actividades</button>
+        <button class="btn" type="button" id="ci-restablecer">Restablecer según categoría</button>
+      </fieldset>
+      <div id="ci-colect-caja" class="ci-colect" hidden></div>
+      <div class="adm-tabla-caja"><table class="adm-tabla" id="ci-tabla"></table></div>
+      <p><button class="btn btn-texto" type="button" id="ci-bitacora-ver">Ver registro de modificaciones</button></p>
+      <ul class="ci-bitacora" id="ci-bitacora" hidden></ul>
+    </details>
+
     <details class="adm-tarjeta">
       <summary><h2 class="adm-h2">Dedicatorias · «Palabras que nos acompañan»</h2></summary>
       <p class="nota" id="mod-aviso"></p>
@@ -137,9 +173,25 @@
   </div>
 </dialog>
 
+<dialog id="dlg-wa" aria-labelledby="t-wa">
+  <div class="hoja-modal">
+    <div class="hoja-cab"><h3 id="t-wa">WhatsApp consecutivo</h3><button class="btn cerrar" type="button" data-cerrar>Cerrar</button></div>
+    <div class="hoja-cuerpo">
+      <label class="adm-check"><input type="radio" name="wa-tipo" value="inst" checked> Mensaje institucional</label>
+      <label class="adm-check"><input type="radio" name="wa-tipo" value="res"> Mensaje de acceso reservado</label>
+      <p id="wa-progreso" class="nota" role="status"></p>
+      <p><b id="wa-nombre"></b></p>
+      <pre class="ci-pre" id="wa-texto"></pre>
+      <button class="btn btn-primario" type="button" id="wa-abrir">Abrir WhatsApp</button>
+      <button class="btn" type="button" id="wa-sig">Marcar como enviado y continuar</button>
+      <button class="btn btn-texto" type="button" id="wa-omitir">Omitir</button>
+    </div>
+  </div>
+</dialog>
+
 <p class="nota adm-toast" id="toast" role="status" aria-live="polite"></p>
-<script src="../js/config.js?v=202611260510"></script>
-<script src="../js/metricas.js?v=202611260510"></script>
-<script src="../js/admin.js?v=202611260510"></script>
+<script src="../js/config.js?v=202611260533"></script>
+<script src="../js/metricas.js?v=202611260533"></script>
+<script src="../js/admin.js?v=202611260533"></script>
 </body>
 </html>

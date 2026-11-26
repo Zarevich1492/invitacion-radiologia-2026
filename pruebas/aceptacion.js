@@ -472,6 +472,63 @@ async function responder(p, resp) {
   const dcsv2 = a.waitForEvent("download"); await a.click("#exportar"); const csv2 = await dcsv2; await csv2.saveAs(`${OUT}/confirmaciones-2.csv`);
   const txt2 = fs.readFileSync(`${OUT}/confirmaciones-2.csv`, "utf8");
   ok("CSV incluye docentes y egresados con su categoría", /Dr\. Luis Ángel Núñez";"Docente"/.test(txt2) && /Dra\. Marta Rivas";"Egresado"/.test(txt2));
+  // ===== Centro de invitaciones: enlaces masivos, autorizaciones con el mismo enlace, mensajes, revocación =====
+  await a.click("#ci > summary"); await a.waitForSelector("#ci-tabla tbody tr");
+  await a.selectOption("#ci-cat", "docente");
+  ok("Centro: filtro por categoría", (await a.$$("#ci-tabla tbody tr")).length === 1);
+  await a.check("#ci-todos"); ok("Centro: «Seleccionar todos» marca los visibles", (await a.textContent("#ci-n")).startsWith("1 seleccionados"));
+  await a.click("#ci-generar"); await a.waitForTimeout(900);
+  ok("Centro: enlaces generados y vigentes", /Vigente/.test(await a.textContent("#ci-tabla")) && /Sin enviar/.test(await a.textContent("#ci-tabla")));
+  await a.evaluate(() => { window.__cp = []; navigator.clipboard.writeText = async (t) => { window.__cp.push(t); }; });
+  await a.click("#ci-copiar-inst"); await a.waitForTimeout(500);
+  const mi = await a.evaluate(() => window.__cp[0]);
+  const enl = (mi.match(/https?:\/\/\S+#t=[\w-]+/) || [])[0];
+  ok("Mensaje institucional: texto aprobado con nombre y enlace personalizado", /^Dr\. Luis Ángel Núñez, has recibido una invitación especial\.\nLa XXIV Promoción de Radiólogos de la Universidad de Los Andes desea compartir contigo este momento tan significativo\.\n28 de noviembre de 2026\.\nhttp\S+#t=\S+\nHay momentos que merecen ser compartidos$/.test(mi), mi.slice(0, 120));
+  await a.click("#ci-copiar-res"); await a.waitForTimeout(300);
+  ok("Acceso reservado: exige validar antes la contraseña de la categoría", (await a.evaluate(() => window.__cp.length)) === 1 && /Valide primero/.test(await a.textContent("#toast")));
+  await a.fill("#ci-c-docentes", "contraseña-equivocada"); await a.click('[data-cod="docentes"]'); await a.waitForTimeout(500);
+  ok("Contraseña incorrecta no se acepta", /no coincide/.test(await a.textContent("#toast")));
+  await a.fill("#ci-c-docentes", "codigo-e2e-docentes"); await a.click('[data-cod="docentes"]'); await a.waitForTimeout(500);
+  await a.click("#ci-copiar-res"); await a.waitForTimeout(300);
+  const mr = await a.evaluate(() => window.__cp[1]);
+  ok("Mensaje de acceso reservado: categoría, contraseña vigente e instrucciones", /Acceso reservado · Docentes y egresados/.test(mr) && mr.includes("Contraseña vigente: codigo-e2e-docentes") && /1\. Abre la invitación/.test(mr), mr.slice(0, 100));
+  ok("La contraseña no se persiste en el navegador", await a.evaluate(() => !JSON.stringify(Object.assign({}, localStorage, sessionStorage)).includes("codigo-e2e")));
+  await a.click("#ci-colectivos"); await a.click('[data-col="res"][data-c="otro"]'); await a.waitForTimeout(300);
+  ok("Invitación colectiva de «Otros»: acceso libre sin contraseña", /no requiere contraseña/.test(await a.evaluate(() => window.__cp[2])));
+  // El destinatario abre su enlace: bienvenida personalizada y actividades vigentes
+  const pe = await nuevaPagina(ctx, errores, externos);
+  await pe.goto("about:blank"); await pe.goto(enl, { waitUntil: "networkidle" }); await pe.waitForSelector("#paso-token:not([hidden])");
+  ok("Destinatario: «Has recibido una invitación especial», nombre y botón «Abrir mi invitación»", (await pe.textContent("#paso-token")).includes("Has recibido una invitación especial") && (await pe.textContent("#token-saludo")) === "Dr. Luis Ángel Núñez" && (await pe.textContent("#btn-token-continuar")) === "Abrir mi invitación");
+  await pe.click("#btn-token-continuar"); await pe.waitForTimeout(2200);
+  const a0 = await pe.evaluate(() => window.__flujo.actividades.join());
+  ok("Destinatario: actividades según la categoría (clase, caravana)", a0 === "clase,caravana", a0);
+  // El administrador autoriza las tres; el MISMO enlace muestra la recepción
+  await a.click("#ci-tres"); await a.waitForTimeout(1500);
+  await pe.goto("about:blank"); await pe.goto(enl, { waitUntil: "networkidle" }); await pe.click("#btn-token-continuar"); await pe.waitForTimeout(2200);
+  ok("«Autorizar las tres» se aplica con el mismo enlace, sin reenviar", (await pe.evaluate(() => window.__flujo.actividades.join())) === "clase,caravana,recepcion");
+  ok("Panel: la tabla refleja la autorización", /Recepción/.test(await a.textContent("#ci-tabla")));
+  await a.check('[data-ci-act="clase"]'); await a.uncheck('[data-ci-act="caravana"]'); await a.uncheck('[data-ci-act="recepcion"]'); await a.click("#ci-aplicar"); await a.waitForTimeout(1500);
+  await pe.goto("about:blank"); await pe.goto(enl, { waitUntil: "networkidle" }); await pe.click("#btn-token-continuar"); await pe.waitForTimeout(2200);
+  ok("Quitar actividades: el mismo enlace muestra solo las autorizadas", (await pe.evaluate(() => window.__flujo.actividades.join())) === "clase");
+  await a.click("#ci-restablecer"); await a.waitForTimeout(1200);
+  await a.click("#ci-bitacora-ver"); await a.waitForTimeout(600);
+  ok("Bitácora: registra las modificaciones administrativas", /autorizacion/.test(await a.textContent("#ci-bitacora")) && /enlaces_generados/.test(await a.textContent("#ci-bitacora")));
+  // WhatsApp consecutivo (sin servicios de pago: enlace wa.me)
+  await a.evaluate(() => { window.__wa = []; window.open = (u) => { window.__wa.push(u); return null; }; });
+  await a.click("#ci-wa"); await a.waitForSelector("#dlg-wa[open]");
+  await a.click("#wa-abrir"); await a.click("#wa-sig"); await a.waitForTimeout(600);
+  ok("WhatsApp: abre wa.me con el mensaje y marca como enviado sin volver a generar", /^https:\/\/wa\.me\/\?text=/.test(await a.evaluate(() => window.__wa[0])) && (await a.textContent("#wa-progreso")).includes("Terminado"));
+  await a.click("#dlg-wa [data-cerrar]");
+  ok("Distribución: estado «Enviado»", /Enviado/.test(await a.textContent("#ci-tabla")));
+  const dci = a.waitForEvent("download"); await a.click("#ci-csv"); const cif = await dci; await cif.saveAs(`${OUT}/invitaciones.csv`);
+  const tci = fs.readFileSync(`${OUT}/invitaciones.csv`, "utf8");
+  ok("CSV de invitaciones: enlace, actividades y estado", /Nombre";"Categoría";"Clase magistral";"Caravana";"Recepción";"Enlace";"Estado de distribución"/.test(tci) && tci.includes("#t=") && tci.includes("Enviado"));
+  await a.evaluate(() => { window.confirm = () => true; });
+  await a.click("#ci-revocar"); await a.waitForTimeout(1200);
+  await pe.goto("about:blank"); await pe.goto(enl, { waitUntil: "networkidle" }); await pe.waitForTimeout(800);
+  ok("Revocar: el enlace deja de funcionar", (await pe.textContent("#acceso-pregunta")).includes("ya no está vigente"));
+  await pe.close();
+  await a.selectOption("#ci-cat", "");
   // Moderación de dedicatorias en el panel
   await a.click("details:has(#dd-tabla) summary"); await a.waitForSelector("#dd-tabla tbody tr");
   const ddTile = await a.$$eval("#dd-indicadores .adm-tile", (t) => Object.fromEntries(t.map((x) => [x.querySelector("span").textContent, +x.querySelector("b").textContent])));
@@ -514,7 +571,7 @@ async function responder(p, resp) {
   await a.click("#dlg-enlace [data-cerrar]");
   const pi = await nuevaPagina(ctx, errores, externos);
   await pi.goto(BASE + "#t=" + enlace.split("#t=")[1], { waitUntil: "networkidle" }); await pi.waitForTimeout(800);
-  ok("Enlace individual: reconoce a la persona", (await pi.textContent("#token-saludo")) === "Hola, Dra. Jenny Sosa.");
+  ok("Enlace individual: reconoce a la persona", (await pi.textContent("#token-saludo")) === "Dra. Jenny Sosa" && (await pi.textContent("#paso-token")).includes("Has recibido una invitación especial"));
   ok("Enlace individual: el token se retira de la barra de direcciones", !pi.url().includes("#t="));
   await pi.click("#btn-token-continuar"); await pi.waitForTimeout(2200);
   const ri = await responder(pi, { clase: "asistira", caravana: "asistira", recepcion: "asistira" });

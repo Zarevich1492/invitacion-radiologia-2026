@@ -32,9 +32,10 @@ const FIRMAS = {
   dedicatorias_config: [], dedicatorias_publicas: [], aportes_publicos: [],
   dedicatoria_enviar: ["p_destinatario", "p_mensaje", "p_autor", "p_telefono", "p_stickers", "p_turnstile", "p_trampa"],
   admin_dedicatorias: [], admin_dedicatoria_estado: ["p_id", "p_estado"], admin_ajustes: [], admin_definir_aportes: ["p_valor"], admin_definir_turnstile: ["p_sitio", "p_secreto"],
+  admin_generar_enlaces: ["p_ids", "p_regenerar"], admin_enlaces: [], admin_revocar_enlaces: ["p_ids"], admin_marcar_enviado: ["p_ids", "p_enviado"], admin_autorizar: ["p_ids", "p_actividades", "p_modo"], admin_verificar_codigo: ["p_grupo", "p_codigo"], admin_bitacora: ["p_limite"],
   admin_generar_enlace: ["p_invitado"], admin_crear_invitado: ["p_nombre", "p_categoria"], admin_sincronizar_padrinos: [], admin_eliminar_registros: ["p_confirmacion"],
 };
-const TIPOS = { p_respuestas: "jsonb", p_invitado: "uuid", p_valor: "jsonb", p_id: "uuid", p_stickers: "text[]" };
+const TIPOS = { p_respuestas: "jsonb", p_invitado: "uuid", p_valor: "jsonb", p_id: "uuid", p_stickers: "text[]", p_ids: "uuid[]", p_actividades: "text[]", p_regenerar: "boolean", p_enviado: "boolean", p_limite: "int" };
 
 http.createServer(async (req, res) => {
   if (req.method === "OPTIONS") { res.writeHead(204, { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*", "Access-Control-Allow-Methods": "*" }); return res.end(); }
@@ -61,7 +62,7 @@ http.createServer(async (req, res) => {
     const b = JSON.parse(cuerpo || "{}"), vars = {}, params = [];
     for (const p of FIRMAS[mr[1]]) if (p in b) {
       if (b[p] === null) { params.push(`${p} => null`); continue; }
-      vars[p] = typeof b[p] === "string" ? b[p] : Array.isArray(b[p]) && TIPOS[p] === "text[]" ? "{" + b[p].map((x) => '"' + String(x).replace(/["\\]/g, "") + '"').join(",") + "}" : JSON.stringify(b[p]);
+      vars[p] = typeof b[p] === "string" ? b[p] : Array.isArray(b[p]) && /\[\]$/.test(TIPOS[p] || "") ? "{" + b[p].map((x) => '"' + String(x).replace(/["\\]/g, "") + '"').join(",") + "}" : JSON.stringify(b[p]);
       params.push(`${p} => :'${p}'::${TIPOS[p] || "text"}`);
     }
     const r = sql(rol, sub, `select to_jsonb(public.${mr[1]}(${params.join(", ")}))::text;`, vars);
@@ -77,7 +78,7 @@ http.createServer(async (req, res) => {
     const where = filtro.length ? " where " + filtro.map((f) => `${f.k}::text = :'f${f.i}'`).join(" and ") : "";
     let q;
     if (req.method === "GET") {
-      if (t === "invitados") q = `select coalesce(jsonb_agg(x order by x.creado), '[]')::text from (select i.id,i.categoria,i.padrino_id,i.nombre,i.origen,i.token_admin,i.verificado,i.recepcion_override,i.nota_omision,i.creado,i.actualizado,i.respondido, coalesce((select jsonb_agg(jsonb_build_object('actividad',c.actividad,'estado',c.estado,'actualizado',c.actualizado)) from public.confirmaciones c where c.invitado_id=i.id),'[]') confirmaciones from public.invitados i) x;`;
+      if (t === "invitados") q = `select coalesce(jsonb_agg(x order by x.creado), '[]')::text from (select i.id,i.categoria,i.padrino_id,i.nombre,i.origen,i.token_admin,i.verificado,i.recepcion_override,i.nota_omision,i.creado,i.actualizado,i.respondido, coalesce((select jsonb_agg(jsonb_build_object('actividad',c.actividad,'estado',c.estado,'actualizado',c.actualizado)) from public.confirmaciones c where c.invitado_id=i.id),'[]') confirmaciones, coalesce((select jsonb_agg(jsonb_build_object('actividad',a.actividad,'habilitada',a.habilitada)) from public.autorizaciones a where a.invitado_id=i.id),'[]') autorizaciones from public.invitados i) x;`;
       else q = `select coalesce(jsonb_agg(to_jsonb(x)), '[]')::text from public.${t} x${where};`;
     } else if (req.method === "PATCH") {
       vars.b = cuerpo; q = `update public.${t} x set ${Object.keys(JSON.parse(cuerpo)).map((k) => `${k} = (jsonb_populate_record(null::public.${t}, :'b'::jsonb)).${k}`).join(", ")}${where.replace(/ (\w+)::text/g, " x.$1::text")};`;

@@ -184,11 +184,11 @@
   async function usarToken(token) {
     try {
       const v = await window.API.miInvitacion(token);
-      if (!v) { mostrarPaso("acceso"); return; }
+      if (!v) { mostrarPaso("acceso"); $("#acceso-pregunta").textContent = "Este enlace de invitación ya no está vigente. Elige cómo nos acompañas:"; return; }
       const id = { categoria: v.categoria, padrinoId: v.padrino_id, nombre: v.nombre };
       window.API.recordarToken(claveIdentidad(id), token);
       servidor = v;
-      $("#token-saludo").textContent = `Hola, ${v.nombre}.`;
+      $("#token-saludo").textContent = v.nombre;
       mostrarPaso("token");
       $("#btn-token-continuar").onclick = () => entrar(id, v);
       $("#btn-token-otro").onclick = () => { servidor = null; mostrarPaso("acceso"); };

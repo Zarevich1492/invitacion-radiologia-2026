@@ -10,13 +10,16 @@ psql -U postgres -q -d $DB -v ON_ERROR_STOP=1 -c "create schema auth; create fun
 psql -U postgres -q -d $DB -v ON_ERROR_STOP=1 -f supabase/esquema.sql
 psql -U postgres -q -d $DB -v ON_ERROR_STOP=1 -f supabase/acceso.sql
 psql -U postgres -q -d $DB -v ON_ERROR_STOP=1 -f supabase/dedicatorias.sql
+psql -U postgres -q -d $DB -v ON_ERROR_STOP=1 -f supabase/invitaciones.sql
 psql -U postgres -q -d $DB -v ON_ERROR_STOP=1 -f supabase/semilla.sql
 # Segunda ejecución: deben ser idempotentes
 psql -U postgres -q -d $DB -v ON_ERROR_STOP=1 -f supabase/esquema.sql
 psql -U postgres -q -d $DB -v ON_ERROR_STOP=1 -f supabase/acceso.sql
 psql -U postgres -q -d $DB -v ON_ERROR_STOP=1 -f supabase/dedicatorias.sql
+psql -U postgres -q -d $DB -v ON_ERROR_STOP=1 -f supabase/invitaciones.sql
 psql -U postgres -q -d $DB -v ON_ERROR_STOP=1 -f supabase/semilla.sql
 psql -U postgres -d $DB -v ON_ERROR_STOP=1 -f supabase/pruebas/renombrado.sql | tail -7
 psql -U postgres -d $DB -v ON_ERROR_STOP=1 -f supabase/pruebas/pruebas.sql
 psql -U postgres -d $DB -v ON_ERROR_STOP=1 -f supabase/pruebas/acceso.sql
 psql -U postgres -d $DB -v ON_ERROR_STOP=1 -f supabase/pruebas/dedicatorias.sql
+psql -U postgres -d $DB -v ON_ERROR_STOP=1 -f supabase/pruebas/invitaciones.sql

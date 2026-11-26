@@ -131,6 +131,33 @@ revoke insert, update, delete, truncate, references, trigger on public.actividad
 grant select, insert, update, delete on public.actividades, public.padrinos, public.categorias, public.habilitaciones, public.invitados, public.confirmaciones to authenticated;
 grant select on public.administradores to authenticated;
 
+
+-- Autorizaciones individuales (anulan la regla por categoría). Un enlace sigue vigente aunque cambien.
+create table if not exists public.autorizaciones (
+  invitado_id uuid not null references public.invitados(id) on delete cascade,
+  actividad   text not null references public.actividades(codigo),
+  habilitada  boolean not null,
+  actualizado timestamptz not null default now(),
+  primary key (invitado_id, actividad)
+);
+create table if not exists public.enlaces (        -- enlace individual vigente (reutilizable y revocable); solo lo lee la organización
+  invitado_id uuid primary key references public.invitados(id) on delete cascade,
+  token       text not null,
+  creado      timestamptz not null default now(),
+  enviado_en  timestamptz
+);
+create table if not exists public.bitacora (        -- registro de modificaciones administrativas
+  id bigserial primary key, cuando timestamptz not null default now(), admin text, accion text not null, detalle jsonb not null default '{}'
+);
+alter table public.autorizaciones enable row level security;
+alter table public.enlaces enable row level security;
+alter table public.bitacora enable row level security;
+revoke all on public.autorizaciones, public.enlaces, public.bitacora from anon;
+revoke all on public.enlaces, public.bitacora from authenticated;
+drop policy if exists admin_lectura on public.autorizaciones;
+create policy admin_lectura on public.autorizaciones for select to authenticated using (public.es_admin());
+grant select on public.autorizaciones to authenticated;
+
 -- ---------- Utilidades ----------
 create or replace function public._hash(p_token text) returns bytea
 language sql immutable set search_path = public, extensions as $$
@@ -165,6 +192,21 @@ language sql stable security definer set search_path = public as $$
                   (select o.recepcion_override from public.invitados o where o.padrino_id = p_inv.padrino_id and o.origen = 'oficial'));
 $$;
 
+
+-- Actividades autorizadas a un invitado: autorización individual > excepción de recepción > regla de categoría.
+-- (Los registros de un padrino heredan las autorizaciones de su registro oficial.)
+create or replace function public._actividades_de(p_inv public.invitados) returns text[]
+language sql stable security definer set search_path = public as $$
+  select array_agg(a.codigo order by a.orden) from public.actividades a
+  where coalesce(
+    (select x.habilitada from public.autorizaciones x
+      where x.invitado_id = coalesce((select o.id from public.invitados o where o.padrino_id = p_inv.padrino_id and o.origen = 'oficial'), p_inv.id)
+        and x.actividad = a.codigo),
+    case when a.codigo = 'recepcion' then public._override_de(p_inv) end,
+    (select h.habilitada from public.habilitaciones h where h.categoria = p_inv.categoria and h.actividad = a.codigo),
+    a.codigo <> 'recepcion');
+$$;
+
 create or replace function public._vista(p_inv public.invitados) returns jsonb
 language sql stable security definer set search_path = public as $$
   select jsonb_build_object(
@@ -172,7 +214,7 @@ language sql stable security definer set search_path = public as $$
     'categoria', p_inv.categoria,
     'padrino_id', p_inv.padrino_id,
     'verificado', p_inv.verificado,
-    'actividades', to_jsonb(public._habilitadas(p_inv.categoria, public._override_de(p_inv))),
+    'actividades', to_jsonb(public._actividades_de(p_inv)),
     'respuestas', coalesce((select jsonb_object_agg(c.actividad, c.estado) from public.confirmaciones c where c.invitado_id = p_inv.id), '{}'::jsonb),
     'actualizado', p_inv.actualizado
   );
@@ -253,7 +295,7 @@ begin
   end if;
 
   select * into v from public.invitados where id = v.id;
-  v_hab := public._habilitadas(v.categoria, public._override_de(v));
+  v_hab := public._actividades_de(v);
 
   for k, e in select key, value #>> '{}' from jsonb_each(p_respuestas) loop
     if not (k = any(v_hab)) then continue; end if;                    -- actividad no habilitada: se ignora
@@ -289,6 +331,7 @@ begin
   v_token := public._nuevo_token();
   update public.invitados set token_hash = public._hash(v_token), token_admin = true, actualizado = now() where id = p_invitado;
   if not found then raise exception 'no_encontrado' using errcode = 'P0001'; end if;
+  insert into public.enlaces(invitado_id, token) values (p_invitado, v_token) on conflict (invitado_id) do update set token = excluded.token, creado = now(), enviado_en = null;
   return v_token;   -- se muestra una sola vez; en la base solo queda el hash
 end $$;
 
@@ -328,6 +371,7 @@ begin
   get diagnostics n = row_count;
   update public.invitados set token_hash = null, token_admin = false, verificado = false, respondido = null, nota_omision = null;
   delete from public.intentos;
+  delete from public.enlaces; delete from public.autorizaciones; delete from public.bitacora;
   return n;
 end $$;
 
@@ -336,7 +380,7 @@ revoke all on function public.invitacion_config(), public.mi_invitacion(text), p
 grant execute on function public.invitacion_config(), public.mi_invitacion(text), public.guardar_confirmacion(text,text,text,text,jsonb,text,text), public.informar_omision(text,text) to anon, authenticated;
 revoke all on function public.admin_generar_enlace(uuid), public.admin_crear_invitado(text,text), public.admin_sincronizar_padrinos(), public.admin_eliminar_registros(text) from public, anon;
 grant execute on function public.admin_generar_enlace(uuid), public.admin_crear_invitado(text,text), public.admin_sincronizar_padrinos(), public.admin_eliminar_registros(text) to authenticated;
-revoke all on function public._hash(text), public._nuevo_token(), public._habilitadas(text,boolean), public._override_de(public.invitados), public._vista(public.invitados) from public, anon, authenticated;
+revoke all on function public._hash(text), public._nuevo_token(), public._habilitadas(text,boolean), public._actividades_de(public.invitados), public._override_de(public.invitados), public._vista(public.invitados) from public, anon, authenticated;
 
 -- ACCESO POR CÓDIGO DE CATEGORÍA (idempotente). Se ejecuta DESPUÉS de esquema.sql.
 -- · Los códigos se guardan solo como hash bcrypt (nunca en texto plano ni en el repositorio).
@@ -674,6 +718,143 @@ revoke all on function public.dedicatorias_config(), public.dedicatoria_enviar(t
 grant execute on function public.dedicatorias_config(), public.dedicatoria_enviar(text,text,text,text,text[],text,text), public.dedicatorias_publicas(), public.aportes_publicos() to anon, authenticated;
 revoke all on function public.admin_dedicatorias(), public.admin_dedicatoria_estado(uuid,text), public.admin_ajustes(), public.admin_definir_aportes(jsonb), public.admin_definir_turnstile(text,text) from public, anon;
 grant execute on function public.admin_dedicatorias(), public.admin_dedicatoria_estado(uuid,text), public.admin_ajustes(), public.admin_definir_aportes(jsonb), public.admin_definir_turnstile(text,text) to authenticated;
+notify pgrst, 'reload schema';
+
+-- CENTRO DE INVITACIONES: enlaces masivos reutilizables/revocables, autorizaciones individuales y bitácora (idempotente).
+-- Se ejecuta DESPUÉS de esquema.sql y acceso.sql. Todo se valida en el servidor; solo la organización puede ejecutarlo.
+-- Los enlaces individuales son secretos al portador: se guardan en public.enlaces (sin acceso público) para poder reutilizarlos;
+-- revocar un enlace lo elimina y deja de funcionar de inmediato.
+
+create or replace function public._admin_id() returns text
+language sql stable as $$ select coalesce((select email from public.administradores where user_id = auth.uid()), current_user); $$;
+
+create or replace function public._bitacora(p_accion text, p_detalle jsonb) returns void
+language sql volatile security definer set search_path = public as $$
+  insert into public.bitacora(admin, accion, detalle) values (public._admin_id(), p_accion, coalesce(p_detalle, '{}'));
+$$;
+
+-- Registro «responsable» de una persona: el oficial para padrinos; el propio para el resto
+create or replace function public._destino(p_id uuid) returns uuid
+language sql stable security definer set search_path = public as $$
+  select coalesce((select o.id from public.invitados o where o.padrino_id = i.padrino_id and o.origen = 'oficial'), i.id) from public.invitados i where i.id = p_id;
+$$;
+
+-- Genera (o reutiliza) enlaces individuales. p_regenerar = true invalida el anterior y crea uno nuevo.
+create or replace function public.admin_generar_enlaces(p_ids uuid[], p_regenerar boolean default false) returns jsonb
+language plpgsql volatile security definer set search_path = public, extensions as $$
+declare v_id uuid; v_dest uuid; v_tok text; v_ok boolean; r jsonb := '[]'; n_nuevos int := 0;
+begin
+  if not public._es_gestor() then raise exception 'no_autorizado' using errcode = '42501'; end if;
+  if p_ids is null or cardinality(p_ids) = 0 or cardinality(p_ids) > 500 then raise exception 'seleccion_invalida' using errcode = 'P0001'; end if;
+  foreach v_id in array p_ids loop
+    v_dest := public._destino(v_id);
+    if v_dest is null then continue; end if;
+    select e.token into v_tok from public.enlaces e join public.invitados i on i.id = e.invitado_id
+      where e.invitado_id = v_dest and i.token_hash = public._hash(e.token) and i.token_admin;
+    v_ok := v_tok is not null and not coalesce(p_regenerar, false);
+    if not v_ok then
+      v_tok := public._nuevo_token();
+      update public.invitados set token_hash = public._hash(v_tok), token_admin = true, actualizado = now() where id = v_dest;
+      insert into public.enlaces(invitado_id, token) values (v_dest, v_tok)
+        on conflict (invitado_id) do update set token = excluded.token, creado = now(), enviado_en = null;
+      n_nuevos := n_nuevos + 1;
+    end if;
+    r := r || jsonb_build_object('id', v_id, 'token', v_tok, 'nuevo', not v_ok);
+  end loop;
+  perform public._bitacora('enlaces_generados', jsonb_build_object('personas', cardinality(p_ids), 'nuevos', n_nuevos, 'regenerados', coalesce(p_regenerar, false)));
+  return r;
+end $$;
+
+-- Enlaces vigentes y estado de distribución (solo organización)
+create or replace function public.admin_enlaces() returns jsonb
+language plpgsql stable security definer set search_path = public, extensions as $$
+begin
+  if not public._es_gestor() then raise exception 'no_autorizado' using errcode = '42501'; end if;
+  return coalesce((select jsonb_agg(jsonb_build_object('id', e.invitado_id, 'token', e.token, 'enviado_en', e.enviado_en))
+    from public.enlaces e join public.invitados i on i.id = e.invitado_id where i.token_hash = public._hash(e.token) and i.token_admin), '[]');
+end $$;
+
+create or replace function public.admin_revocar_enlaces(p_ids uuid[]) returns int
+language plpgsql volatile security definer set search_path = public, extensions as $$
+declare v_id uuid; v_dest uuid; n int := 0;
+begin
+  if not public._es_gestor() then raise exception 'no_autorizado' using errcode = '42501'; end if;
+  if p_ids is null or cardinality(p_ids) = 0 or cardinality(p_ids) > 500 then raise exception 'seleccion_invalida' using errcode = 'P0001'; end if;
+  foreach v_id in array p_ids loop
+    v_dest := public._destino(v_id);
+    update public.invitados set token_hash = null, token_admin = false, actualizado = now() where id = v_dest and token_hash is not null;
+    if found then n := n + 1; end if;
+    delete from public.enlaces where invitado_id = v_dest;
+  end loop;
+  perform public._bitacora('enlaces_revocados', jsonb_build_object('personas', cardinality(p_ids), 'revocados', n));
+  return n;
+end $$;
+
+create or replace function public.admin_marcar_enviado(p_ids uuid[], p_enviado boolean default true) returns int
+language plpgsql volatile security definer set search_path = public as $$
+declare n int;
+begin
+  if not public._es_gestor() then raise exception 'no_autorizado' using errcode = '42501'; end if;
+  update public.enlaces set enviado_en = case when p_enviado then now() else null end
+   where invitado_id in (select public._destino(x) from unnest(p_ids) x);
+  get diagnostics n = row_count; return n;
+end $$;
+
+-- Autorizaciones individuales o masivas. 'fijar': solo las actividades indicadas quedan autorizadas.
+-- 'restablecer': vuelve a la regla de la categoría. El enlace, las confirmaciones y el registro no se tocan.
+create or replace function public.admin_autorizar(p_ids uuid[], p_actividades text[], p_modo text default 'fijar') returns int
+language plpgsql volatile security definer set search_path = public as $$
+declare v_id uuid; v_dest uuid; a record; n int := 0; v_ant jsonb;
+begin
+  if not public._es_gestor() then raise exception 'no_autorizado' using errcode = '42501'; end if;
+  if p_ids is null or cardinality(p_ids) = 0 or cardinality(p_ids) > 500 then raise exception 'seleccion_invalida' using errcode = 'P0001'; end if;
+  if p_modo not in ('fijar','restablecer') then raise exception 'modo_invalido' using errcode = 'P0001'; end if;
+  if p_modo = 'fijar' then
+    if exists(select 1 from unnest(coalesce(p_actividades, '{}')) x where x not in (select codigo from public.actividades)) then raise exception 'actividad_invalida' using errcode = 'P0001'; end if;
+  end if;
+  foreach v_id in array p_ids loop
+    v_dest := public._destino(v_id);
+    if v_dest is null then continue; end if;
+    v_ant := to_jsonb(public._actividades_de((select i from public.invitados i where i.id = v_dest)));
+    if p_modo = 'restablecer' then
+      delete from public.autorizaciones where invitado_id = v_dest;
+    else
+      for a in select codigo from public.actividades loop
+        insert into public.autorizaciones(invitado_id, actividad, habilitada) values (v_dest, a.codigo, a.codigo = any(coalesce(p_actividades, '{}')))
+          on conflict (invitado_id, actividad) do update set habilitada = excluded.habilitada, actualizado = now();
+      end loop;
+    end if;
+    update public.invitados set actualizado = now() where id = v_dest;
+    insert into public.bitacora(admin, accion, detalle) values (public._admin_id(), 'autorizacion',
+      jsonb_build_object('invitado', v_dest, 'modo', p_modo, 'antes', v_ant, 'despues', to_jsonb(public._actividades_de((select i from public.invitados i where i.id = v_dest)))));
+    n := n + 1;
+  end loop;
+  return n;
+end $$;
+
+-- Verifica un código de categoría sin abrir sesión (el panel lo pide una vez por sesión y no lo guarda).
+create or replace function public.admin_verificar_codigo(p_grupo text, p_codigo text) returns boolean
+language plpgsql stable security definer set search_path = public, extensions as $$
+declare v_hash text;
+begin
+  if not public._es_gestor() then raise exception 'no_autorizado' using errcode = '42501'; end if;
+  if p_grupo = 'otros' then return true; end if;
+  select hash into v_hash from public.codigos_acceso where grupo = p_grupo;
+  return v_hash is not null and p_codigo is not null and extensions.crypt(p_codigo, v_hash) = v_hash;
+end $$;
+
+create or replace function public.admin_bitacora(p_limite int default 100) returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+begin
+  if not public._es_gestor() then raise exception 'no_autorizado' using errcode = '42501'; end if;
+  return coalesce((select jsonb_agg(to_jsonb(b)) from (select * from public.bitacora order by id desc limit least(greatest(p_limite, 1), 500)) b), '[]');
+end $$;
+
+revoke all on function public._admin_id(), public._bitacora(text,jsonb), public._destino(uuid) from public, anon, authenticated;
+revoke all on function public.admin_generar_enlaces(uuid[],boolean), public.admin_enlaces(), public.admin_revocar_enlaces(uuid[]), public.admin_marcar_enviado(uuid[],boolean),
+  public.admin_autorizar(uuid[],text[],text), public.admin_verificar_codigo(text,text), public.admin_bitacora(int) from public, anon;
+grant execute on function public.admin_generar_enlaces(uuid[],boolean), public.admin_enlaces(), public.admin_revocar_enlaces(uuid[]), public.admin_marcar_enviado(uuid[],boolean),
+  public.admin_autorizar(uuid[],text[],text), public.admin_verificar_codigo(text,text), public.admin_bitacora(int) to authenticated;
 notify pgrst, 'reload schema';
 
 -- GENERADO desde datos/evento.json por herramientas/generar_semilla_sql.py. No editar a mano.

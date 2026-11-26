@@ -130,6 +130,33 @@ revoke insert, update, delete, truncate, references, trigger on public.actividad
 grant select, insert, update, delete on public.actividades, public.padrinos, public.categorias, public.habilitaciones, public.invitados, public.confirmaciones to authenticated;
 grant select on public.administradores to authenticated;
 
+
+-- Autorizaciones individuales (anulan la regla por categoría). Un enlace sigue vigente aunque cambien.
+create table if not exists public.autorizaciones (
+  invitado_id uuid not null references public.invitados(id) on delete cascade,
+  actividad   text not null references public.actividades(codigo),
+  habilitada  boolean not null,
+  actualizado timestamptz not null default now(),
+  primary key (invitado_id, actividad)
+);
+create table if not exists public.enlaces (        -- enlace individual vigente (reutilizable y revocable); solo lo lee la organización
+  invitado_id uuid primary key references public.invitados(id) on delete cascade,
+  token       text not null,
+  creado      timestamptz not null default now(),
+  enviado_en  timestamptz
+);
+create table if not exists public.bitacora (        -- registro de modificaciones administrativas
+  id bigserial primary key, cuando timestamptz not null default now(), admin text, accion text not null, detalle jsonb not null default '{}'
+);
+alter table public.autorizaciones enable row level security;
+alter table public.enlaces enable row level security;
+alter table public.bitacora enable row level security;
+revoke all on public.autorizaciones, public.enlaces, public.bitacora from anon;
+revoke all on public.enlaces, public.bitacora from authenticated;
+drop policy if exists admin_lectura on public.autorizaciones;
+create policy admin_lectura on public.autorizaciones for select to authenticated using (public.es_admin());
+grant select on public.autorizaciones to authenticated;
+
 -- ---------- Utilidades ----------
 create or replace function public._hash(p_token text) returns bytea
 language sql immutable set search_path = public, extensions as $$
@@ -164,6 +191,21 @@ language sql stable security definer set search_path = public as $$
                   (select o.recepcion_override from public.invitados o where o.padrino_id = p_inv.padrino_id and o.origen = 'oficial'));
 $$;
 
+
+-- Actividades autorizadas a un invitado: autorización individual > excepción de recepción > regla de categoría.
+-- (Los registros de un padrino heredan las autorizaciones de su registro oficial.)
+create or replace function public._actividades_de(p_inv public.invitados) returns text[]
+language sql stable security definer set search_path = public as $$
+  select array_agg(a.codigo order by a.orden) from public.actividades a
+  where coalesce(
+    (select x.habilitada from public.autorizaciones x
+      where x.invitado_id = coalesce((select o.id from public.invitados o where o.padrino_id = p_inv.padrino_id and o.origen = 'oficial'), p_inv.id)
+        and x.actividad = a.codigo),
+    case when a.codigo = 'recepcion' then public._override_de(p_inv) end,
+    (select h.habilitada from public.habilitaciones h where h.categoria = p_inv.categoria and h.actividad = a.codigo),
+    a.codigo <> 'recepcion');
+$$;
+
 create or replace function public._vista(p_inv public.invitados) returns jsonb
 language sql stable security definer set search_path = public as $$
   select jsonb_build_object(
@@ -171,7 +213,7 @@ language sql stable security definer set search_path = public as $$
     'categoria', p_inv.categoria,
     'padrino_id', p_inv.padrino_id,
     'verificado', p_inv.verificado,
-    'actividades', to_jsonb(public._habilitadas(p_inv.categoria, public._override_de(p_inv))),
+    'actividades', to_jsonb(public._actividades_de(p_inv)),
     'respuestas', coalesce((select jsonb_object_agg(c.actividad, c.estado) from public.confirmaciones c where c.invitado_id = p_inv.id), '{}'::jsonb),
     'actualizado', p_inv.actualizado
   );
@@ -252,7 +294,7 @@ begin
   end if;
 
   select * into v from public.invitados where id = v.id;
-  v_hab := public._habilitadas(v.categoria, public._override_de(v));
+  v_hab := public._actividades_de(v);
 
   for k, e in select key, value #>> '{}' from jsonb_each(p_respuestas) loop
     if not (k = any(v_hab)) then continue; end if;                    -- actividad no habilitada: se ignora
@@ -288,6 +330,7 @@ begin
   v_token := public._nuevo_token();
   update public.invitados set token_hash = public._hash(v_token), token_admin = true, actualizado = now() where id = p_invitado;
   if not found then raise exception 'no_encontrado' using errcode = 'P0001'; end if;
+  insert into public.enlaces(invitado_id, token) values (p_invitado, v_token) on conflict (invitado_id) do update set token = excluded.token, creado = now(), enviado_en = null;
   return v_token;   -- se muestra una sola vez; en la base solo queda el hash
 end $$;
 
@@ -327,6 +370,7 @@ begin
   get diagnostics n = row_count;
   update public.invitados set token_hash = null, token_admin = false, verificado = false, respondido = null, nota_omision = null;
   delete from public.intentos;
+  delete from public.enlaces; delete from public.autorizaciones; delete from public.bitacora;
   return n;
 end $$;
 
@@ -335,4 +379,4 @@ revoke all on function public.invitacion_config(), public.mi_invitacion(text), p
 grant execute on function public.invitacion_config(), public.mi_invitacion(text), public.guardar_confirmacion(text,text,text,text,jsonb,text,text), public.informar_omision(text,text) to anon, authenticated;
 revoke all on function public.admin_generar_enlace(uuid), public.admin_crear_invitado(text,text), public.admin_sincronizar_padrinos(), public.admin_eliminar_registros(text) from public, anon;
 grant execute on function public.admin_generar_enlace(uuid), public.admin_crear_invitado(text,text), public.admin_sincronizar_padrinos(), public.admin_eliminar_registros(text) to authenticated;
-revoke all on function public._hash(text), public._nuevo_token(), public._habilitadas(text,boolean), public._override_de(public.invitados), public._vista(public.invitados) from public, anon, authenticated;
+revoke all on function public._hash(text), public._nuevo_token(), public._habilitadas(text,boolean), public._actividades_de(public.invitados), public._override_de(public.invitados), public._vista(public.invitados) from public, anon, authenticated;

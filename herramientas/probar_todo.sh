@@ -14,6 +14,7 @@ psql -U postgres -q -d invitacion_e2e -v ON_ERROR_STOP=1 -c "create schema auth;
 psql -U postgres -q -d invitacion_e2e -v ON_ERROR_STOP=1 -f supabase/esquema.sql >/dev/null 2>&1
 psql -U postgres -q -d invitacion_e2e -v ON_ERROR_STOP=1 -f supabase/acceso.sql >/dev/null
 psql -U postgres -q -d invitacion_e2e -v ON_ERROR_STOP=1 -f supabase/dedicatorias.sql >/dev/null 2>&1
+psql -U postgres -q -d invitacion_e2e -v ON_ERROR_STOP=1 -f supabase/invitaciones.sql >/dev/null
 psql -U postgres -q -d invitacion_e2e -v ON_ERROR_STOP=1 -f supabase/semilla.sql >/dev/null
 # Códigos SOLO de prueba (la base de producción recibe los suyos del organizador; nunca se guardan en el repositorio)
 for g in padrinos docentes residentes especialistas; do psql -U postgres -q -d invitacion_e2e -c "select public.admin_definir_codigo('$g', 'codigo-e2e-$g')" >/dev/null; done
