@@ -743,3 +743,7 @@ body{background-image:linear-gradient(#f4e6d1 0,#f4e6d1 55%,#efdfc6 100%);backgr
 .pm-detalle>summary::before{content:"+";font-weight:700;color:var(--rojo)}
 .pm-detalle[open]>summary::before{content:"−"}
 .pm-detalle .pm-tarjeta{margin-top:8px}
+
+/* Costo de entrada de la recepción (dato del evento, discreto) */
+.momento-txt .costo{display:block;margin-top:2px;font-size:.88rem;color:var(--tinta-suave)}
+.rsvp-costo{margin:2px 0 8px;font-size:.88rem;color:var(--tinta-suave)}

@@ -357,6 +357,7 @@
           ${a.social ? '<em class="etiqueta-social">Celebración social</em>' : ""}
           <strong>${esc(a.titulo)}</strong>
           ${a.lineas_pase.map((l) => `<span>${esc(l)}</span>`).join(" ")}
+          ${a.costo_texto ? `<small class="costo">${esc(a.costo_texto)}</small>` : ""}
           <a class="como-llegar" target="_blank" rel="noopener noreferrer" href="https://www.google.com/maps/search/?api=1&amp;query=${encodeURIComponent(a.mapa)}">Cómo llegar <span aria-hidden="true">↗</span><span class="sr-only"> a ${esc(a.titulo)} (abre Google Maps)</span></a>
         </div>
       </li>`).join("");
@@ -379,6 +380,7 @@
     caja.innerHTML = acts.map((a) => `
       <fieldset class="rsvp-act${a.social ? " social" : ""}">
         <legend><b>${esc(a.titulo)}</b><span>${esc(a.hora_texto)}</span></legend>
+        ${a.costo_texto ? `<p class="rsvp-costo">${esc(a.costo_texto)}</p>` : ""}
         <div class="opciones-rsvp">${ESTADOS.map(([k, t]) => `<label><input type="radio" name="r-${a.codigo}" value="${k}"${resp[a.codigo] === k ? " checked" : ""}><span>${t}</span></label>`).join("")}</div>
       </fieldset>`).join("");
     resumen();

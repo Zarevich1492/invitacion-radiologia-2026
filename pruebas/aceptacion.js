@@ -428,6 +428,27 @@ async function responder(p, resp) {
   const navOt = await p.$$eval(".nav-inferior a", (a) => a.filter((x) => !x.hidden && getComputedStyle(x).display !== "none").map((x) => x.textContent.trim()).join("|"));
   ok("Otros: navegación Inicio|Programa|Palabras|Distancia|Solicitar", navOt === "Inicio|Programa|Palabras|Distancia|Solicitar", navOt);
   await p.close();
+  // ===== Costo de entrada de la recepción: en la actividad y antes de confirmar; no en portada ni «Desde la distancia» =====
+  p = await nuevaPagina(ctx, errores, externos);
+  await elegirPadrino(p, "rojas-gustavo");
+  const COSTO = "Costo de entrada: 3 USD por persona.";
+  await irVista(p, "programa");
+  const items = await p.$$eval("#programa .momento", (li) => li.map((x) => [x.textContent.includes("Recepción"), x.textContent.includes("3 USD")]));
+  ok("Programa: el costo aparece solo en la recepción de Mucumbarila", items.length === 3 && items.filter((x) => x[1]).length === 1 && items.find((x) => x[0])[1] && (await p.textContent("#programa .momento.social")).includes(COSTO), JSON.stringify(items));
+  await irVista(p, "confirmar");
+  const rc = await p.$$eval("#rsvp-actividades fieldset", (f) => f.map((x) => [x.textContent.includes("Recepción"), x.textContent.includes("3 USD")]));
+  ok("Confirmación: el costo se muestra antes de responder en la recepción (y solo allí)", rc.filter((x) => x[1]).length === 1 && rc.find((x) => x[0])[1], JSON.stringify(rc));
+  await irVista(p, "invitacion");
+  ok("Portada e Inicio: sin el costo", !(await p.textContent("#vista-invitacion")).includes("USD"));
+  await irVista(p, "distancia");
+  ok("«Desde la distancia»: sin el costo (no es un aporte voluntario)", !(await p.textContent("#vista-distancia")).includes("USD"));
+  await p.close();
+  p = await nuevaPagina(ctx, errores, externos); await p.goto(BASE, { waitUntil: "networkidle" });
+  ok("Bienvenida: sin el costo", !(await p.textContent("#bienvenida")).includes("USD"));
+  const imgs = await p.evaluate(async () => (await (await fetch("datos/evento.json")).json()).actividades.filter((a) => a.costo_texto).map((a) => a.codigo));
+  ok("Dato único en evento.json solo para la recepción", imgs.join() === "recepcion");
+  await p.close();
+
   // Familia radiológica (una sola comunidad, sin subdivisiones)
   p = await nuevaPagina(ctx, errores, externos);
   await p.goto(BASE, { waitUntil: "networkidle" }); await conCodigo(p, "docentes"); await p.waitForSelector("#form-nombre:not([hidden])");

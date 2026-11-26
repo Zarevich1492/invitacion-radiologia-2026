@@ -5,6 +5,10 @@ https://zarevich1492.github.io/invitacion-radiologia-2026/ (misma dirección sie
 Reversión: `git revert <commit>` o volver a una etiqueta: `git checkout -B main <etiqueta> && git push -f origin main`
 (solo con autorización expresa).
 
+## v2.17 · Costo de entrada de la recepción
+- «Costo de entrada: 3 USD por persona.» se muestra discretamente solo en la recepción de Mucumbarila: en su descripción del Programa y antes de responder en «Confirmar asistencia». No aparece en la portada, el Inicio, la bienvenida ni «Desde la distancia» (es el costo del evento, no un aporte voluntario). Dato único en `datos/evento.json` (`costo_texto`).
+- Pruebas: aceptación 220, responsive 244.
+
 ## v2.16 · «Otros invitados» pasa a «Invitados especiales»
 - Cambio exclusivamente de denominación en bienvenida, menú, tarjetas, formularios, panel (filtros, indicadores, solicitudes, mensajes de acceso y de WhatsApp), documentación y pruebas. Identificadores internos (`otro`, `otros`), enlaces, permisos y registros sin cambios; no requiere migración SQL.
 - Pruebas: aceptación 214, responsive 244.
