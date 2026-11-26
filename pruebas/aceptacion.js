@@ -61,7 +61,7 @@ async function rutaB(p, cat, nombre) {
 }
 async function responder(p, resp) {
   if (await p.evaluate(() => document.body.dataset.vistaActiva) !== "confirmar") await irVista(p, "confirmar");
-  for (const [a, e] of Object.entries(resp)) await p.check(`input[name="r-${a}"][value="${e}"]`, { force: true });
+  for (const [a, e] of Object.entries(resp)) { const sel = `input[name="r-${a}"][value="${e}"]`; await p.$eval(sel, (el) => el.scrollIntoView({ block: "center" })); await p.check(sel, { force: true }); }   // al centro: la barra inferior fija no tapa el control
   await p.click("#btn-rsvp");
   await p.waitForFunction(() => /exito|error/.test(document.getElementById("rsvp-estado").className), null, { timeout: 15000 });
   return { texto: await p.textContent("#rsvp-estado"), clase: await p.getAttribute("#rsvp-estado", "class") };
@@ -123,7 +123,7 @@ async function responder(p, resp) {
   await p.screenshot({ path: `${OUT}/02-portada-variante-A.png` });
 
   // Navegación por vistas (padrinos: 5 apartados con Inicio y Mi listón independiente)
-  const navEsperadaPadrino = EV.modulos && EV.modulos.listones ? "Inicio|Programa|Confirmar|Mi pase|Mi listón|Palabras|Distancia" : "Inicio|Programa|Confirmar|Mi pase|Palabras|Distancia";
+  const navEsperadaPadrino = EV.modulos && EV.modulos.listones ? "Inicio|Programa|Confirmar|Mi pase|Mi listón|Aportes y dedicatorias" : "Inicio|Programa|Confirmar|Mi pase|Aportes y dedicatorias";
   const navPadrino = await p.$$eval(".nav-inferior [data-ir]", (a) => a.filter((x) => !x.hidden && getComputedStyle(x).display !== "none").map((x) => x.textContent.trim()).join("|"));
   ok("Navegación padrino: «Inicio» activo al entrar y apartados exactos", navPadrino === navEsperadaPadrino && (await p.getAttribute('.nav-inferior [data-ir="invitacion"]', "aria-current")) === "page", navPadrino);
   await irVista(p, "programa"); await irVista(p, "pase");
@@ -304,7 +304,7 @@ async function responder(p, resp) {
   await p.click('[data-graduando="arrieta-jorge"]'); await p.waitForTimeout(1500);
   ok("Graduando: entra directamente a su listón", (await p.evaluate(() => document.body.dataset.vistaActiva)) === "liston" && (await p.isVisible("#vista-liston")) && (await p.getAttribute("#liston-vista", "src")).split("?")[0] === "assets/listones/arrieta-jorge.png");
   const navG = await p.$$eval(".nav-inferior a", (a) => a.filter((x) => !x.hidden && getComputedStyle(x).display !== "none").map((x) => x.textContent.trim()).join("|"));
-  ok("Graduando: navegación exacta (Inicio|Programa|Mi listón|Palabras|Distancia)", navG === "Inicio|Programa|Mi listón|Palabras|Distancia", navG);
+  ok("Graduando: navegación exacta (Inicio|Programa|Mi listón|Aportes y dedicatorias)", navG === "Inicio|Programa|Mi listón|Aportes y dedicatorias", navG);
   await p.evaluate(() => { location.hash = "confirmar"; }); await p.waitForTimeout(400);
   ok("Graduando: la ruta #confirmar no está disponible", (await p.evaluate(() => document.body.dataset.vistaActiva)) === "liston");
   await irVista(p, "invitacion");
@@ -331,7 +331,7 @@ async function responder(p, resp) {
   p = await nuevaPagina(ctx, errores, externos);
   await rutaB(p, "r2", "Residente Prueba");
   const navR = await p.$$eval(".nav-inferior a", (a) => a.filter((x) => !x.hidden && getComputedStyle(x).display !== "none").map((x) => x.textContent.trim()).join("|"));
-  ok("Residente: navegación sin Mi listón (Inicio|Programa|Confirmar|Mi pase)", navR === "Inicio|Programa|Confirmar|Mi pase|Palabras|Distancia", navR);
+  ok("Residente: navegación sin Mi listón (Inicio|Programa|Confirmar|Mi pase)", navR === "Inicio|Programa|Confirmar|Mi pase|Aportes y dedicatorias", navR);
   await p.evaluate(() => { location.hash = "liston"; }); await p.waitForTimeout(400);
   ok("Residente: ruta #liston no accesible", (await p.evaluate(() => document.body.dataset.vistaActiva)) !== "liston");
   await p.close();
@@ -345,7 +345,7 @@ async function responder(p, resp) {
   await p.click('[data-visitante="dedicatorias"]'); await p.waitForFunction(() => document.body.dataset.vistaActiva === "dedicatorias");
   ok("Palabras que nos acompañan: encabezado, frase y «Dejar unas palabras» como acción principal con formulario plegado", (await p.textContent("#vista-dedicatorias .versalita")).includes("XXIV Promoción · ULA 2026") && (await p.textContent("#t-dedic")).replace(/\s+/g, " ").includes("Palabras que nos acompañan") && (await p.textContent(".cita-libro")).includes("recuerdos para toda la vida") && (await p.textContent("#dd-abrir")) === "Dejar unas palabras" && !(await p.isVisible("#form-dedic")));
   ok("Palabras que nos acompañan: sin referencias a aportes económicos", !/aporte|pago m|dinero|transferencia|donaci|detalle con la promoci/i.test(await p.textContent("#vista-dedicatorias")));
-  ok("«Desde la distancia»: fuera del menú solo se alcanza desde «Un detalle para nuestra promoción»", (await p.$$eval('[data-ir="distancia"]', (e) => e.filter((x) => !x.closest("nav")).map((x) => !!x.closest("#detalle-promo")))).join() === "true");
+  ok("«Aportes y dedicatorias»: fuera del menú solo se alcanza desde «Celebra este logro con nosotros» (Inicio)", (await p.$$eval('[data-ir="distancia"]', (e) => e.filter((x) => !x.closest("nav")).map((x) => !!x.closest("#celebra")))).join() === "true");
   await p.click("#dd-abrir");
   await p.waitForSelector("#dd-stickers .sticker"); await p.waitForFunction(() => !document.getElementById("dd-enviar").disabled, null, { timeout: 8000 });
   ok("Dedicatorias: visibles para un visitante sin código", await p.isVisible("#form-dedic"));
@@ -375,37 +375,33 @@ async function responder(p, resp) {
   const lect = await p.request.get(API + "/rest/v1/dedicatorias?select=telefono", { headers: hdr });
   ok("El público no puede leer teléfonos", lect.status() === 404 || lect.status() === 401 || lect.status() === 403);
   await p.close();
-  // «Desde la distancia»: sección independiente, solo desde el menú; el detalle voluntario solo al desplegarlo
+  // «Aportes y dedicatorias»: página con los datos de Pago Móvil a la vista (se llega por el menú o por «Realizar un aporte»)
   p = await nuevaPagina(ctx, errores, externos);
   await p.goto(BASE, { waitUntil: "networkidle" }); await p.click('[data-visitante="dedicatorias"]'); await p.waitForFunction(() => document.body.dataset.vistaActiva === "dedicatorias");
   await irVista(p, "distancia");
-  ok("Desde la distancia: título y texto aprobados", (await p.textContent("#t-distancia")).replace(/\s+/g, " ").includes("Hay muchas formas de estar presentes") && (await p.textContent("#vista-distancia")).includes("Tu cariño, tus enseñanzas y tus buenos deseos también forman parte de este logro."));
-  await p.waitForSelector("#pm-detalle:not([hidden])");
-  ok("Detalle voluntario: opción discreta plegada, sin datos de Pago Móvil a la vista", (await p.textContent("#pm-detalle summary")).includes("¿Deseas tener un detalle con la promoción?") && !(await p.isVisible("#pm-datos")) && !(await p.textContent("#vista-distancia")).includes("Titular de Prueba") && (await p.$$("#pm-datos .pm-fila")).length === 0);
-  ok("Desde la distancia: sin botones destacados (ningún botón primario)", (await p.$$("#vista-distancia .btn-primario")).length === 0);
-  await p.click("#pm-detalle summary"); await p.waitForSelector("#pm-datos .pm-fila");
+  await p.waitForSelector("#hub-aportes:not([hidden]) #pm-datos .pm-fila", { timeout: 8000 });
+  ok("Aportes y dedicatorias: título y los dos textos aprobados", (await p.textContent("#t-distancia")).replace(/\s+/g, " ").includes("Celebra este logro con nosotros") && (await p.textContent("#hub-aportes")).includes("Si deseas apoyar económicamente a nuestra promoción, puedes hacerlo mediante Pago Móvil.") && (await p.textContent("#vista-distancia")).includes("Deja un mensaje que podamos conservar como recuerdo."));
   const filas = await p.$$eval("#pm-datos .pm-fila", (f) => f.map((x) => x.querySelector("dt").textContent));
-  ok("Detalle voluntario: al elegirlo se muestran cinco datos con su botón Copiar", filas.join("|") === "Banco|Código bancario|Titular|Cédula de identidad|Teléfono" && (await p.$$("#pm-datos .pm-copiar")).length === 5, filas.join("|"));
-  ok("Detalle voluntario: aviso de voluntariedad y cierre de gratitud", (await p.textContent("#pm-tarjeta")).includes("Todo es voluntario") && (await p.textContent("#pm-gracias")).includes("incluso desde la distancia"));
-  ok("Detalle voluntario: sin montos, metas ni comprobantes", !/(monto|meta|m[ií]nimo|comprobante|ranking)/i.test(await p.textContent("#vista-distancia")));
+  ok("Aportes: Pago Móvil a la vista con cinco datos y su botón Copiar", filas.join("|") === "Banco|Código bancario|Titular|Cédula de identidad|Teléfono" && (await p.$$("#pm-datos .pm-copiar")).length === 5, filas.join("|"));
+  ok("Aportes: aviso de voluntariedad, independencia de la entrada y gratitud", (await p.textContent("#hub-aportes")).includes("independiente de la entrada a Mucumbarila") && (await p.textContent("#pm-gracias")).includes("incluso desde la distancia"));
+  ok("Aportes: sin montos, metas ni comprobantes", !/(monto|meta\b|metas|m[ií]nimo|comprobante|ranking|usd|\$)/i.test(await p.textContent("#vista-distancia")));
   await p.evaluate(() => { window.__cp = []; navigator.clipboard.writeText = async (t) => { window.__cp.push(t); }; });
   await p.click('[data-copiar="cedula"]'); await p.waitForTimeout(150);
-  ok("Detalle voluntario: copiar un dato individual con confirmación visual", (await p.evaluate(() => window.__cp[0])) === "1" && (await p.textContent("#pm-copiado")).includes("Copiado"));
+  ok("Aportes: copiar un dato individual con confirmación visual", (await p.evaluate(() => window.__cp[0])) === "1" && (await p.textContent("#pm-copiado")).includes("Copiado"));
   await p.click("#pm-copiar-todo"); await p.waitForTimeout(150);
   const todo = await p.evaluate(() => window.__cp[1]);
-  ok("Detalle voluntario: «Copiar datos de Pago Móvil» copia los cinco datos", /^Pago Móvil\nBanco: .+\nCódigo bancario: .+\nTitular: .+\nCédula de identidad: .+\nTeléfono: .+$/.test(todo), todo);
-  await p.screenshot({ path: `${OUT}/18-desde-la-distancia.png`, fullPage: true });
-  await p.click("#pm-detalle summary"); await p.waitForTimeout(200);
-  ok("Detalle voluntario: al plegarlo los datos desaparecen", (await p.$$("#pm-datos .pm-fila")).length === 0);
+  ok("Aportes: «Copiar datos de Pago Móvil» copia los cinco datos", /^Pago Móvil\nBanco: .+\nCódigo bancario: .+\nTitular: .+\nCédula de identidad: .+\nTeléfono: .+$/.test(todo), todo);
+  ok("Dedicatorias: el botón «Dejar una dedicatoria» lleva al libro", (await p.textContent("#vista-distancia .celebra-dedic a")).trim() === "Dejar una dedicatoria");
+  await p.screenshot({ path: `${OUT}/18-aportes-y-dedicatorias.png`, fullPage: true });
   const sw2 = await p.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth]);
-  ok("Desde la distancia: sin desplazamiento horizontal en móvil", sw2[0] <= sw2[1], sw2.join(" ≤ "));
+  ok("Aportes y dedicatorias: sin desplazamiento horizontal en móvil", sw2[0] <= sw2[1], sw2.join(" ≤ "));
   await p.close();
 
   // ===== «Invitados especiales»: cinco funcionalidades de acceso libre, visibles desde Inicio =====
   p = await nuevaPagina(ctx, errores, externos);
   await rutaB(p, "otro", "Visitante Otros");
   const ops = await p.$$eval("#otros-tarjetas .op b", (b) => b.map((x) => x.textContent));
-  ok("Otros: tarjetas visibles desde Inicio (ver, programa, palabras, solicitar)", ops.join("|") === "Ver invitación|Programa|Palabras que nos acompañan|Solicitar invitación" && (await p.isVisible("#otros-tarjetas")), ops.join("|"));
+  ok("Otros: tarjetas visibles desde Inicio (ver, programa, solicitar)", ops.join("|") === "Ver invitación|Programa|Solicitar invitación" && (await p.isVisible("#otros-tarjetas")), ops.join("|"));
   ok("Otros: sin contraseña ni registro previo (acceso libre)", !(await p.isVisible("#paso-codigo")));
   await p.screenshot({ path: `${OUT}/19-otros-inicio.png`, fullPage: true });
   await p.click('#otros-tarjetas [data-ir="solicitar"]'); await p.waitForFunction(() => document.body.dataset.vistaActiva === "solicitar");
@@ -423,41 +419,48 @@ async function responder(p, resp) {
   await p.click("#dd-abrir");
   ok("Otros: dedicatorias disponibles aunque su solicitud no esté autorizada", await p.isVisible("#form-dedic"));
   await p.evaluate(() => { location.hash = "distancia"; }); await p.waitForFunction(() => document.body.dataset.vistaActiva === "distancia");
-  await p.waitForSelector("#pm-detalle:not([hidden])", { timeout: 8000 });
-  ok("Otros: «Desde la distancia» disponible desde el menú sin confirmar asistencia", await p.isVisible("#pm-detalle"));
+  await p.waitForSelector("#hub-aportes:not([hidden])", { timeout: 8000 });
+  ok("Otros: «Aportes y dedicatorias» disponible desde el menú sin confirmar asistencia", await p.isVisible("#hub-aportes"));
   const navOt = await p.$$eval(".nav-inferior a", (a) => a.filter((x) => !x.hidden && getComputedStyle(x).display !== "none").map((x) => x.textContent.trim()).join("|"));
-  ok("Otros: navegación Inicio|Programa|Palabras|Distancia|Solicitar", navOt === "Inicio|Programa|Palabras|Distancia|Solicitar", navOt);
+  ok("Otros: navegación Inicio|Programa|Aportes y dedicatorias|Solicitar", navOt === "Inicio|Programa|Aportes y dedicatorias|Solicitar", navOt);
   await p.close();
-  // ===== Costo de entrada de la recepción: en la actividad y antes de confirmar; no en portada ni «Desde la distancia» =====
+  // ===== ENTRADA a Mucumbarila (3 USD, la invitación no la incluye) y APORTES voluntarios: conceptos independientes =====
   p = await nuevaPagina(ctx, errores, externos);
   await elegirPadrino(p, "rojas-gustavo");
-  const COSTO = "Costo de entrada: 3 USD por persona.";
+  const ENTRADA = "Entrada: 3 USD por persona. La invitación no incluye el costo de entrada.";
+  const limpio = (t) => t.replace(/\s+/g, " ").trim();
   await irVista(p, "programa");
   const items = await p.$$eval("#programa .momento", (li) => li.map((x) => [x.textContent.includes("Recepción"), x.textContent.includes("3 USD")]));
-  ok("Programa: el costo aparece solo en la recepción de Mucumbarila", items.length === 3 && items.filter((x) => x[1]).length === 1 && items.find((x) => x[0])[1] && (await p.textContent("#programa .momento.social")).includes(COSTO), JSON.stringify(items));
+  ok("Programa: la entrada aparece solo en la recepción de Mucumbarila", items.length === 3 && items.filter((x) => x[1]).length === 1 && items.find((x) => x[0])[1], JSON.stringify(items));
+  ok("Programa: texto exacto «Entrada: 3 USD por persona. La invitación no incluye el costo de entrada.»", limpio(await p.textContent("#programa .momento.social .costo")) === ENTRADA, limpio(await p.textContent("#programa .momento.social .costo")));
+  const val = await p.$eval("#programa .costo-valor", (e) => ({ fs: parseFloat(getComputedStyle(e).fontSize), t: e.textContent }));
+  ok("Programa: el valor «3 USD» tiene protagonismo visual (≥ 1,9× el texto base)", val.t === "3 USD" && val.fs >= 28, JSON.stringify(val));
   await irVista(p, "confirmar");
   const rc = await p.$$eval("#rsvp-actividades fieldset", (f) => f.map((x) => [x.textContent.includes("Recepción"), x.textContent.includes("3 USD")]));
-  ok("Confirmación: el costo se muestra antes de responder en la recepción (y solo allí)", rc.filter((x) => x[1]).length === 1 && rc.find((x) => x[0])[1], JSON.stringify(rc));
+  ok("Confirmación: la entrada se muestra antes de responder en la recepción (y solo allí)", rc.filter((x) => x[1]).length === 1 && rc.find((x) => x[0])[1], JSON.stringify(rc));
+  ok("Confirmación: aviso «no equivale al pago de la entrada»", (await p.textContent("#rsvp-actividades")).includes("Confirmar tu asistencia no equivale al pago de la entrada."));
+  await p.evaluate(() => { window.__ft = []; const f = CanvasRenderingContext2D.prototype.fillText; CanvasRenderingContext2D.prototype.fillText = function (t, ...a) { window.__ft.push(String(t)); return f.call(this, t, ...a); }; });
+  await irVista(p, "pase"); await p.waitForFunction(() => document.getElementById("pase-vista").naturalWidth > 0, null, { timeout: 15000 });
+  const ft = await p.evaluate(() => window.__ft.join(" | "));
+  ok("Pase: la actividad de Mucumbarila incluye «ENTRADA: 3 USD POR PERSONA» y el aviso de que la invitación no la incluye", ft.includes("ENTRADA: 3 USD POR PERSONA") && ft.includes("La invitación no incluye") && ft.includes("el costo de entrada."), ft.slice(0, 160));
   await irVista(p, "invitacion");
-  ok("Portada e Inicio: sin el costo", !(await p.textContent("#vista-invitacion")).includes("USD"));
-  // «Un detalle para nuestra promoción»: secundaria, bajo «Palabras que nos acompañan», para todos los perfiles
-  await irVista(p, "invitacion"); await p.waitForSelector("#detalle-promo:not([hidden])", { timeout: 8000 });
-  const orden = await p.evaluate(() => { const a = document.getElementById("otros-tarjetas"), b = document.getElementById("detalle-promo"), t = document.getElementById("escenario"); return [!!(t.compareDocumentPosition(a) & 4), !!(a.compareDocumentPosition(b) & 4)]; });
-  ok("Inicio: tarjeta → «Palabras que nos acompañan» (principal) → «Un detalle para nuestra promoción»", orden.join() === "true,true");
-  const dpTxt = await p.textContent("#detalle-promo");
-  ok("Detalle secundario: título, texto aprobado y botón «Realizar un aporte voluntario»", dpTxt.includes("Un detalle para nuestra promoción") && dpTxt.includes("Si deseas celebrar este logro con nosotros mediante un aporte económico voluntario, hemos dispuesto una alternativa para hacerlo.") && (await p.textContent("#detalle-promo a")).trim() === "Realizar un aporte voluntario");
-  ok("Detalle secundario: jerarquía secundaria, sin montos, metas ni comparativos", (await p.$$("#detalle-promo .btn-primario")).length === 0 && !/(\d|usd|bs\.?|\$|meta|objetivo|total|recaud|ranking|m[ií]nimo)/i.test(dpTxt.replace("Un detalle para nuestra promoción", "")), dpTxt.slice(0, 60));
-  await p.click("#detalle-promo a"); await p.waitForFunction(() => document.body.dataset.vistaActiva === "distancia");
+  ok("Inicio: sin la entrada (no se mezcla con los aportes)", !(await p.textContent("#vista-invitacion")).includes("USD"));
+  // «Celebra este logro con nosotros»: bajo la tarjeta, mobile-first
+  await p.waitForSelector("#celebra-aportes:not([hidden])", { timeout: 8000 });
+  const orden = await p.evaluate(() => { const t = document.getElementById("escenario"), c = document.getElementById("celebra"); return !!(t.compareDocumentPosition(c) & 4); });
+  ok("Inicio: «Celebra este logro con nosotros» está debajo de la tarjeta", orden);
+  const ct = limpio(await p.textContent("#celebra"));
+  ok("Celebra: título, dos opciones diferenciadas y textos aprobados", ct.includes("Celebra este logro con nosotros") && ct.includes("Aportes voluntarios") && ct.includes("Si deseas apoyar económicamente a nuestra promoción, puedes hacerlo mediante Pago Móvil.") && ct.includes("Dedicatorias") && ct.includes("Deja un mensaje que podamos conservar como recuerdo."));
+  ok("Celebra: botones «Realizar un aporte» (principal) y «Dejar una dedicatoria» (secundario)", limpio(await p.textContent("#celebra-aportes a")) === "Realizar un aporte" && (await p.$("#celebra-aportes a.btn-primario")) !== null && limpio(await p.textContent("#celebra-dedic a")) === "Dejar una dedicatoria" && (await p.$("#celebra-dedic a.btn-primario")) === null);
+  ok("Celebra: sin montos, metas ni condicionamientos de asistencia", !/(\d|usd|\$|meta|objetivo|m[ií]nimo|obligatori|condicion)/i.test(ct.replace("Celebra este logro con nosotros", "")), ct.slice(0, 80));
+  ok("Aportes e inicio no se confunden con la entrada: «3 USD» solo en Programa y Confirmación", !ct.includes("USD") && !(await p.textContent("#vista-distancia")).includes("USD"));
+  await p.click("#celebra-aportes a"); await p.waitForFunction(() => document.body.dataset.vistaActiva === "distancia");
   await p.waitForSelector("#pm-datos .pm-fila", { timeout: 8000 });
-  ok("El botón lleva a «Desde la distancia» con los datos de Pago Móvil a la vista", (await p.$$("#pm-datos .pm-copiar")).length === 5 && (await p.isVisible("#pm-tarjeta")));
-  await irVista(p, "invitacion"); await irVista(p, "distancia"); await p.waitForTimeout(500);
-  ok("Entrando por el menú, el detalle sigue plegado (decisión voluntaria)", (await p.$$("#pm-datos .pm-fila")).length === 0);
-  await irVista(p, "distancia");
-  ok("«Desde la distancia»: sin el costo (no es un aporte voluntario)", !(await p.textContent("#vista-distancia")).includes("USD"));
+  ok("«Realizar un aporte» lleva a «Aportes y dedicatorias» con Pago Móvil a la vista", (await p.$$("#pm-datos .pm-copiar")).length === 5 && (await p.isVisible("#pm-tarjeta")));
   await p.close();
   p = await nuevaPagina(ctx, errores, externos); await p.goto(BASE, { waitUntil: "networkidle" });
   ok("Bienvenida: sin el costo", !(await p.textContent("#bienvenida")).includes("USD"));
-  const imgs = await p.evaluate(async () => (await (await fetch("datos/evento.json")).json()).actividades.filter((a) => a.costo_texto).map((a) => a.codigo));
+  const imgs = await p.evaluate(async () => (await (await fetch("datos/evento.json")).json()).actividades.filter((a) => a.costo).map((a) => a.codigo));
   ok("Dato único en evento.json solo para la recepción", imgs.join() === "recepcion");
   await p.close();
 
@@ -499,7 +502,7 @@ async function responder(p, resp) {
   p = await nuevaPagina(ctx, errores, externos);
   await rutaB(p, "otro", "Visitante Libre");
   const navO = await p.$$eval(".nav-inferior a", (a) => a.filter((x) => !x.hidden && getComputedStyle(x).display !== "none").map((x) => x.textContent.trim()).join("|"));
-  ok("Otros: navegación Inicio|Programa|Palabras|Distancia|Solicitar (sin confirmar ni pase hasta ser autorizado)", navO === "Inicio|Programa|Palabras|Distancia|Solicitar", navO);
+  ok("Otros: navegación Inicio|Programa|Aportes y dedicatorias|Solicitar (sin confirmar ni pase hasta ser autorizado)", navO === "Inicio|Programa|Aportes y dedicatorias|Solicitar", navO);
   await p.evaluate(() => { location.hash = "confirmar"; }); await p.waitForTimeout(400);
   ok("Otros: la ruta #confirmar no está disponible", (await p.evaluate(() => document.body.dataset.vistaActiva)) !== "confirmar");
   ok("Otros: ve la tarjeta personalizada", (await p.getAttribute("#img-portada", "src")).split("?")[0] === "assets/img/C-portada-1400.jpg");

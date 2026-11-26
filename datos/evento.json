@@ -69,7 +69,7 @@
         "Centro de Convenciones Mucumbarila."
       ],
       "mapa": "Centro de Convenciones Mucumbarila, Mérida, Venezuela",
-      "costo_texto": "Costo de entrada: 3 USD por persona.",
+      "costo": { "etiqueta": "Entrada:", "valor": "3 USD", "detalle": "por persona.", "aviso": "La invitación no incluye el costo de entrada.", "nota_confirmacion": "Confirmar tu asistencia no equivale al pago de la entrada." },
       "social": true
     }
   ],

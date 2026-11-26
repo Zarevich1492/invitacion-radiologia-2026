@@ -14,6 +14,13 @@ Reversión: `git revert <commit>` o volver a una etiqueta: `git checkout -B main
 - «Costo de entrada: 3 USD por persona.» se muestra discretamente solo en la recepción de Mucumbarila: en su descripción del Programa y antes de responder en «Confirmar asistencia». No aparece en la portada, el Inicio, la bienvenida ni «Desde la distancia» (es el costo del evento, no un aporte voluntario). Dato único en `datos/evento.json` (`costo_texto`).
 - Pruebas: aceptación 220, responsive 244.
 
+## v2.19 · Entrada a Mucumbarila (3 USD) y «Celebra este logro con nosotros» (mobile-first)
+- **Entrada:** «Entrada: 3 USD por persona. La invitación no incluye el costo de entrada.» con «3 USD» destacado, en el Programa (descripción de la recepción), antes de confirmar asistencia a Mucumbarila (con la nota «Confirmar tu asistencia no equivale al pago de la entrada») y en el pase (insignia roja «ENTRADA: 3 USD POR PERSONA» y aviso). Dato único en `datos/evento.json` (`costo`).
+- **Aportes y dedicatorias:** bajo la tarjeta, sección «Celebra este logro con nosotros» con dos opciones diferenciadas: «Aportes voluntarios» (botón principal «Realizar un aporte») y «Dedicatorias» (botón secundario «Dejar una dedicatoria»). La opción de aportes solo aparece si la organización la activó.
+- Menú: «Desde la distancia» pasa a **«Aportes y dedicatorias»** (barra inferior fija, sin menú desplegable). Esa página muestra los datos de Pago Móvil a la vista, sin montos ni condicionamientos, y aclara que el aporte es independiente de la entrada.
+- Sin ventanas emergentes, recordatorios, montos sugeridos ni condicionamientos de asistencia. Enlaces, confirmaciones, permisos y registros sin cambios.
+- Pruebas: aceptación 227, responsive 244, móvil 360/390/430 (30), contraste.
+
 ## v2.16 · «Otros invitados» pasa a «Invitados especiales»
 - Cambio exclusivamente de denominación en bienvenida, menú, tarjetas, formularios, panel (filtros, indicadores, solicitudes, mensajes de acceso y de WhatsApp), documentación y pruebas. Identificadores internos (`otro`, `otros`), enlaces, permisos y registros sin cambios; no requiere migración SQL.
 - Pruebas: aceptación 214, responsive 244.

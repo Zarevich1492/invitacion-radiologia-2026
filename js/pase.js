@@ -112,7 +112,7 @@
     // Maquetación dinámica: el espacio del logotipo se ajusta para que nada invada la ilustración inferior.
     const bh = Math.round(TW * r.banda.naturalHeight / r.banda.naturalWidth);
     const by = Y0 + TH - bh, limite = by + Math.round(bh * 0.33);
-    const altoPrograma = datos.actividades.reduce((t, a) => t + 70 + a.lineas_pase.length * 44 + 46, 0);
+    const altoPrograma = datos.actividades.reduce((t, a) => t + 70 + a.lineas_pase.length * 44 + 46 + (a.costo ? 176 : 0), 0);
     const n0 = (datos.nombre || "").trim() || "Nuestros invitados";
     const p = partirNombre(g, n0, TW - 160);
     const paso = Math.round(p.tam * 1.08), extraNombre = (p.lineas.length - 1) * paso;
@@ -154,7 +154,18 @@
       texto(g, a.titulo, colT, y - 6, `600 ${a.titulo.length > 28 ? 44 : 50}px ${TEXTO}`, C.tinta, "left");
       a.lineas_pase.forEach((d, i) => texto(g, d, colT, y + 48 + i * 44, `400 37px ${TEXTO}`, C.suave, "left"));
       if (a.social) { g.fillStyle = C.rojo; g.fillRect(colH, y + 26, 60, 4); }
-      y += 70 + a.lineas_pase.length * 44 + 46;
+      let extra = 0;
+      if (a.costo) {   // entrada: valor destacado y aviso (la invitación no la incluye)
+        const yy = y + 48 + a.lineas_pase.length * 44 + 14, maxW = X0 + TW - 100 - colT;
+        let tam = 46; const etq = `ENTRADA: ${a.costo.valor.toUpperCase()} ${a.costo.detalle.replace(/\.$/, "").toUpperCase()}`;
+        g.font = `700 ${tam}px ${TEXTO}`; let w = g.measureText(etq).width + 56; if (w > maxW) { tam = Math.floor(tam * (maxW - 56) / (w - 56)); g.font = `700 ${tam}px ${TEXTO}`; w = g.measureText(etq).width + 56; }
+        rrect(g, colT, yy, w, 76, 18); g.fillStyle = C.rojo; g.fill();
+        g.fillStyle = "#fff6ea"; g.textAlign = "left"; g.fillText(etq, colT + 28, yy + 54);
+        const av = a.costo.aviso.replace(/^La invitación no incluye /, "La invitación no incluye\n").split("\n");
+        av.forEach((l, i) => texto(g, l, colT, yy + 126 + i * 40, `600 34px ${TEXTO}`, C.tinta, "left"));
+        extra = 176;
+      }
+      y += 70 + a.lineas_pase.length * 44 + 46 + extra;
     }
 
     // Identificación

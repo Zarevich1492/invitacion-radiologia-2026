@@ -108,31 +108,26 @@
     catch (e) { const ta = document.createElement("textarea"); ta.value = texto; ta.setAttribute("readonly", ""); ta.style.cssText = "position:fixed;opacity:0"; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); } catch (e2) {} ta.remove(); }
     copiado(msg);
   }
-  let aportesActivos = null;   // conocido tras la primera consulta (para mostrar u ocultar «Un detalle para nuestra promoción»)
-  async function revisarDetalle() {
-    const sec = $("#detalle-promo");
-    if (aportesActivos === null) {
-      let a = null;
-      if (window.API.configurado) { try { a = await window.API.aportesPublicos(); } catch (e) {} }
-      aportesActivos = !!(a && a.activo && CAMPOS.some(([k]) => a[k]));
-    }
-    sec.hidden = !aportesActivos;
-  }
-  async function comprobarAportes(abrir) {
-    const det = $("#pm-detalle"); det.open = false; $("#pm-datos").innerHTML = ""; datosPM = null;
+  let aportesActivos = null;   // conocido tras la primera consulta (muestra u oculta «Aportes voluntarios» en Inicio)
+  async function leerAportes() {
     let a = null;
     if (window.API.configurado) { try { a = await window.API.aportesPublicos(); } catch (e) {} }
-    const ok = !!(a && a.activo && CAMPOS.some(([k]) => a[k]));
-    det.hidden = !ok;                     // la opción solo existe si la organización la activó
-    if (ok) datosPM = a;                  // se guarda en memoria; no se pinta hasta que la persona lo elija
-    if (ok && abrir) det.open = true;     // llegó con «Realizar un aporte voluntario»: ya lo eligió
+    return a && a.activo && CAMPOS.some(([k]) => a[k]) ? a : null;
+  }
+  async function revisarDetalle() {
+    if (aportesActivos === null) aportesActivos = !!(await leerAportes());
+    const el = $("#celebra-aportes"); if (el) el.hidden = !aportesActivos;
+  }
+  async function comprobarAportes() {
+    const a = await leerAportes(); datosPM = a; aportesActivos = !!a;
+    $("#hub-aportes").hidden = !a; $("#hub-sin-aportes").hidden = !!a;
+    if (a) pintarPM(); else $("#pm-datos").innerHTML = "";
   }
   function pintarPM() {
     if (!datosPM) return;
     if (datosPM.gracias) $("#pm-gracias").textContent = datosPM.gracias;
     $("#pm-datos").innerHTML = CAMPOS.filter(([k]) => datosPM[k]).map(([k, t]) => `<div class="pm-fila"><dt>${t}</dt><dd>${esc(datosPM[k])}</dd><button class="btn pm-copiar" type="button" data-copiar="${k}" aria-label="Copiar ${t.toLowerCase()}">Copiar</button></div>`).join("");
   }
-  $("#pm-detalle").addEventListener("toggle", () => { if ($("#pm-detalle").open) pintarPM(); else { $("#pm-datos").innerHTML = ""; $("#pm-copiado").textContent = ""; } });
   $("#pm-datos").addEventListener("click", (e) => { const b = e.target.closest("[data-copiar]"); if (b && datosPM) copiar(String(datosPM[b.dataset.copiar]), "Copiado: " + CAMPOS.find(([k]) => k === b.dataset.copiar)[1]); });
   $("#pm-copiar-todo").addEventListener("click", () => {
     if (!datosPM) return;
@@ -178,7 +173,7 @@
 
   window.Dedicatorias = {
     abrir() { pintarStickers(); previa(); cargarLibro(); },
-    abrirDistancia(abrir) { comprobarAportes(abrir); },
+    abrirDistancia() { comprobarAportes(); },
     revisarDetalle,
     abrirSolicitud() { iniciarSolicitud(); },
   };

@@ -29,3 +29,5 @@ echo "== 4. Aceptación end-to-end (Playwright, Chromium simulado)"
 node pruebas/aceptacion.js http://127.0.0.1:8765/ http://127.0.0.1:8787 "$CAPTURAS"
 echo "== 5. Responsive (13 tamaños, simulación)"
 node pruebas/responsive.js http://127.0.0.1:8765/ "$CAPTURAS/responsive"
+echo "== 6. Móvil 360/390/430 (entrada y «Celebra este logro con nosotros»)"
+node pruebas/movil_economia.js http://127.0.0.1:8765/ http://127.0.0.1:8787

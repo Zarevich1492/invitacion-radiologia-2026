@@ -310,7 +310,7 @@
     $("#nav-inferior").style.gridTemplateColumns = `repeat(${n || 1},1fr)`;
     $("#btn-prog-confirmar").hidden = !permitida("confirmar");
     // Dedicatorias y aportes siempre visibles en Inicio (todos los perfiles); «Otros» ve además las cinco opciones
-    $("#otros-tarjetas").hidden = false;
+    $("#otros-tarjetas").hidden = !esOtro();   // solo «Invitados especiales» ven ver/programa/solicitar; «Celebra…» es para todos
     document.querySelectorAll("#otros-tarjetas [data-solo-otros]").forEach((li) => { li.hidden = !esOtro(); });
     $("#op-solicitar").closest("li").hidden = !permitida("solicitar");
     $("#t-otros").textContent = esOtro() ? "Acompáñanos como tú prefieras" : "Palabras que nos acompañan";
@@ -329,7 +329,7 @@
     if (v === "invitacion" && !esGraduando()) requestAnimationFrame(() => window.Tarjeta.medir());
     if (v === "pase" && !esGraduando()) prepararPase();
     if (v === "dedicatorias" && window.Dedicatorias) window.Dedicatorias.abrir();
-    if (v === "distancia" && window.Dedicatorias) { window.Dedicatorias.abrirDistancia(!!window.__aporteDirecto); window.__aporteDirecto = false; }
+    if (v === "distancia" && window.Dedicatorias) window.Dedicatorias.abrirDistancia();
     if (v === "solicitar" && window.Dedicatorias) window.Dedicatorias.abrirSolicitud();
     if (foco) {
       const sel = v === "invitacion" && esGraduando() ? "#esp-nombre" : `section[data-vista="${v}"] h1, section[data-vista="${v}"] h2`;
@@ -342,7 +342,6 @@
     if (ver && ID) { e.preventDefault(); document.querySelector(".inv-tarjeta").scrollIntoView({ behavior: "smooth", block: "center" }); return; }
     const a = e.target.closest("[data-ir]");
     if (!a || !ID) return;
-    window.__aporteDirecto = !!a.dataset.aporte;   // solo el botón «Realizar un aporte voluntario» despliega los datos al llegar
     e.preventDefault();
     const v = a.dataset.ir;
     if (location.hash === "#" + v) mostrarVista(v); else location.hash = v;   // crea entrada en el historial
@@ -350,6 +349,8 @@
   addEventListener("hashchange", () => { const v = vistaDeHash(); if (ID && v && v !== vistaActual) mostrarVista(v); });
 
   /* ---------- Programa ---------- */
+  // Entrada a Mucumbarila: valor destacado y aviso explícito (independiente de cualquier aporte voluntario)
+  const costoHTML = (c, cls) => c ? `<div class="costo ${cls}"><span class="costo-etq">${esc(c.etiqueta)}</span> <b class="costo-valor">${esc(c.valor)}</b> <span class="costo-det">${esc(c.detalle)}</span> <span class="costo-aviso">${esc(c.aviso)}</span></div>` : "";
   function pintarPrograma(acts) {
     $("#programa-fecha").textContent = EV.fecha_texto + " · " + EV.ciudad;
     $("#programa").innerHTML = acts.map((a) => `
@@ -359,7 +360,7 @@
           ${a.social ? '<em class="etiqueta-social">Celebración social</em>' : ""}
           <strong>${esc(a.titulo)}</strong>
           ${a.lineas_pase.map((l) => `<span>${esc(l)}</span>`).join(" ")}
-          ${a.costo_texto ? `<small class="costo">${esc(a.costo_texto)}</small>` : ""}
+          ${costoHTML(a.costo, "costo-prog")}
           <a class="como-llegar" target="_blank" rel="noopener noreferrer" href="https://www.google.com/maps/search/?api=1&amp;query=${encodeURIComponent(a.mapa)}">Cómo llegar <span aria-hidden="true">↗</span><span class="sr-only"> a ${esc(a.titulo)} (abre Google Maps)</span></a>
         </div>
       </li>`).join("");
@@ -382,7 +383,7 @@
     caja.innerHTML = acts.map((a) => `
       <fieldset class="rsvp-act${a.social ? " social" : ""}">
         <legend><b>${esc(a.titulo)}</b><span>${esc(a.hora_texto)}</span></legend>
-        ${a.costo_texto ? `<p class="rsvp-costo">${esc(a.costo_texto)}</p>` : ""}
+        ${costoHTML(a.costo, "costo-rsvp")}${a.costo ? `<p class="costo-nota">${esc(a.costo.nota_confirmacion)}</p>` : ""}
         <div class="opciones-rsvp">${ESTADOS.map(([k, t]) => `<label><input type="radio" name="r-${a.codigo}" value="${k}"${resp[a.codigo] === k ? " checked" : ""}><span>${t}</span></label>`).join("")}</div>
       </fieldset>`).join("");
     resumen();

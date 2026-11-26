@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="version-recursos" content="202611261712">
+<meta name="version-recursos" content="202611261844">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>XXIV Promoción de Radiólogos | Invitación especial</title>
 <meta name="description" content="Tres momentos. Una misma celebración. Sábado 28 de noviembre de 2026.">
@@ -31,7 +31,7 @@
 <link rel="preload" href="assets/fonts/BodoniModa-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/EBGaramond-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/logos/promocion-xxiv-560.jpg" as="image">
-<link rel="stylesheet" href="css/estilos.css?v=202611261712">
+<link rel="stylesheet" href="css/estilos.css?v=202611261844">
 </head>
 <body>
 
@@ -143,8 +143,7 @@
       <a href="#confirmar" data-ir="confirmar">Confirmar asistencia</a>
       <a href="#pase" data-ir="pase">Mi pase</a>
       <a href="#liston" data-ir="liston" hidden>Mi listón</a>
-      <a href="#dedicatorias" data-ir="dedicatorias" class="nav-extra">Palabras</a>
-      <a href="#distancia" data-ir="distancia" class="nav-extra">Desde la distancia</a>
+      <a href="#distancia" data-ir="distancia" class="nav-extra">Aportes y dedicatorias</a>
       <a href="#solicitar" data-ir="solicitar" class="nav-extra" hidden>Solicitar invitación</a>
     </nav>
     <button class="btn btn-texto cambiar-nombre" type="button" id="btn-cambiar-nombre">Cambiar nombre</button>
@@ -165,7 +164,6 @@
         <a class="btn btn-primario" href="#liston" data-ir="liston">Ver mi listón conmemorativo <span aria-hidden="true">→</span></a>
         <a class="btn btn-siguiente" href="#programa" data-ir="programa">Ver el programa <span aria-hidden="true">→</span></a>
       </div>
-      <p class="mas-secciones"><a class="btn btn-texto" href="#dedicatorias" data-ir="dedicatorias">Palabras que nos acompañan</a></p>
     </div>
     <div class="inv-grid">
       <header class="inv-enc saludo">
@@ -210,24 +208,32 @@
           <button class="btn-sec" type="button" id="btn-reproducir" aria-pressed="false"><span class="ico" aria-hidden="true">▶</span><span>Reproducir</span></button>
           <button class="btn-sec" type="button" id="btn-reiniciar"><span class="ico" aria-hidden="true">↺</span><span>Reiniciar</span></button>
         </div>
-        <p class="mas-secciones"><a class="btn btn-texto" href="#dedicatorias" data-ir="dedicatorias">Palabras que nos acompañan</a></p>
       </div>
     </div>
 
+    <section class="celebra" id="celebra" aria-labelledby="t-celebra">
+      <h2 id="t-celebra" class="celebra-tit">Celebra este logro con nosotros</h2>
+      <div class="celebra-opciones">
+        <article class="celebra-op celebra-aporte" id="celebra-aportes" hidden>
+          <h3>Aportes voluntarios</h3>
+          <p>Si deseas apoyar económicamente a nuestra promoción, puedes hacerlo mediante Pago Móvil.</p>
+          <a class="btn btn-primario btn-grande" href="#distancia" data-ir="distancia">Realizar un aporte</a>
+        </article>
+        <article class="celebra-op celebra-dedic" id="celebra-dedic">
+          <h3>Dedicatorias</h3>
+          <p>Deja un mensaje que podamos conservar como recuerdo.</p>
+          <a class="btn btn-secundario" href="#dedicatorias" data-ir="dedicatorias">Dejar una dedicatoria</a>
+        </article>
+      </div>
+    </section>
     <section class="otros-tarjetas" id="otros-tarjetas" aria-labelledby="t-otros" hidden>
       <h2 id="t-otros" class="otros-tit">Acompáñanos como tú prefieras</h2>
       <ul class="op-lista">
         <li data-solo-otros><a class="op" href="#invitacion" data-accion="ver"><svg viewBox="0 0 24 24" aria-hidden="true" class="op-ico"><path d="M4 7l8 6 8-6"/><rect x="3.5" y="5" width="17" height="14" rx="2"/></svg><b>Ver invitación</b><span>Abre la tarjeta de la promoción.</span></a></li>
         <li data-solo-otros><a class="op" href="#programa" data-ir="programa"><svg viewBox="0 0 24 24" aria-hidden="true" class="op-ico"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><b>Programa</b><span>Las tres actividades del 28 de noviembre.</span></a></li>
-        <li><a class="op" href="#dedicatorias" data-ir="dedicatorias"><svg viewBox="0 0 24 24" aria-hidden="true" class="op-ico"><path d="M5 4h11l3 3v13H5z"/><path d="M8 11h8M8 15h5"/></svg><b>Palabras que nos acompañan</b><span>Deja unas palabras y lee el libro de dedicatorias.</span></a></li>
         <li data-solo-otros><a class="op" href="#solicitar" data-ir="solicitar" id="op-solicitar"><svg viewBox="0 0 24 24" aria-hidden="true" class="op-ico"><circle cx="9" cy="8" r="3.500"/><path d="M3 20c0-3.300 2.700-6 6-6s6 2.700 6 6M18 8v6M15 11h6"/></svg><b>Solicitar invitación</b><span>Cuéntanos quién te invita.</span></a></li>
       </ul>
       <p class="nota">El libro de dedicatorias está abierto a todos, sin contraseña y no depende de la asistencia.</p>
-    </section>
-    <section class="detalle-promo" id="detalle-promo" aria-labelledby="t-detalle" hidden>
-      <h2 id="t-detalle" class="detalle-tit">Un detalle para nuestra promoción</h2>
-      <p>Si deseas celebrar este logro con nosotros mediante un aporte económico voluntario, hemos dispuesto una alternativa para hacerlo.</p>
-      <a class="btn btn-secundario" href="#distancia" data-ir="distancia" data-aporte="1">Realizar un aporte voluntario</a>
     </section>
   </section>
 
@@ -244,7 +250,6 @@
       <a class="btn btn-primario" id="btn-prog-confirmar" href="#confirmar" data-ir="confirmar">Confirmar asistencia <span aria-hidden="true">→</span></a>
       <a class="btn btn-primario" id="btn-prog-liston" href="#liston" data-ir="liston" hidden>Ver mi listón <span aria-hidden="true">→</span></a>
     </div>
-    <p class="mas-secciones"><a class="btn btn-texto" href="#dedicatorias" data-ir="dedicatorias">Palabras que nos acompañan</a></p>
   </section>
 
   <!-- 03 · Confirmación -->
@@ -406,15 +411,16 @@
     <div class="vista-pie"><a class="btn btn-texto" href="#invitacion" data-ir="invitacion"><span aria-hidden="true">←</span> Inicio</a></div>
   </section>
 
-  <!-- 07 · Desde la distancia (independiente; solo se llega desde el menú) -->
+  <!-- 07 · Aportes y dedicatorias (antes «Desde la distancia») -->
   <section class="vista vista-distancia" id="vista-distancia" data-vista="distancia" aria-labelledby="t-distancia" hidden>
     <header class="vista-enc">
-      <span class="versalita">Desde la distancia</span>
-      <h2 id="t-distancia" tabindex="-1">Hay muchas formas <em>de estar presentes</em></h2>
-      <p>Tu cariño, tus enseñanzas y tus buenos deseos también forman parte de este logro.</p>
+      <span class="versalita">Aportes y dedicatorias</span>
+      <h2 id="t-distancia" tabindex="-1">Celebra este logro <em>con nosotros</em></h2>
     </header>
-    <details class="pm-detalle" id="pm-detalle" hidden>
-      <summary>¿Deseas tener un detalle con la promoción?</summary>
+    <div class="hub">
+      <article class="celebra-op celebra-aporte" id="hub-aportes" hidden>
+        <h3>Aportes voluntarios</h3>
+        <p>Si deseas apoyar económicamente a nuestra promoción, puedes hacerlo mediante Pago Móvil.</p>
     <div class="pm-tarjeta" id="pm-tarjeta">
       <div class="pm-cab"><b>Pago Móvil</b><span>Todo es voluntario</span></div>
       <dl class="pm-datos" id="pm-datos"></dl>
@@ -422,7 +428,15 @@
       <p class="pm-copiado" id="pm-copiado" role="status" aria-live="polite"></p>
       <p class="pm-gracias" id="pm-gracias">Gracias por acompañarnos, incluso desde la distancia.</p>
     </div>
-    </details>
+        <p class="nota">El aporte es voluntario, no condiciona la asistencia ni la invitación y es independiente de la entrada a Mucumbarila.</p>
+      </article>
+      <p class="nota" id="hub-sin-aportes" hidden>Por ahora no hay aportes habilitados.</p>
+      <article class="celebra-op celebra-dedic">
+        <h3>Dedicatorias</h3>
+        <p>Deja un mensaje que podamos conservar como recuerdo.</p>
+        <a class="btn btn-secundario" href="#dedicatorias" data-ir="dedicatorias">Dejar una dedicatoria</a>
+      </article>
+    </div>
     <div class="vista-pie"><a class="btn btn-texto" href="#invitacion" data-ir="invitacion"><span aria-hidden="true">←</span> Inicio</a></div>
   </section>
 
@@ -471,8 +485,7 @@
   <a href="#confirmar" data-ir="confirmar"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M8 12.3l2.7 2.7L16.2 9.5"/></svg><span>Confirmar</span></a>
   <a href="#pase" data-ir="pase"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16v3a2 2 0 000 4v3H4v-3a2 2 0 000-4z"/><path d="M14 7v10" stroke-dasharray="1.6 1.8"/></svg><span>Mi pase</span></a>
   <a href="#liston" data-ir="liston" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg><span>Mi listón</span></a>
-  <a href="#dedicatorias" data-ir="dedicatorias" aria-label="Palabras que nos acompañan"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h11l3 3v13H5z"/><path d="M8 11h8M8 15h5"/></svg><span>Palabras</span></a>
-  <a href="#distancia" data-ir="distancia" aria-label="Desde la distancia"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h11l3 3v13H5z"/><path d="M8 11h8M8 15h5"/></svg><span>Distancia</span></a>
+  <a href="#distancia" data-ir="distancia" class="nav-doble" aria-label="Aportes y dedicatorias"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h11l3 3v13H5z"/><path d="M8 11h8M8 15h5"/></svg><span>Aportes y dedicatorias</span></a>
   <a href="#solicitar" data-ir="solicitar" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.500"/><path d="M3 20c0-3.300 2.700-6 6-6s6 2.700 6 6M18 8v6M15 11h6"/></svg><span>Solicitar</span></a>
 </nav>
 
@@ -485,11 +498,11 @@
   <style>.bienvenida{display:none!important}</style>
 </noscript>
 
-<script src="js/config.js?v=202611261712"></script>
-<script src="js/api.js?v=202611261712"></script>
-<script src="js/pase.js?v=202611261712"></script>
-<script src="js/app.js?v=202611261712"></script>
-<script src="js/dedicatorias.js?v=202611261712"></script>
-<script src="js/inicio.js?v=202611261712"></script>
+<script src="js/config.js?v=202611261844"></script>
+<script src="js/api.js?v=202611261844"></script>
+<script src="js/pase.js?v=202611261844"></script>
+<script src="js/app.js?v=202611261844"></script>
+<script src="js/dedicatorias.js?v=202611261844"></script>
+<script src="js/inicio.js?v=202611261844"></script>
 </body>
 </html>
