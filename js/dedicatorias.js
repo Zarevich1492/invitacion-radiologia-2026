@@ -108,13 +108,24 @@
     catch (e) { const ta = document.createElement("textarea"); ta.value = texto; ta.setAttribute("readonly", ""); ta.style.cssText = "position:fixed;opacity:0"; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); } catch (e2) {} ta.remove(); }
     copiado(msg);
   }
-  async function comprobarAportes() {
+  let aportesActivos = null;   // conocido tras la primera consulta (para mostrar u ocultar «Un detalle para nuestra promoción»)
+  async function revisarDetalle() {
+    const sec = $("#detalle-promo");
+    if (aportesActivos === null) {
+      let a = null;
+      if (window.API.configurado) { try { a = await window.API.aportesPublicos(); } catch (e) {} }
+      aportesActivos = !!(a && a.activo && CAMPOS.some(([k]) => a[k]));
+    }
+    sec.hidden = !aportesActivos;
+  }
+  async function comprobarAportes(abrir) {
     const det = $("#pm-detalle"); det.open = false; $("#pm-datos").innerHTML = ""; datosPM = null;
     let a = null;
     if (window.API.configurado) { try { a = await window.API.aportesPublicos(); } catch (e) {} }
     const ok = !!(a && a.activo && CAMPOS.some(([k]) => a[k]));
     det.hidden = !ok;                     // la opción solo existe si la organización la activó
     if (ok) datosPM = a;                  // se guarda en memoria; no se pinta hasta que la persona lo elija
+    if (ok && abrir) det.open = true;     // llegó con «Realizar un aporte voluntario»: ya lo eligió
   }
   function pintarPM() {
     if (!datosPM) return;
@@ -167,7 +178,8 @@
 
   window.Dedicatorias = {
     abrir() { pintarStickers(); previa(); cargarLibro(); },
-    abrirDistancia() { comprobarAportes(); },
+    abrirDistancia(abrir) { comprobarAportes(abrir); },
+    revisarDetalle,
     abrirSolicitud() { iniciarSolicitud(); },
   };
 })();

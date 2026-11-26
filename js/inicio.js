@@ -315,6 +315,7 @@
     $("#op-solicitar").closest("li").hidden = !permitida("solicitar");
     $("#t-otros").textContent = esOtro() ? "Acompáñanos como tú prefieras" : "Palabras que nos acompañan";
     $("#nav-inferior").classList.toggle("nav-denso", n >= 6);
+    if (window.Dedicatorias) window.Dedicatorias.revisarDetalle();
   }
   function mostrarVista(v, { foco = true } = {}) {
     if (!VISTAS.includes(v)) v = esGraduando() ? "liston" : "invitacion";
@@ -328,7 +329,7 @@
     if (v === "invitacion" && !esGraduando()) requestAnimationFrame(() => window.Tarjeta.medir());
     if (v === "pase" && !esGraduando()) prepararPase();
     if (v === "dedicatorias" && window.Dedicatorias) window.Dedicatorias.abrir();
-    if (v === "distancia" && window.Dedicatorias) window.Dedicatorias.abrirDistancia();
+    if (v === "distancia" && window.Dedicatorias) { window.Dedicatorias.abrirDistancia(!!window.__aporteDirecto); window.__aporteDirecto = false; }
     if (v === "solicitar" && window.Dedicatorias) window.Dedicatorias.abrirSolicitud();
     if (foco) {
       const sel = v === "invitacion" && esGraduando() ? "#esp-nombre" : `section[data-vista="${v}"] h1, section[data-vista="${v}"] h2`;
@@ -341,6 +342,7 @@
     if (ver && ID) { e.preventDefault(); document.querySelector(".inv-tarjeta").scrollIntoView({ behavior: "smooth", block: "center" }); return; }
     const a = e.target.closest("[data-ir]");
     if (!a || !ID) return;
+    window.__aporteDirecto = !!a.dataset.aporte;   // solo el botón «Realizar un aporte voluntario» despliega los datos al llegar
     e.preventDefault();
     const v = a.dataset.ir;
     if (location.hash === "#" + v) mostrarVista(v); else location.hash = v;   // crea entrada en el historial

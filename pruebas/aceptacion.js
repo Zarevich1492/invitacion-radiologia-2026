@@ -345,7 +345,7 @@ async function responder(p, resp) {
   await p.click('[data-visitante="dedicatorias"]'); await p.waitForFunction(() => document.body.dataset.vistaActiva === "dedicatorias");
   ok("Palabras que nos acompañan: encabezado, frase y «Dejar unas palabras» como acción principal con formulario plegado", (await p.textContent("#vista-dedicatorias .versalita")).includes("XXIV Promoción · ULA 2026") && (await p.textContent("#t-dedic")).replace(/\s+/g, " ").includes("Palabras que nos acompañan") && (await p.textContent(".cita-libro")).includes("recuerdos para toda la vida") && (await p.textContent("#dd-abrir")) === "Dejar unas palabras" && !(await p.isVisible("#form-dedic")));
   ok("Palabras que nos acompañan: sin referencias a aportes económicos", !/aporte|pago m|dinero|transferencia|donaci|detalle con la promoci/i.test(await p.textContent("#vista-dedicatorias")));
-  ok("Inicio, programa y bienvenida: «Desde la distancia» solo se alcanza desde el menú", (await p.$$eval('[data-ir="distancia"]', (e) => e.filter((x) => !x.closest("nav")).length)) === 0);
+  ok("«Desde la distancia»: fuera del menú solo se alcanza desde «Un detalle para nuestra promoción»", (await p.$$eval('[data-ir="distancia"]', (e) => e.filter((x) => !x.closest("nav")).map((x) => !!x.closest("#detalle-promo")))).join() === "true");
   await p.click("#dd-abrir");
   await p.waitForSelector("#dd-stickers .sticker"); await p.waitForFunction(() => !document.getElementById("dd-enviar").disabled, null, { timeout: 8000 });
   ok("Dedicatorias: visibles para un visitante sin código", await p.isVisible("#form-dedic"));
@@ -440,6 +440,18 @@ async function responder(p, resp) {
   ok("Confirmación: el costo se muestra antes de responder en la recepción (y solo allí)", rc.filter((x) => x[1]).length === 1 && rc.find((x) => x[0])[1], JSON.stringify(rc));
   await irVista(p, "invitacion");
   ok("Portada e Inicio: sin el costo", !(await p.textContent("#vista-invitacion")).includes("USD"));
+  // «Un detalle para nuestra promoción»: secundaria, bajo «Palabras que nos acompañan», para todos los perfiles
+  await irVista(p, "invitacion"); await p.waitForSelector("#detalle-promo:not([hidden])", { timeout: 8000 });
+  const orden = await p.evaluate(() => { const a = document.getElementById("otros-tarjetas"), b = document.getElementById("detalle-promo"), t = document.getElementById("escenario"); return [!!(t.compareDocumentPosition(a) & 4), !!(a.compareDocumentPosition(b) & 4)]; });
+  ok("Inicio: tarjeta → «Palabras que nos acompañan» (principal) → «Un detalle para nuestra promoción»", orden.join() === "true,true");
+  const dpTxt = await p.textContent("#detalle-promo");
+  ok("Detalle secundario: título, texto aprobado y botón «Realizar un aporte voluntario»", dpTxt.includes("Un detalle para nuestra promoción") && dpTxt.includes("Si deseas celebrar este logro con nosotros mediante un aporte económico voluntario, hemos dispuesto una alternativa para hacerlo.") && (await p.textContent("#detalle-promo a")).trim() === "Realizar un aporte voluntario");
+  ok("Detalle secundario: jerarquía secundaria, sin montos, metas ni comparativos", (await p.$$("#detalle-promo .btn-primario")).length === 0 && !/(\d|usd|bs\.?|\$|meta|objetivo|total|recaud|ranking|m[ií]nimo)/i.test(dpTxt.replace("Un detalle para nuestra promoción", "")), dpTxt.slice(0, 60));
+  await p.click("#detalle-promo a"); await p.waitForFunction(() => document.body.dataset.vistaActiva === "distancia");
+  await p.waitForSelector("#pm-datos .pm-fila", { timeout: 8000 });
+  ok("El botón lleva a «Desde la distancia» con los datos de Pago Móvil a la vista", (await p.$$("#pm-datos .pm-copiar")).length === 5 && (await p.isVisible("#pm-tarjeta")));
+  await irVista(p, "invitacion"); await irVista(p, "distancia"); await p.waitForTimeout(500);
+  ok("Entrando por el menú, el detalle sigue plegado (decisión voluntaria)", (await p.$$("#pm-datos .pm-fila")).length === 0);
   await irVista(p, "distancia");
   ok("«Desde la distancia»: sin el costo (no es un aporte voluntario)", !(await p.textContent("#vista-distancia")).includes("USD"));
   await p.close();

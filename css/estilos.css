@@ -747,3 +747,10 @@ body{background-image:linear-gradient(#f4e6d1 0,#f4e6d1 55%,#efdfc6 100%);backgr
 /* Costo de entrada de la recepción (dato del evento, discreto) */
 .momento-txt .costo{display:block;margin-top:2px;font-size:.88rem;color:var(--tinta-suave)}
 .rsvp-costo{margin:2px 0 8px;font-size:.88rem;color:var(--tinta-suave)}
+
+/* ---------- Un detalle para nuestra promoción (secundario) ---------- */
+.detalle-promo{max-width:var(--ancho-max);margin:22px auto 8px;padding:16px 4px 4px;border-top:1px solid var(--linea);display:flex;flex-direction:column;align-items:flex-start;gap:8px}
+.detalle-tit{font-family:var(--f-display);font-weight:600;font-size:1.1rem;margin:0}
+.detalle-promo p{margin:0;max-width:60ch;color:var(--tinta-suave)}
+.btn-secundario{background:transparent;border:1.5px solid var(--rojo);color:var(--rojo-osc);box-shadow:none;min-height:48px}
+.btn-secundario:hover,.btn-secundario:focus-visible{background:#fbf0e0;border-color:var(--rojo-osc)}

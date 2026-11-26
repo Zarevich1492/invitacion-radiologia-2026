@@ -26,7 +26,8 @@ async function entrar(ctx, perfil) {
   const nav = await p.$$eval(".nav-inferior a, .nav-superior a", (a) => a.filter((x) => !x.hidden && x.getBoundingClientRect().width > 0).map((x) => x.textContent.trim()));
   ok(`${perfil.nombre}: «Palabras» y «Desde la distancia» en el menú`, nav.some((x) => /Palabras/.test(x)) && nav.some((x) => /Distancia|Desde la distancia/.test(x)), nav.join("|"));
   await p.evaluate(() => { location.hash = "invitacion"; }); await p.waitForFunction(() => document.body.dataset.vistaActiva === "invitacion"); await p.waitForTimeout(600);
-  ok(`${perfil.nombre}: bajo la tarjeta solo «Palabras que nos acompañan» y sin referencias económicas`, (await p.isVisible('#otros-tarjetas [data-ir="dedicatorias"]')) && (await p.$$eval('[data-ir="distancia"]', (e) => e.filter((x) => !x.closest("nav")).length)) === 0 && !/(pago m[óo]vil|aporte|transferencia|donaci|detalle con la promoci)/i.test(await p.textContent("#vista-invitacion")));
+  await p.waitForSelector("#detalle-promo:not([hidden])", { timeout: 8000 }).catch(() => {});
+  ok(`${perfil.nombre}: bajo la tarjeta, «Palabras que nos acompañan» y luego «Un detalle para nuestra promoción» (secundario, sin montos)`, (await p.isVisible('#otros-tarjetas [data-ir="dedicatorias"]')) && (await p.isVisible("#detalle-promo")) && (await p.$$("#detalle-promo .btn-primario")).length === 0 && !/\d|usd|meta/i.test((await p.textContent("#detalle-promo")).replace("Un detalle para nuestra promoción", "")));
   await p.evaluate(() => { location.hash = "dedicatorias"; }); await p.waitForFunction(() => document.body.dataset.vistaActiva === "dedicatorias");
   await p.click("#dd-abrir"); await p.waitForTimeout(1200);
   ok(`${perfil.nombre}: «Dejar unas palabras» abre el formulario (sin CAPTCHA externo)`, !(await p.$eval("#dd-enviar", (b) => b.disabled)) && (await p.$$("#dd-stickers .sticker")).length === 6);
