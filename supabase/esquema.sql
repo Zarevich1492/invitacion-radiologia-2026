@@ -370,7 +370,7 @@ begin
   get diagnostics n = row_count;
   update public.invitados set token_hash = null, token_admin = false, verificado = false, respondido = null, nota_omision = null;
   delete from public.intentos;
-  delete from public.enlaces; delete from public.autorizaciones; delete from public.bitacora;
+  delete from public.enlaces; delete from public.autorizaciones; delete from public.bitacora; delete from public.solicitudes;
   return n;
 end $$;
 

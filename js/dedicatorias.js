@@ -1,5 +1,5 @@
-/* Palabras que nos acompañan (dedicatorias) y Aportes voluntarios. Públicos para todos los visitantes.
-   Verificación antispam: Cloudflare Turnstile (el servidor valida el token; la clave secreta nunca llega al navegador). */
+/* Palabras que nos acompañan (dedicatorias), Aportes voluntarios y Solicitud de invitación. Públicos.
+   Protección solo en el servidor: validación, frecuencia, duplicados, saneamiento y moderación obligatoria (sin CAPTCHA externo). */
 (function () {
   "use strict";
   const $ = (s) => document.querySelector(s);
@@ -20,9 +20,9 @@
   const sticker = (c, px = 40) => `<span class="sticker-img" role="img" aria-label="${esc(STICKERS[c][0])}" style="width:${px}px;height:${px}px">${STICKERS[c][1]}</span>`;
 
   /* ---------- Estado ---------- */
-  let cfg = null, tokenTS = null, widget = null, cargando = false, elegidos = [];
+  let cfg = null, cargando = false, elegidos = [];
   const MSG = {
-    verificacion_fallida: "No pudimos validar la verificación de seguridad. Inténtalo de nuevo.",
+    cupo_lleno: "En este momento no podemos recibir más mensajes. Inténtalo más tarde.",
     telefono_invalido: "Revisa el teléfono: incluye el prefijo internacional (por ejemplo, +58 412 1234567).",
     mensaje_invalido: "Escribe tu mensaje (entre 5 y 500 caracteres).",
     autor_invalido: "Escribe tu nombre y apellido.",
@@ -59,43 +59,29 @@
   const estado = (t, cls = "") => { const e = $("#dd-estado"); e.textContent = t; e.className = "rsvp-estado" + (cls ? " " + cls : ""); };
   const bloquear = (si, aviso) => { for (const el of $("#form-dedic").elements) el.disabled = si; if (si && aviso) estado(aviso); };
 
-  function cargarTurnstile() {
-    return new Promise((ok, mal) => {
-      if (window.turnstile) return ok();
-      const s = document.createElement("script"); s.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"; s.async = true;
-      s.onload = ok; s.onerror = () => mal(new Error("turnstile")); document.head.appendChild(s);
-    });
-  }
   async function iniciarForm() {
     if (!window.API.configurado) { bloquear(true, MSG.sin_backend); return; }
     try { cfg = await window.API.dedicConfig(); } catch (e) { bloquear(true, MSG.sin_conexion); return; }
     $("#dd-esp").innerHTML = (cfg.especialistas || []).map((x) => `<option value="${esc(x.id)}">${esc(x.nombre)}</option>`).join("");
-    if (!cfg.activo) { bloquear(true, "El envío de dedicatorias estará disponible muy pronto. Mientras tanto, puedes leer el libro."); return; }
-    try {
-      await cargarTurnstile();
-      if (widget === null) widget = window.turnstile.render("#dd-turnstile", { sitekey: cfg.sitio, callback: (t) => { tokenTS = t; estado(""); }, "expired-callback": () => { tokenTS = null; }, "error-callback": () => { tokenTS = null; } });
-      bloquear(false);
-    } catch (e) { bloquear(true, "No se pudo cargar la verificación de seguridad. Revisa tu conexión y recarga la página."); }
+    bloquear(false);
   }
 
   $("#form-dedic").addEventListener("submit", async (e) => {
     e.preventDefault();
-    if (cargando || !cfg || !cfg.activo) return;
+    if (cargando || !cfg) return;
     const d = destino();
     if (!$("#dd-msg").value.trim()) { estado("Escribe tu mensaje.", "error"); $("#dd-msg").focus(); return; }
     if (!$("#dd-autor").value.trim()) { estado("Escribe tu nombre y apellido.", "error"); $("#dd-autor").focus(); return; }
     if (!/^\+?[\d\s\-().]{8,24}$/.test($("#dd-tel").value.trim()) || !/^(\+|00)/.test($("#dd-tel").value.trim())) { estado(MSG.telefono_invalido, "error"); $("#dd-tel").focus(); return; }
-    if (!tokenTS) { estado("Completa la verificación de seguridad antes de enviar.", "error"); return; }
     cargando = true; $("#dd-enviar").disabled = true; estado("Enviando…");
     try {
-      await window.API.dedicEnviar({ destinatario: d.id, mensaje: $("#dd-msg").value, autor: $("#dd-autor").value, telefono: $("#dd-tel").value, stickers: elegidos, turnstile: tokenTS, trampa: $("#dd-web").value });
+      await window.API.dedicEnviar({ destinatario: d.id, mensaje: $("#dd-msg").value, autor: $("#dd-autor").value, telefono: $("#dd-tel").value, stickers: elegidos, trampa: $("#dd-web").value });
       estado("");
       $("#form-dedic").hidden = true; document.querySelector(".dd-previa").hidden = true; $("#dd-gracias").hidden = false; $("#dd-gracias").focus();
     } catch (err) {
       estado(MSG[err.codigo] || "No se pudo enviar tu dedicatoria. Inténtalo de nuevo en unos minutos.", "error");
     } finally {
       cargando = false; $("#dd-enviar").disabled = false;
-      tokenTS = null; try { if (window.turnstile && widget !== null) window.turnstile.reset(widget); } catch (e2) {}
     }
   });
   $("#dd-otra").addEventListener("click", () => {
@@ -139,8 +125,40 @@
     copiar("Pago Móvil\n" + CAMPOS.filter(([k]) => datosPM[k]).map(([k, t]) => `${t}: ${datosPM[k]}`).join("\n"), "Datos de Pago Móvil copiados");
   });
 
+
+  /* ---------- Solicitar invitación (Otros invitados) ---------- */
+  let EVs = null, cargandoSol = false;
+  const MSG_SOL = Object.assign({}, MSG, { invita_invalido: "Indica el nombre de quien te invita.", nombre_invalido: "Escribe tu nombre y apellido." });
+  const estadoSol = (t, cls = "") => { const e = $("#sol-estado"); e.textContent = t; e.className = "rsvp-estado" + (cls ? " " + cls : ""); };
+  function sugerencias() {
+    const t = $("#sol-tipo").value, ev = EVs || { padrinos: [], graduandos_lista: [] };
+    const l = t === "padrino" ? ev.padrinos : t === "especialista" ? ev.graduandos_lista : [];
+    $("#sol-sugerencias").innerHTML = l.map((x) => `<option value="${esc(x.nombre)}"></option>`).join("");
+  }
+  $("#sol-tipo").addEventListener("change", sugerencias);
+  async function iniciarSolicitud() {
+    if (!window.API.configurado) { for (const el of $("#form-solic").elements) el.disabled = true; estadoSol(MSG.sin_backend); return; }
+    try { EVs = EVs || await window.API.evento(); } catch (e) {}
+    sugerencias();
+    for (const el of $("#form-solic").elements) el.disabled = false;
+  }
+  $("#form-solic").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (cargandoSol) return;
+    if (!$("#sol-nombre").value.trim()) { estadoSol("Escribe tu nombre y apellido.", "error"); $("#sol-nombre").focus(); return; }
+    if (!$("#sol-quien").value.trim()) { estadoSol("Indica el nombre de quien te invita.", "error"); $("#sol-quien").focus(); return; }
+    if (!/^(\+|00)[\d\s\-().]{8,24}$/.test($("#sol-tel").value.trim())) { estadoSol(MSG.telefono_invalido, "error"); $("#sol-tel").focus(); return; }
+    cargandoSol = true; $("#sol-enviar").disabled = true; estadoSol("Enviando…");
+    try {
+      await window.API.solicitarInvitacion({ nombre: $("#sol-nombre").value, tipo: $("#sol-tipo").value, invita: $("#sol-quien").value, telefono: $("#sol-tel").value, trampa: $("#sol-web").value });
+      estadoSol(""); $("#form-solic").hidden = true; $("#sol-gracias").hidden = false; $("#sol-gracias").focus();
+    } catch (err) { estadoSol(MSG_SOL[err.codigo] || "No se pudo enviar tu solicitud. Inténtalo de nuevo en unos minutos.", "error"); }
+    finally { cargandoSol = false; $("#sol-enviar").disabled = false; }
+  });
+
   window.Dedicatorias = {
     abrir() { pintarStickers(); previa(); iniciarForm(); cargarLibro(); },
     abrirAportes() { cargarAportes(); },
+    abrirSolicitud() { iniciarSolicitud(); },
   };
 })();

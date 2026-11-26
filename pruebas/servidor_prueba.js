@@ -30,12 +30,14 @@ const FIRMAS = {
   acceso_validar: ["p_grupo", "p_codigo"], acceso_estado: ["p_sesion"], lista_nombres: ["p_sesion"], mi_invitacion_sesion: ["p_sesion", "p_token"],
   guardar_con_sesion: ["p_sesion", "p_token", "p_categoria", "p_padrino_id", "p_nombre", "p_respuestas", "p_trampa", "p_nota"],
   dedicatorias_config: [], dedicatorias_publicas: [], aportes_publicos: [],
-  dedicatoria_enviar: ["p_destinatario", "p_mensaje", "p_autor", "p_telefono", "p_stickers", "p_turnstile", "p_trampa"],
-  admin_dedicatorias: [], admin_dedicatoria_estado: ["p_id", "p_estado"], admin_ajustes: [], admin_definir_aportes: ["p_valor"], admin_definir_turnstile: ["p_sitio", "p_secreto"],
+  dedicatoria_enviar: ["p_destinatario", "p_mensaje", "p_autor", "p_telefono", "p_stickers", "p_trampa"], admin_dedicatoria_eliminar: ["p_id"],
+  admin_estado_acceso: [], admin_definir_codigo: ["p_grupo", "p_codigo"], admin_revocar_sesiones: ["p_grupo"],
+  admin_dedicatorias: [], admin_dedicatoria_estado: ["p_id", "p_estado"], admin_ajustes: [], admin_definir_aportes: ["p_valor"],
   admin_generar_enlaces: ["p_ids", "p_regenerar"], admin_enlaces: [], admin_revocar_enlaces: ["p_ids"], admin_marcar_enviado: ["p_ids", "p_enviado"], admin_autorizar: ["p_ids", "p_actividades", "p_modo"], admin_verificar_codigo: ["p_grupo", "p_codigo"], admin_bitacora: ["p_limite"],
+  solicitar_invitacion: ["p_nombre", "p_invita_tipo", "p_invita_nombre", "p_telefono", "p_trampa"], admin_solicitudes: [], admin_solicitud_resolver: ["p_id", "p_aprobar"],
   admin_generar_enlace: ["p_invitado"], admin_crear_invitado: ["p_nombre", "p_categoria"], admin_sincronizar_padrinos: [], admin_eliminar_registros: ["p_confirmacion"],
 };
-const TIPOS = { p_respuestas: "jsonb", p_invitado: "uuid", p_valor: "jsonb", p_id: "uuid", p_stickers: "text[]", p_ids: "uuid[]", p_actividades: "text[]", p_regenerar: "boolean", p_enviado: "boolean", p_limite: "int" };
+const TIPOS = { p_respuestas: "jsonb", p_invitado: "uuid", p_valor: "jsonb", p_id: "uuid", p_stickers: "text[]", p_ids: "uuid[]", p_actividades: "text[]", p_regenerar: "boolean", p_enviado: "boolean", p_aprobar: "boolean", p_limite: "int" };
 
 http.createServer(async (req, res) => {
   if (req.method === "OPTIONS") { res.writeHead(204, { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*", "Access-Control-Allow-Methods": "*" }); return res.end(); }

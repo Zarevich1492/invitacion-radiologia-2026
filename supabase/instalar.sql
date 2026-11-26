@@ -371,7 +371,7 @@ begin
   get diagnostics n = row_count;
   update public.invitados set token_hash = null, token_admin = false, verificado = false, respondido = null, nota_omision = null;
   delete from public.intentos;
-  delete from public.enlaces; delete from public.autorizaciones; delete from public.bitacora;
+  delete from public.enlaces; delete from public.autorizaciones; delete from public.bitacora; delete from public.solicitudes;
   return n;
 end $$;
 
@@ -549,16 +549,17 @@ grant execute on function public.admin_definir_codigo(text,text), public.admin_r
 notify pgrst, 'reload schema';
 
 -- DEDICATORIAS Y APORTES VOLUNTARIOS (idempotente). Se ejecuta DESPUÉS de esquema.sql y acceso.sql.
--- · Teléfonos y datos de Pago Móvil NO están en el repositorio: se cargan desde el panel (o SQL Editor).
--- · La verificación Cloudflare Turnstile se hace en el servidor; la clave secreta vive solo en public.ajustes_privados (sin acceso público).
--- · Las dedicatorias entran «pendiente» y solo las «aprobado» se publican.
+-- Sin CAPTCHA ni verificación telefónica: protección solo en el servidor (validación, frecuencia, duplicados, saneamiento,
+-- límites de almacenamiento) y moderación obligatoria. El teléfono es privado y NO está verificado.
+-- Los datos de Pago Móvil NO están en el repositorio: se cargan desde el panel o el SQL Editor.
 
-do $$ begin
-  create extension if not exists http with schema extensions;   -- necesaria para consultar Turnstile desde la base
-exception when others then raise notice 'Active la extensión «http» (Database → Extensions) para validar Turnstile: %', sqlerrm; end $$;
+-- Limpieza de versiones previas (nunca instaladas en producción): Turnstile fuera del proyecto
+drop function if exists public.dedicatoria_enviar(text,text,text,text,text[],text,text);
+drop function if exists public.admin_definir_turnstile(text,text);
+drop function if exists public._turnstile_verificar(text,text);
+drop table if exists public.ajustes_privados;
 
 create table if not exists public.ajustes (clave text primary key, valor jsonb not null, actualizado timestamptz not null default now());
-create table if not exists public.ajustes_privados (clave text primary key, valor text not null, actualizado timestamptz not null default now());
 create table if not exists public.dedicatorias (
   id uuid primary key default gen_random_uuid(),
   destinatario text not null,                       -- 'promocion' o id de un graduando
@@ -574,38 +575,18 @@ create index if not exists ix_dedic_estado on public.dedicatorias (estado, publi
 create index if not exists ix_dedic_tel on public.dedicatorias (telefono, creado);
 create index if not exists ix_dedic_ip on public.dedicatorias (ip, creado);
 alter table public.ajustes enable row level security;
-alter table public.ajustes_privados enable row level security;
 alter table public.dedicatorias enable row level security;
-revoke all on public.ajustes, public.ajustes_privados, public.dedicatorias from anon, authenticated;
+revoke all on public.ajustes, public.dedicatorias from anon, authenticated;
 
--- Verificación real con Cloudflare (siteverify). Sin clave secreta o ante cualquier fallo: falso (nunca se omite).
-create or replace function public._turnstile_verificar(p_token text, p_ip text) returns boolean
-language plpgsql volatile security definer set search_path = public, extensions as $$
-declare v_sec text; v_resp jsonb;
-begin
-  select valor into v_sec from public.ajustes_privados where clave = 'turnstile_secreto';
-  if v_sec is null or p_token is null or char_length(p_token) < 10 or char_length(p_token) > 2048 then return false; end if;
-  select content::jsonb into v_resp from extensions.http((
-    'POST', 'https://challenges.cloudflare.com/turnstile/v0/siteverify', array[]::extensions.http_header[],
-    'application/x-www-form-urlencoded',
-    'secret=' || extensions.urlencode(v_sec) || '&response=' || extensions.urlencode(p_token) ||
-      case when p_ip is not null and p_ip <> 'desconocida' then '&remoteip=' || extensions.urlencode(p_ip) else '' end
-  )::extensions.http_request);
-  return coalesce((v_resp->>'success')::boolean, false);
-exception when others then return false;
-end $$;
-
--- Estado público del módulo: clave de sitio (pública) y si el servidor puede validar
+-- Lista de especialistas para el formulario (sin datos privados)
 create or replace function public.dedicatorias_config() returns jsonb
 language sql stable security definer set search_path = public as $$
-  select jsonb_build_object(
-    'sitio', (select valor #>> '{}' from public.ajustes where clave = 'turnstile_sitio'),
-    'activo', exists(select 1 from public.ajustes where clave = 'turnstile_sitio') and exists(select 1 from public.ajustes_privados where clave = 'turnstile_secreto'),
+  select jsonb_build_object('activo', true,
     'especialistas', coalesce((select jsonb_agg(jsonb_build_object('id', id, 'nombre', nombre) order by apellido, nombre) from public.graduandos where activo), '[]'));
 $$;
 
 create or replace function public.dedicatoria_enviar(
-  p_destinatario text, p_mensaje text, p_autor text, p_telefono text, p_stickers text[], p_turnstile text, p_trampa text default null
+  p_destinatario text, p_mensaje text, p_autor text, p_telefono text, p_stickers text[], p_trampa text default null
 ) returns jsonb
 language plpgsql volatile security definer set search_path = public, extensions as $$
 declare v_ip text; v_msg text; v_aut text; v_tel text; v_st text[]; v_h text; s text;
@@ -627,13 +608,14 @@ begin
   end loop;
   if (select count(distinct x) from unnest(v_st) x) <> cardinality(v_st) then raise exception 'stickers_invalidos' using errcode = 'P0001'; end if;
   v_h := md5(lower(v_msg) || '|' || p_destinatario);
-  -- Control de frecuencia y duplicados (antes de consultar a Cloudflare)
+  -- Control de frecuencia, duplicados y límites de almacenamiento
   if (select count(*) from public.dedicatorias where ip = v_ip and creado > now() - interval '1 hour') >= 5
-     or (select count(*) from public.dedicatorias where telefono = v_tel and creado > now() - interval '1 day') >= 3 then
+     or (select count(*) from public.dedicatorias where telefono = v_tel and creado > now() - interval '1 day') >= 3
+     or (select count(*) from public.dedicatorias where creado > now() - interval '1 hour') >= 120 then
     raise exception 'demasiadas_solicitudes' using errcode = 'P0001';
   end if;
+  if (select count(*) from public.dedicatorias where estado = 'pendiente') >= 400 then raise exception 'cupo_lleno' using errcode = 'P0001'; end if;
   if exists(select 1 from public.dedicatorias where huella = v_h and telefono = v_tel) then raise exception 'duplicado' using errcode = 'P0001'; end if;
-  if not public._turnstile_verificar(p_turnstile, v_ip) then raise exception 'verificacion_fallida' using errcode = 'P0001'; end if;
   insert into public.dedicatorias(destinatario, mensaje, autor, telefono, stickers, ip, huella) values (p_destinatario, v_msg, v_aut, v_tel, v_st, v_ip, v_h);
   return jsonb_build_object('ok', true);
 end $$;
@@ -677,14 +659,19 @@ begin
   return found;
 end $$;
 
+create or replace function public.admin_dedicatoria_eliminar(p_id uuid) returns boolean
+language plpgsql volatile security definer set search_path = public as $$
+begin
+  if not public._es_gestor() then raise exception 'no_autorizado' using errcode = '42501'; end if;
+  delete from public.dedicatorias where id = p_id;
+  return found;
+end $$;
+
 create or replace function public.admin_ajustes() returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 begin
   if not public._es_gestor() then raise exception 'no_autorizado' using errcode = '42501'; end if;
-  return jsonb_build_object(
-    'aportes', coalesce((select valor from public.ajustes where clave = 'aportes'), '{}'),
-    'turnstile_sitio', (select valor #>> '{}' from public.ajustes where clave = 'turnstile_sitio'),
-    'turnstile_secreto_definido', exists(select 1 from public.ajustes_privados where clave = 'turnstile_secreto'));
+  return jsonb_build_object('aportes', coalesce((select valor from public.ajustes where clave = 'aportes'), '{}'));
 end $$;
 
 create or replace function public.admin_definir_aportes(p_valor jsonb) returns boolean
@@ -700,24 +687,10 @@ begin
   return true;
 end $$;
 
-create or replace function public.admin_definir_turnstile(p_sitio text, p_secreto text) returns boolean
-language plpgsql volatile security definer set search_path = public as $$
-begin
-  if not public._es_gestor() then raise exception 'no_autorizado' using errcode = '42501'; end if;
-  if coalesce(p_sitio, '') <> '' then
-    insert into public.ajustes(clave, valor) values ('turnstile_sitio', to_jsonb(left(btrim(p_sitio), 100))) on conflict (clave) do update set valor = excluded.valor, actualizado = now();
-  end if;
-  if coalesce(p_secreto, '') <> '' then
-    insert into public.ajustes_privados(clave, valor) values ('turnstile_secreto', btrim(p_secreto)) on conflict (clave) do update set valor = excluded.valor, actualizado = now();
-  end if;
-  return true;
-end $$;
-
-revoke all on function public._turnstile_verificar(text,text) from public, anon, authenticated;
-revoke all on function public.dedicatorias_config(), public.dedicatoria_enviar(text,text,text,text,text[],text,text), public.dedicatorias_publicas(), public.aportes_publicos() from public;
-grant execute on function public.dedicatorias_config(), public.dedicatoria_enviar(text,text,text,text,text[],text,text), public.dedicatorias_publicas(), public.aportes_publicos() to anon, authenticated;
-revoke all on function public.admin_dedicatorias(), public.admin_dedicatoria_estado(uuid,text), public.admin_ajustes(), public.admin_definir_aportes(jsonb), public.admin_definir_turnstile(text,text) from public, anon;
-grant execute on function public.admin_dedicatorias(), public.admin_dedicatoria_estado(uuid,text), public.admin_ajustes(), public.admin_definir_aportes(jsonb), public.admin_definir_turnstile(text,text) to authenticated;
+revoke all on function public.dedicatorias_config(), public.dedicatoria_enviar(text,text,text,text,text[],text), public.dedicatorias_publicas(), public.aportes_publicos() from public;
+grant execute on function public.dedicatorias_config(), public.dedicatoria_enviar(text,text,text,text,text[],text), public.dedicatorias_publicas(), public.aportes_publicos() to anon, authenticated;
+revoke all on function public.admin_dedicatorias(), public.admin_dedicatoria_estado(uuid,text), public.admin_dedicatoria_eliminar(uuid), public.admin_ajustes(), public.admin_definir_aportes(jsonb) from public, anon;
+grant execute on function public.admin_dedicatorias(), public.admin_dedicatoria_estado(uuid,text), public.admin_dedicatoria_eliminar(uuid), public.admin_ajustes(), public.admin_definir_aportes(jsonb) to authenticated;
 notify pgrst, 'reload schema';
 
 -- CENTRO DE INVITACIONES: enlaces masivos reutilizables/revocables, autorizaciones individuales y bitácora (idempotente).
@@ -855,6 +828,81 @@ revoke all on function public.admin_generar_enlaces(uuid[],boolean), public.admi
   public.admin_autorizar(uuid[],text[],text), public.admin_verificar_codigo(text,text), public.admin_bitacora(int) from public, anon;
 grant execute on function public.admin_generar_enlaces(uuid[],boolean), public.admin_enlaces(), public.admin_revocar_enlaces(uuid[]), public.admin_marcar_enviado(uuid[],boolean),
   public.admin_autorizar(uuid[],text[],text), public.admin_verificar_codigo(text,text), public.admin_bitacora(int) to authenticated;
+notify pgrst, 'reload schema';
+
+-- ---------- Solicitudes de invitación («Otros invitados») ----------
+-- Una solicitud pendiente NO es una asistencia: solo al aprobarla se crea el registro «Otro invitado» (sin respuestas).
+drop function if exists public.solicitar_invitacion(text,text,text,text,text,text,text);
+create table if not exists public.solicitudes (
+  id uuid primary key default gen_random_uuid(),
+  nombre text not null check (char_length(nombre) between 2 and 80),
+  invita_tipo text not null check (invita_tipo in ('padrino','especialista','r1','r2','docente','otro')),
+  invita_nombre text not null check (char_length(invita_nombre) between 2 and 80),
+  telefono text not null,                          -- privado: solo la organización
+  estado text not null default 'pendiente' check (estado in ('pendiente','aprobada','rechazada')),
+  invitado_id uuid references public.invitados(id) on delete set null,
+  ip text, creado timestamptz not null default now()
+);
+create index if not exists ix_solic_ip on public.solicitudes (ip, creado);
+alter table public.solicitudes enable row level security;
+revoke all on public.solicitudes from anon, authenticated;
+
+create or replace function public.solicitar_invitacion(
+  p_nombre text, p_invita_tipo text, p_invita_nombre text, p_telefono text, p_trampa text default null
+) returns jsonb
+language plpgsql volatile security definer set search_path = public, extensions as $$
+declare v_ip text; v_nom text; v_tel text; v_inv text;
+begin
+  if coalesce(p_trampa, '') <> '' then raise exception 'solicitud_rechazada' using errcode = 'P0001'; end if;
+  v_ip := coalesce(split_part(current_setting('request.headers', true)::json->>'x-forwarded-for', ',', 1), 'desconocida');
+  v_nom := left(public._limpiar(p_nombre), 80);
+  if v_nom is null or char_length(v_nom) < 2 then raise exception 'nombre_invalido' using errcode = 'P0001'; end if;
+  if p_invita_tipo not in ('padrino','especialista','r1','r2','docente','otro') then raise exception 'invita_invalido' using errcode = 'P0001'; end if;
+  v_inv := left(public._limpiar(p_invita_nombre), 80);   -- obligatorio: nombre de quien invita
+  if v_inv is null or char_length(v_inv) < 2 then raise exception 'invita_invalido' using errcode = 'P0001'; end if;
+  v_tel := regexp_replace(coalesce(p_telefono, ''), '[\s\-().]', '', 'g');
+  if v_tel like '00%' then v_tel := '+' || substr(v_tel, 3); end if;
+  if v_tel !~ '^\+[1-9][0-9]{7,14}$' then raise exception 'telefono_invalido' using errcode = 'P0001'; end if;
+  if (select count(*) from public.solicitudes where ip = v_ip and creado > now() - interval '1 hour') >= 5
+     or (select count(*) from public.solicitudes where telefono = v_tel and creado > now() - interval '1 day') >= 3
+     or (select count(*) from public.solicitudes where creado > now() - interval '1 hour') >= 120 then raise exception 'demasiadas_solicitudes' using errcode = 'P0001'; end if;
+  if (select count(*) from public.solicitudes where estado = 'pendiente') >= 400 then raise exception 'cupo_lleno' using errcode = 'P0001'; end if;
+  if exists(select 1 from public.solicitudes where telefono = v_tel and lower(nombre) = lower(v_nom) and estado = 'pendiente') then raise exception 'duplicado' using errcode = 'P0001'; end if;
+  insert into public.solicitudes(nombre, invita_tipo, invita_nombre, telefono, ip) values (v_nom, p_invita_tipo, v_inv, v_tel, v_ip);
+  return jsonb_build_object('ok', true);
+end $$;
+
+create or replace function public.admin_solicitudes() returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+begin
+  if not public._es_gestor() then raise exception 'no_autorizado' using errcode = '42501'; end if;
+  return coalesce((select jsonb_agg(jsonb_build_object('id', s.id, 'nombre', s.nombre, 'telefono', s.telefono, 'estado', s.estado, 'creado', s.creado,
+    'invitado_id', s.invitado_id, 'invita', s.invita_nombre, 'invita_tipo', s.invita_tipo) order by s.creado desc) from public.solicitudes s), '[]');
+end $$;
+
+-- Aprobar crea el registro «Otro invitado» (luego se le genera su enlace y se autorizan sus actividades en el centro); rechazar no crea nada.
+create or replace function public.admin_solicitud_resolver(p_id uuid, p_aprobar boolean) returns uuid
+language plpgsql volatile security definer set search_path = public as $$
+declare s public.solicitudes; v_inv uuid;
+begin
+  if not public._es_gestor() then raise exception 'no_autorizado' using errcode = '42501'; end if;
+  select * into s from public.solicitudes where id = p_id for update;
+  if not found then raise exception 'no_encontrado' using errcode = 'P0001'; end if;
+  if p_aprobar then
+    v_inv := s.invitado_id;
+    if v_inv is null then insert into public.invitados(categoria, nombre, origen) values ('otro', s.nombre, 'registro_admin') returning id into v_inv; end if;
+    update public.solicitudes set estado = 'aprobada', invitado_id = v_inv where id = p_id;
+  else
+    update public.solicitudes set estado = 'rechazada' where id = p_id;
+  end if;
+  perform public._bitacora('solicitud_' || case when p_aprobar then 'aprobada' else 'rechazada' end, jsonb_build_object('solicitud', p_id));
+  return v_inv;
+end $$;
+
+revoke all on function public.solicitar_invitacion(text,text,text,text,text) from public;
+grant execute on function public.solicitar_invitacion(text,text,text,text,text) to anon, authenticated;
+revoke all on function public.admin_solicitudes(), public.admin_solicitud_resolver(uuid,boolean) from public, anon;
+grant execute on function public.admin_solicitudes(), public.admin_solicitud_resolver(uuid,boolean) to authenticated;
 notify pgrst, 'reload schema';
 
 -- GENERADO desde datos/evento.json por herramientas/generar_semilla_sql.py. No editar a mano.

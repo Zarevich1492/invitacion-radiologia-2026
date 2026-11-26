@@ -18,8 +18,8 @@ psql -U postgres -q -d invitacion_e2e -v ON_ERROR_STOP=1 -f supabase/invitacione
 psql -U postgres -q -d invitacion_e2e -v ON_ERROR_STOP=1 -f supabase/semilla.sql >/dev/null
 # Códigos SOLO de prueba (la base de producción recibe los suyos del organizador; nunca se guardan en el repositorio)
 for g in padrinos docentes residentes especialistas; do psql -U postgres -q -d invitacion_e2e -c "select public.admin_definir_codigo('$g', 'codigo-e2e-$g')" >/dev/null; done
-# Dedicatorias/aportes SOLO de prueba: claves ficticias, doble de prueba de Turnstile y datos de Pago Móvil ficticios
-psql -U postgres -q -d invitacion_e2e -c "select public.admin_definir_turnstile('SITIO-PRUEBA','SECRETO-PRUEBA')" -c "create or replace function public._turnstile_verificar(p_token text, p_ip text) returns boolean language sql as \$f\$ select p_token = 'TOKEN-VALIDO-PRUEBA' \$f\$" -c "select public.admin_definir_aportes('{\"activo\":true,\"banco\":\"Banco de prueba\",\"codigo\":\"0000\",\"titular\":\"Titular de Prueba\",\"cedula\":\"1\",\"telefono\":\"04120000000\"}')" >/dev/null
+# Aportes SOLO de prueba: datos ficticios (los reales se cargan desde el panel y nunca van al repositorio)
+psql -U postgres -q -d invitacion_e2e -c "select public.admin_definir_aportes('{\"activo\":true,\"banco\":\"Banco de prueba\",\"codigo\":\"0000\",\"titular\":\"Titular de Prueba\",\"cedula\":\"1\",\"telefono\":\"04120000000\"}')" >/dev/null
 psql -U postgres -q -d invitacion_e2e -c "insert into public.administradores(user_id,email) values ('11111111-1111-1111-1111-111111111111','organizador@prueba.local')"
 (python3 -m http.server 8765 --bind 127.0.0.1 >/dev/null 2>&1 &)
 node pruebas/servidor_prueba.js 8787 invitacion_e2e & API=$!

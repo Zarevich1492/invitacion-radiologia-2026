@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="version-recursos" content="202611260533">
+<meta name="version-recursos" content="202611260553">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Panel de confirmaciones · XXIV Promoción</title>
 <meta name="robots" content="noindex,nofollow,noarchive">
@@ -11,8 +11,8 @@
 <meta name="supported-color-schemes" content="light">
 <meta name="darkreader-lock">
 <link rel="icon" href="../assets/logos/promocion-xxiv-560.jpg" type="image/jpeg">
-<link rel="stylesheet" href="../css/estilos.css?v=202611260533">
-<link rel="stylesheet" href="../css/admin.css?v=202611260533">
+<link rel="stylesheet" href="../css/estilos.css?v=202611260553">
+<link rel="stylesheet" href="../css/admin.css?v=202611260553">
 </head>
 <body class="admin">
 <main class="envoltura">
@@ -80,6 +80,21 @@
       </form>
     </details>
 
+    <details class="adm-tarjeta" id="seg">
+      <summary><h2 class="adm-h2">Seguridad y accesos</h2></summary>
+      <p class="nota">Cambiar una contraseña cierra las sesiones abiertas de esa categoría. «Otros invitados» es de acceso libre. Mínimo 8 caracteres; las contraseñas se guardan solo como hash. La autenticación del panel es independiente.</p>
+      <p class="nota" id="seg-estado" role="status"></p>
+      <div class="ci-codigos" id="seg-codigos"></div>
+      <p><button class="btn" type="button" id="seg-revocar-todo">Revocar todas las sesiones de invitados</button></p>
+    </details>
+
+    <details class="adm-tarjeta" id="solic">
+      <summary><h2 class="adm-h2">Solicitudes de invitación (Otros invitados)</h2></summary>
+      <p class="nota">Aprobar crea el registro «Otro invitado»; luego genere su enlace y autorice sus actividades en el Centro de invitaciones. Rechazar no crea nada. El teléfono es privado.</p>
+      <p class="nota" id="solic-resumen" role="status"></p>
+      <div class="adm-tabla-caja"><table class="adm-tabla" id="solic-tabla"></table></div>
+    </details>
+
     <details class="adm-tarjeta" id="ci">
       <summary><h2 class="adm-h2">Centro de invitaciones</h2></summary>
       <p class="nota" id="ci-aviso">Seleccione destinatarios para generar enlaces individuales (únicos, privados y revocables; se reutilizan los vigentes), personalizar sus actividades y preparar mensajes. Los enlaces son secretos: quien los tenga abre esa invitación.</p>
@@ -131,7 +146,7 @@
     </details>
 
     <details class="adm-tarjeta">
-      <summary><h2 class="adm-h2">Aportes voluntarios y verificación antispam</h2></summary>
+      <summary><h2 class="adm-h2">Aportes voluntarios</h2></summary>
       <p class="nota">Los datos de Pago Móvil se guardan solo en la base de datos (no en GitHub). Publíquelos únicamente con autorización de la titular.</p>
       <form id="form-aportes" class="adm-form">
         <label class="adm-check"><input type="checkbox" id="ap-activo"> Mostrar la sección «Aportes voluntarios» al público</label>
@@ -143,13 +158,6 @@
         <textarea class="campo" id="ap-intro" rows="3" placeholder="Mensaje introductorio (opcional; si se deja vacío se usa el texto estándar)"></textarea>
         <input class="campo" id="ap-gracias" placeholder="Mensaje de agradecimiento (opcional)">
         <button class="btn btn-primario" type="submit">Guardar aportes</button>
-      </form>
-      <h3>Cloudflare Turnstile (gratuito)</h3>
-      <p class="nota" id="ts-estado"></p>
-      <form id="form-turnstile" class="adm-form">
-        <input class="campo" id="ts-sitio" placeholder="Clave de sitio (pública)" autocomplete="off">
-        <input class="campo" id="ts-secreto" type="password" placeholder="Clave secreta (solo se guarda en el servidor; déjela vacía para no cambiarla)" autocomplete="off">
-        <button class="btn btn-primario" type="submit">Guardar Turnstile</button>
       </form>
     </details>
 
@@ -190,8 +198,8 @@
 </dialog>
 
 <p class="nota adm-toast" id="toast" role="status" aria-live="polite"></p>
-<script src="../js/config.js?v=202611260533"></script>
-<script src="../js/metricas.js?v=202611260533"></script>
-<script src="../js/admin.js?v=202611260533"></script>
+<script src="../js/config.js?v=202611260553"></script>
+<script src="../js/metricas.js?v=202611260553"></script>
+<script src="../js/admin.js?v=202611260553"></script>
 </body>
 </html>

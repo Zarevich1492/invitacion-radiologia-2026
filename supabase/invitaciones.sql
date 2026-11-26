@@ -134,3 +134,78 @@ revoke all on function public.admin_generar_enlaces(uuid[],boolean), public.admi
 grant execute on function public.admin_generar_enlaces(uuid[],boolean), public.admin_enlaces(), public.admin_revocar_enlaces(uuid[]), public.admin_marcar_enviado(uuid[],boolean),
   public.admin_autorizar(uuid[],text[],text), public.admin_verificar_codigo(text,text), public.admin_bitacora(int) to authenticated;
 notify pgrst, 'reload schema';
+
+-- ---------- Solicitudes de invitación («Otros invitados») ----------
+-- Una solicitud pendiente NO es una asistencia: solo al aprobarla se crea el registro «Otro invitado» (sin respuestas).
+drop function if exists public.solicitar_invitacion(text,text,text,text,text,text,text);
+create table if not exists public.solicitudes (
+  id uuid primary key default gen_random_uuid(),
+  nombre text not null check (char_length(nombre) between 2 and 80),
+  invita_tipo text not null check (invita_tipo in ('padrino','especialista','r1','r2','docente','otro')),
+  invita_nombre text not null check (char_length(invita_nombre) between 2 and 80),
+  telefono text not null,                          -- privado: solo la organización
+  estado text not null default 'pendiente' check (estado in ('pendiente','aprobada','rechazada')),
+  invitado_id uuid references public.invitados(id) on delete set null,
+  ip text, creado timestamptz not null default now()
+);
+create index if not exists ix_solic_ip on public.solicitudes (ip, creado);
+alter table public.solicitudes enable row level security;
+revoke all on public.solicitudes from anon, authenticated;
+
+create or replace function public.solicitar_invitacion(
+  p_nombre text, p_invita_tipo text, p_invita_nombre text, p_telefono text, p_trampa text default null
+) returns jsonb
+language plpgsql volatile security definer set search_path = public, extensions as $$
+declare v_ip text; v_nom text; v_tel text; v_inv text;
+begin
+  if coalesce(p_trampa, '') <> '' then raise exception 'solicitud_rechazada' using errcode = 'P0001'; end if;
+  v_ip := coalesce(split_part(current_setting('request.headers', true)::json->>'x-forwarded-for', ',', 1), 'desconocida');
+  v_nom := left(public._limpiar(p_nombre), 80);
+  if v_nom is null or char_length(v_nom) < 2 then raise exception 'nombre_invalido' using errcode = 'P0001'; end if;
+  if p_invita_tipo not in ('padrino','especialista','r1','r2','docente','otro') then raise exception 'invita_invalido' using errcode = 'P0001'; end if;
+  v_inv := left(public._limpiar(p_invita_nombre), 80);   -- obligatorio: nombre de quien invita
+  if v_inv is null or char_length(v_inv) < 2 then raise exception 'invita_invalido' using errcode = 'P0001'; end if;
+  v_tel := regexp_replace(coalesce(p_telefono, ''), '[\s\-().]', '', 'g');
+  if v_tel like '00%' then v_tel := '+' || substr(v_tel, 3); end if;
+  if v_tel !~ '^\+[1-9][0-9]{7,14}$' then raise exception 'telefono_invalido' using errcode = 'P0001'; end if;
+  if (select count(*) from public.solicitudes where ip = v_ip and creado > now() - interval '1 hour') >= 5
+     or (select count(*) from public.solicitudes where telefono = v_tel and creado > now() - interval '1 day') >= 3
+     or (select count(*) from public.solicitudes where creado > now() - interval '1 hour') >= 120 then raise exception 'demasiadas_solicitudes' using errcode = 'P0001'; end if;
+  if (select count(*) from public.solicitudes where estado = 'pendiente') >= 400 then raise exception 'cupo_lleno' using errcode = 'P0001'; end if;
+  if exists(select 1 from public.solicitudes where telefono = v_tel and lower(nombre) = lower(v_nom) and estado = 'pendiente') then raise exception 'duplicado' using errcode = 'P0001'; end if;
+  insert into public.solicitudes(nombre, invita_tipo, invita_nombre, telefono, ip) values (v_nom, p_invita_tipo, v_inv, v_tel, v_ip);
+  return jsonb_build_object('ok', true);
+end $$;
+
+create or replace function public.admin_solicitudes() returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+begin
+  if not public._es_gestor() then raise exception 'no_autorizado' using errcode = '42501'; end if;
+  return coalesce((select jsonb_agg(jsonb_build_object('id', s.id, 'nombre', s.nombre, 'telefono', s.telefono, 'estado', s.estado, 'creado', s.creado,
+    'invitado_id', s.invitado_id, 'invita', s.invita_nombre, 'invita_tipo', s.invita_tipo) order by s.creado desc) from public.solicitudes s), '[]');
+end $$;
+
+-- Aprobar crea el registro «Otro invitado» (luego se le genera su enlace y se autorizan sus actividades en el centro); rechazar no crea nada.
+create or replace function public.admin_solicitud_resolver(p_id uuid, p_aprobar boolean) returns uuid
+language plpgsql volatile security definer set search_path = public as $$
+declare s public.solicitudes; v_inv uuid;
+begin
+  if not public._es_gestor() then raise exception 'no_autorizado' using errcode = '42501'; end if;
+  select * into s from public.solicitudes where id = p_id for update;
+  if not found then raise exception 'no_encontrado' using errcode = 'P0001'; end if;
+  if p_aprobar then
+    v_inv := s.invitado_id;
+    if v_inv is null then insert into public.invitados(categoria, nombre, origen) values ('otro', s.nombre, 'registro_admin') returning id into v_inv; end if;
+    update public.solicitudes set estado = 'aprobada', invitado_id = v_inv where id = p_id;
+  else
+    update public.solicitudes set estado = 'rechazada' where id = p_id;
+  end if;
+  perform public._bitacora('solicitud_' || case when p_aprobar then 'aprobada' else 'rechazada' end, jsonb_build_object('solicitud', p_id));
+  return v_inv;
+end $$;
+
+revoke all on function public.solicitar_invitacion(text,text,text,text,text) from public;
+grant execute on function public.solicitar_invitacion(text,text,text,text,text) to anon, authenticated;
+revoke all on function public.admin_solicitudes(), public.admin_solicitud_resolver(uuid,boolean) from public, anon;
+grant execute on function public.admin_solicitudes(), public.admin_solicitud_resolver(uuid,boolean) to authenticated;
+notify pgrst, 'reload schema';

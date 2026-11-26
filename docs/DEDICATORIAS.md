@@ -1,16 +1,14 @@
-# Dedicatorias y aportes voluntarios (v2.10)
+# Dedicatorias, solicitudes y aportes voluntarios (v2.12)
 
-Ambas secciones son públicas (sin código). Las dedicatorias exigen verificación **Cloudflare Turnstile** (gratuita, modo Managed); sin ella el formulario permanece cerrado y el servidor rechaza cualquier envío.
+Públicos, sin contraseña, desde Inicio y la navegación de todos los perfiles. **Sin CAPTCHA, Turnstile, SMS, OTP ni verificación telefónica.**
 
-## Configuración manual indispensable (una sola vez)
-1. **Supabase → Database → Extensions:** activar **`http`** (la base consulta a Cloudflare con ella). Sin esa extensión el servidor rechaza todos los envíos (nunca los acepta sin validar).
-2. **Supabase → SQL Editor:** ejecutar `supabase/dedicatorias.sql` (idempotente; depende de `acceso.sql`).
-3. **Cloudflare → Turnstile → Add widget** (plan gratuito): dominio `zarevich1492.github.io`, modo **Managed**. Copiar la *Site key* y la *Secret key*.
-4. **Panel de organizadores → «Aportes voluntarios y verificación antispam»:** pegar ambas claves y pulsar *Guardar Turnstile*. La clave secreta queda solo en el servidor (tabla sin acceso público) y nunca vuelve al navegador.
-5. En el mismo apartado, cargar los datos de Pago Móvil **con autorización de la titular** y marcar «Mostrar la sección». Esos datos no están en el repositorio ni en GitHub.
-
-## Moderación
-Panel → «Dedicatorias»: aprobar, rechazar u ocultar; filtrar por estado, destinatario y fecha; ver teléfono (solo allí); detectar posibles duplicados; exportar las aprobadas (CSV protegido contra inyección de fórmulas).
+## Protección (solo en el servidor)
+Validación de campos, saneamiento de texto (sin `<`/`>`), teléfono internacional normalizado, campo trampa, límite de frecuencia (5 envíos por IP y hora, 3 por teléfono y día, 120 por hora en total), prevención de duplicados, tope de 400 pendientes y **moderación obligatoria**. Solo las dedicatorias aprobadas son públicas.
 
 ## Qué no se afirma
-El teléfono y la identidad del autor **no se verifican**; Turnstile solo distingue personas de automatizaciones. Los números son privados pero se guardan en la base de datos (Supabase).
+El teléfono y la identidad del autor **no se verifican**. Sin CAPTCHA, un actor decidido podría enviar mensajes en volumen; los límites lo frenan y la moderación impide que algo se publique sin revisión.
+
+## Operación (panel)
+- **Dedicatorias:** aprobar, rechazar, ocultar o eliminar; filtros; teléfono visible solo allí; exportación CSV de las aprobadas.
+- **Solicitudes de invitación:** nombre, teléfono, tipo y nombre de quien invita (obligatorio), invitados asociados por responsable; aprobar crea el registro «Otro invitado» (los pendientes no cuentan como asistencia).
+- **Aportes voluntarios:** datos de Pago Móvil, textos y activación (la sección permanece oculta hasta activarla, con autorización de la titular). Los datos no están en el repositorio.

@@ -75,5 +75,37 @@ begin
   reset role;
   perform public._ok('el borrado posterior al evento limpia enlaces y autorizaciones', true);
 end $$;
+do $$
+declare r jsonb; sid uuid; inv uuid; l jsonb;
+begin
+  set local role anon;
+  perform set_config('request.headers', '{"x-forwarded-for":"5.5.5.5"}', true);
+  begin perform public.solicitar_invitacion('Pedro Prueba','padrino','',  '+584121112233'); perform public._ok('quién invita es obligatorio', false);
+  exception when others then perform public._ok('quién invita es obligatorio', sqlerrm = 'invita_invalido'); end;
+  begin perform public.solicitar_invitacion('Pedro Prueba','extraterrestre','Alguien','+584121112233'); perform public._ok('tipo de quien invita inválido se rechaza', false);
+  exception when others then perform public._ok('tipo de quien invita inválido se rechaza', sqlerrm = 'invita_invalido'); end;
+  begin perform public.solicitar_invitacion('Pedro Prueba','padrino','Dra. Analy Falcón','123'); perform public._ok('teléfono sin prefijo se rechaza', false);
+  exception when others then perform public._ok('teléfono sin prefijo se rechaza', sqlerrm = 'telefono_invalido'); end;
+  begin perform public.solicitar_invitacion('Pedro Prueba','padrino','Dra. Analy Falcón','+584121112233','http://spam'); perform public._ok('campo trampa rechaza', false);
+  exception when others then perform public._ok('campo trampa rechaza', sqlerrm = 'solicitud_rechazada'); end;
+  r := public.solicitar_invitacion('Pedro <b>Prueba</b>','padrino','Dra. Analy Falcón','+58 412 111 2233');
+  perform public._ok('solicitud válida (invitado por una madrina)', (r->>'ok')::boolean);
+  r := public.solicitar_invitacion('Lucía Prueba','r1','Residente Uno','+584129998877');
+  perform public._ok('solicitud válida (invitada por un R1)', (r->>'ok')::boolean);
+  r := public.solicitar_invitacion('Marta Prueba','docente','Dra. Docente','+584127776655');
+  perform public._ok('solicitud válida (invitada por docente/egresado)', (r->>'ok')::boolean);
+  begin perform public.solicitar_invitacion('Pedro <b>Prueba</b>','padrino','Dra. Analy Falcón','+584121112233'); perform public._ok('duplicado pendiente se rechaza', false);
+  exception when others then perform public._ok('duplicado pendiente se rechaza', sqlerrm = 'duplicado'); end;
+  begin perform count(*) from public.solicitudes; perform public._ok('anon NO lee solicitudes', false); exception when insufficient_privilege then perform public._ok('anon NO lee solicitudes', true); end;
+  begin perform public.admin_solicitudes(); perform public._ok('anon NO ve solicitudes (admin)', false); exception when insufficient_privilege then perform public._ok('anon NO ve solicitudes (admin)', true); end;
+  reset role;
+  l := public.admin_solicitudes();
+  perform public._ok('admin ve quién invita y el teléfono', jsonb_array_length(l) = 3 and exists(select 1 from jsonb_array_elements(l) x where x->>'invita' = 'Dra. Analy Falcón' and x->>'telefono' = '+584121112233'));
+  perform public._ok('una solicitud pendiente NO crea invitado ni asistencia', not exists(select 1 from public.invitados where nombre like 'Pedro%' or nombre like 'Luc%') );
+  sid := (select (x->>'id')::uuid from jsonb_array_elements(l) x where x->>'nombre' like 'Pedro%');
+  inv := public.admin_solicitud_resolver(sid, true);
+  perform public._ok('aprobar crea el registro «Otro invitado» (sin enlace ni respuestas)', exists(select 1 from public.invitados where id = inv and categoria = 'otro' and token_hash is null) and not exists(select 1 from public.confirmaciones where invitado_id = inv));
+  perform public._ok('rechazar no crea registros', public.admin_solicitud_resolver((select (x->>'id')::uuid from jsonb_array_elements(public.admin_solicitudes()) x where x->>'nombre' like 'Luc%'), false) is null);
+end $$;
 select n, case when ok then '✔' else '✘' end as r, prueba, detalle from public._resultado order by n;
 select count(*) filter (where ok) || '/' || count(*) || ' pruebas del centro de invitaciones superadas' as resumen from public._resultado;

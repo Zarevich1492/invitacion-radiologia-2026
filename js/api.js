@@ -50,7 +50,8 @@
     dedicConfig: () => rpc("dedicatorias_config", {}, 1),
     dedicPublicas: () => rpc("dedicatorias_publicas", {}, 1),
     aportesPublicos: () => rpc("aportes_publicos", {}, 1),
-    dedicEnviar: (p) => rpc("dedicatoria_enviar", { p_destinatario: p.destinatario, p_mensaje: p.mensaje, p_autor: p.autor, p_telefono: p.telefono, p_stickers: p.stickers || [], p_turnstile: p.turnstile, p_trampa: p.trampa || null }, 0),
+    solicitarInvitacion: (p) => rpc("solicitar_invitacion", { p_nombre: p.nombre, p_invita_tipo: p.tipo, p_invita_nombre: p.invita, p_telefono: p.telefono, p_trampa: p.trampa || null }, 0),
+    dedicEnviar: (p) => rpc("dedicatoria_enviar", { p_destinatario: p.destinatario, p_mensaje: p.mensaje, p_autor: p.autor, p_telefono: p.telefono, p_stickers: p.stickers || [], p_trampa: p.trampa || null }, 0),
     sesion: leerSesion, cerrarSesion: () => guardarSesion(null),
     // Un token por identidad en este dispositivo (permite modificar sin duplicar)
     tokenDe: (clave) => leerTokens()[clave] || null,

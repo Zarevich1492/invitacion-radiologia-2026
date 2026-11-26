@@ -71,6 +71,8 @@
     $("#acceso").hidden = true; $("#panel").hidden = false; $("#salir").hidden = false;
     $("#actualizado").textContent = `Datos al ${fecha(new Date())} · sesión: ${sesion.email || ""}`;
     pintar();
+    cargarSolic().catch(() => {});
+    cargarSeg().catch(() => {});
     cargarCI().catch((e) => toast("Centro de invitaciones: ejecute supabase/invitaciones.sql (" + e.message + ")"));
     cargarModulos().catch((e) => { $("#mod-aviso").textContent = "Módulos de dedicatorias y aportes no disponibles: ejecute supabase/dedicatorias.sql (" + e.message + ")"; });
   }
@@ -362,6 +364,45 @@
     try { const b = await rpc("admin_bitacora", { p_limite: 50 }); ul.innerHTML = b.map((x) => `<li><b>${esc(fecha(x.cuando))}</b> · ${esc(x.admin || "")} · ${esc(x.accion)} <small>${esc(JSON.stringify(x.detalle))}</small></li>`).join("") || "<li>Sin registros.</li>"; } catch (err) { toast(err.message); }
   });
 
+
+
+  /* ---------- Seguridad y accesos ---------- */
+  const GRUPOS_SEG = [["padrinos", "Padrinos y madrinas"], ["docentes", "Docentes y egresados"], ["residentes", "Residentes R1 y R2"], ["especialistas", "Especialistas 2026"]];
+  async function cargarSeg() {
+    let e = {};
+    try { e = await rpc("admin_estado_acceso"); } catch (err) { $("#seg-estado").textContent = "Ejecute supabase/instalar.sql para activar el acceso por contraseña (" + err.message + ")"; }
+    const cod = e.codigos || {}, ses = e.sesiones_activas || {};
+    $("#seg-estado").textContent = `Sesiones activas: ${Object.values(ses).reduce((a, b) => a + b, 0)} · Intentos fallidos en la última hora: ${e.intentos_fallidos_hora ?? "—"}`;
+    $("#seg-codigos").innerHTML = GRUPOS_SEG.map(([g, t]) => `<div class="ci-cod"><label for="seg-c-${g}">${t} <small>${cod[g] ? "definida " + esc(fecha(cod[g])) : "SIN CONTRASEÑA"}</small></label><input class="campo" id="seg-c-${g}" type="password" autocomplete="new-password" placeholder="Nueva contraseña (mín. 8)"><button class="btn" type="button" data-seg="${g}">Cambiar</button><button class="btn btn-texto" type="button" data-seg-rev="${g}">Revocar sesiones (${ses[g] || 0})</button></div>`).join("");
+  }
+  $("#seg-codigos").addEventListener("click", async (e) => {
+    const c = e.target.closest("[data-seg]"), r = e.target.closest("[data-seg-rev]");
+    try {
+      if (c) { await rpc("admin_definir_codigo", { p_grupo: c.dataset.seg, p_codigo: $("#seg-c-" + c.dataset.seg).value }); toast("Contraseña actualizada; sesiones previas cerradas"); await cargarSeg(); }
+      if (r) { const n = await rpc("admin_revocar_sesiones", { p_grupo: r.dataset.segRev }); toast(`${n} sesiones revocadas`); await cargarSeg(); }
+    } catch (err) { toast(err.message); }
+  });
+  $("#seg-revocar-todo").addEventListener("click", async () => { if (!confirm("¿Cerrar todas las sesiones de invitados?")) return; try { const n = await rpc("admin_revocar_sesiones", {}); toast(`${n} sesiones revocadas`); await cargarSeg(); } catch (err) { toast(err.message); } });
+
+  /* ---------- Solicitudes de invitación ---------- */
+  let SOL = [];
+  const ETQ_SOL = { pendiente: "Pendiente", aprobada: "Autorizada", rechazada: "Rechazada" };
+  const TIPO_INV = { padrino: "Padrino/madrina", especialista: "Radiólogo 2026", r1: "Residente R1", r2: "Residente R2", docente: "Docente o egresado", otro: "Otro" };
+  const llave = (t) => String(t || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
+  function pintarSolic() {
+    const cuenta = {};   // invitados asociados a cada responsable (pendientes y autorizados; las rechazadas no cuentan)
+    for (const x of SOL.filter((y) => y.estado !== "rechazada")) cuenta[llave(x.invita)] = (cuenta[llave(x.invita)] || 0) + 1;
+    const n = (e) => SOL.filter((x) => x.estado === e).length;
+    $("#solic-resumen").textContent = `Pendientes: ${n("pendiente")} · Autorizadas: ${n("aprobada")} · Rechazadas: ${n("rechazada")}. Las solicitudes pendientes no se cuentan como asistencias.`;
+    $("#solic-tabla").innerHTML = `<thead><tr><th>Fecha</th><th>Solicitante</th><th>Teléfono</th><th>Lo invita</th><th>Invitados asociados</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>` +
+      (SOL.map((x) => `<tr><td>${esc(fecha(x.creado))}</td><td>${esc(x.nombre)}</td><td>${esc(x.telefono)}</td><td>${esc(x.invita)} <small>(${esc(TIPO_INV[x.invita_tipo])})</small></td><td>${cuenta[llave(x.invita)] || 0}</td><td>${ETQ_SOL[x.estado]}</td><td class="adm-acc">${x.estado === "pendiente" ? `<button class="btn" type="button" data-sol="${esc(x.id)}" data-ap="1">Aprobar</button> <button class="btn" type="button" data-sol="${esc(x.id)}" data-ap="0">Rechazar</button>` : ""}</td></tr>`).join("") || `<tr><td colspan="7">Sin solicitudes.</td></tr>`) + `</tbody>`;
+  }
+  async function cargarSolic() { SOL = await rpc("admin_solicitudes"); pintarSolic(); }
+  $("#solic-tabla").addEventListener("click", async (e) => {
+    const b = e.target.closest("[data-sol]"); if (!b) return;
+    try { await rpc("admin_solicitud_resolver", { p_id: b.dataset.sol, p_aprobar: b.dataset.ap === "1" }); await cargar(); toast(b.dataset.ap === "1" ? "Aprobada: ya figura en el Centro de invitaciones." : "Solicitud rechazada"); } catch (err) { toast(err.message); }
+  });
+
   /* ---------- Dedicatorias y aportes voluntarios ---------- */
   let DD = [];
   const ESTADO = { pendiente: "Pendiente", aprobado: "Aprobado", rechazado: "Rechazado", oculto: "Oculto" };
@@ -373,8 +414,6 @@
     const ap = a.aportes || {};
     $("#ap-activo").checked = !!ap.activo;
     for (const k of ["intro", "gracias", "banco", "codigo", "titular", "cedula", "telefono"]) $("#ap-" + k).value = ap[k] || "";
-    $("#ts-sitio").value = a.turnstile_sitio || "";
-    $("#ts-estado").textContent = a.turnstile_sitio && a.turnstile_secreto_definido ? "Turnstile configurado: el envío de dedicatorias está activo." : "Turnstile incompleto: faltan " + [!a.turnstile_sitio && "la clave de sitio", !a.turnstile_secreto_definido && "la clave secreta"].filter(Boolean).join(" y ") + ". Hasta entonces el formulario permanece cerrado.";
   }
   function pintarDedic() {
     const n = (e) => DD.filter((d) => d.estado === e).length;
@@ -382,7 +421,7 @@
     const fe = $("#dd-f-estado").value, fd = $("#dd-f-dest").value, fb = $("#dd-f-fecha").value;
     const l = DD.filter((d) => (!fe || d.estado === fe) && (!fd || d.destinatario === fd) && (!fb || (d.creado || "").slice(0, 10) === fb));
     $("#dd-tabla").innerHTML = `<thead><tr><th>Fecha</th><th>Para</th><th>Autor y teléfono</th><th>Mensaje</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>` +
-      l.map((d) => `<tr><td>${esc(fecha(d.creado))}</td><td>${esc(d.para)}</td><td>${esc(d.autor)}<br><small>${esc(d.telefono)}</small>${d.duplicados > 0 ? `<br><small class="adm-dup">Posible duplicado (${d.duplicados})</small>` : ""}</td><td>${esc(d.mensaje)}${d.stickers && d.stickers.length ? `<br><small>Stickers: ${esc(d.stickers.join(", "))}</small>` : ""}</td><td>${ESTADO[d.estado]}</td><td class="adm-acc">${["aprobado", "rechazado", "oculto"].filter((e) => e !== d.estado).map((e) => `<button class="btn" type="button" data-dd="${esc(d.id)}" data-e="${e}">${{ aprobado: "Aprobar", rechazado: "Rechazar", oculto: "Ocultar" }[e]}</button>`).join(" ")}</td></tr>`).join("") + `</tbody>`;
+      l.map((d) => `<tr><td>${esc(fecha(d.creado))}</td><td>${esc(d.para)}</td><td>${esc(d.autor)}<br><small>${esc(d.telefono)}</small>${d.duplicados > 0 ? `<br><small class="adm-dup">Posible duplicado (${d.duplicados})</small>` : ""}</td><td>${esc(d.mensaje)}${d.stickers && d.stickers.length ? `<br><small>Stickers: ${esc(d.stickers.join(", "))}</small>` : ""}</td><td>${ESTADO[d.estado]}</td><td class="adm-acc">${["aprobado", "rechazado", "oculto"].filter((e) => e !== d.estado).map((e) => `<button class="btn" type="button" data-dd="${esc(d.id)}" data-e="${e}">${{ aprobado: "Aprobar", rechazado: "Rechazar", oculto: "Ocultar" }[e]}</button>`).join(" ")} <button class="btn" type="button" data-dd-del="${esc(d.id)}">Eliminar</button></td></tr>`).join("") + `</tbody>`;
     const dests = [...new Map(DD.map((d) => [d.destinatario, d.para])).entries()];
     const cur = $("#dd-f-dest").value;
     $("#dd-f-dest").innerHTML = `<option value="">Todos los destinatarios</option>` + dests.map(([id, t]) => `<option value="${esc(id)}">${esc(t)}</option>`).join("");
@@ -390,6 +429,8 @@
   }
   for (const id of ["#dd-f-estado", "#dd-f-dest", "#dd-f-fecha"]) $(id).addEventListener("change", pintarDedic);
   $("#dd-tabla").addEventListener("click", async (e) => {
+    const del = e.target.closest("[data-dd-del]");
+    if (del) { if (!confirm("¿Eliminar definitivamente esta dedicatoria?")) return; try { await rpc("admin_dedicatoria_eliminar", { p_id: del.dataset.ddDel }); DD = DD.filter((x) => x.id !== del.dataset.ddDel); pintarDedic(); toast("Dedicatoria eliminada"); } catch (err) { toast(err.message); } return; }
     const b = e.target.closest("[data-dd]"); if (!b) return;
     try { await rpc("admin_dedicatoria_estado", { p_id: b.dataset.dd, p_estado: b.dataset.e }); const d = DD.find((x) => x.id === b.dataset.dd); if (d) { d.estado = b.dataset.e; if (b.dataset.e === "aprobado" && !d.publicada) d.publicada = new Date().toISOString(); } pintarDedic(); toast("Estado actualizado"); }
     catch (err) { toast(err.message); }
@@ -406,10 +447,6 @@
     const v = { activo: $("#ap-activo").checked };
     for (const k of ["intro", "gracias", "banco", "codigo", "titular", "cedula", "telefono"]) { const t = $("#ap-" + k).value.trim(); if (t) v[k] = t; }
     try { await rpc("admin_definir_aportes", { p_valor: v }); toast("Aportes guardados"); } catch (err) { toast(err.message); }
-  });
-  $("#form-turnstile").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    try { await rpc("admin_definir_turnstile", { p_sitio: $("#ts-sitio").value.trim(), p_secreto: $("#ts-secreto").value.trim() }); $("#ts-secreto").value = ""; await cargarModulos(); toast("Turnstile guardado"); } catch (err) { toast(err.message); }
   });
 
   /* ---------- Inicio ---------- */

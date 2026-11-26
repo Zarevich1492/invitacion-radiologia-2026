@@ -35,7 +35,7 @@ async function nuevaPagina(ctx, errores, externos) {
   await p.route(/\/js\/config\.js(\?.*)?$/, (r) => r.fulfill({ contentType: "application/javascript", body: `window.CONFIG={supabaseUrl:${JSON.stringify(API)},supabaseAnonKey:"clave-publica-de-prueba"};` }));
   p.on("pageerror", (e) => errores.push(e.message));
   p.on("console", (m) => { if (m.type() === "error") errores.push(m.text()); });
-  p.on("request", (r) => { const u = r.url(); if (!u.startsWith(BASE) && !u.startsWith(API) && !/^(blob|data):/.test(u) && !/^https:\/\/challenges\.cloudflare\.com\//.test(u)) externos.push(u); });
+  p.on("request", (r) => { const u = r.url(); if (!u.startsWith(BASE) && !u.startsWith(API) && !/^(blob|data):/.test(u)) externos.push(u); });
   return p;
 }
 async function irVista(p, v) {
@@ -123,7 +123,7 @@ async function responder(p, resp) {
   await p.screenshot({ path: `${OUT}/02-portada-variante-A.png` });
 
   // Navegación por vistas (padrinos: 5 apartados con Inicio y Mi listón independiente)
-  const navEsperadaPadrino = EV.modulos && EV.modulos.listones ? "Inicio|Programa|Confirmar|Mi pase|Mi listón" : "Inicio|Programa|Confirmar|Mi pase";
+  const navEsperadaPadrino = EV.modulos && EV.modulos.listones ? "Inicio|Programa|Confirmar|Mi pase|Mi listón|Palabras|Aportes" : "Inicio|Programa|Confirmar|Mi pase|Palabras|Aportes";
   const navPadrino = await p.$$eval(".nav-inferior [data-ir]", (a) => a.filter((x) => !x.hidden && getComputedStyle(x).display !== "none").map((x) => x.textContent.trim()).join("|"));
   ok("Navegación padrino: «Inicio» activo al entrar y apartados exactos", navPadrino === navEsperadaPadrino && (await p.getAttribute('.nav-inferior [data-ir="invitacion"]', "aria-current")) === "page", navPadrino);
   await irVista(p, "programa"); await irVista(p, "pase");
@@ -304,7 +304,7 @@ async function responder(p, resp) {
   await p.click('[data-graduando="arrieta-jorge"]'); await p.waitForTimeout(1500);
   ok("Graduando: entra directamente a su listón", (await p.evaluate(() => document.body.dataset.vistaActiva)) === "liston" && (await p.isVisible("#vista-liston")) && (await p.getAttribute("#liston-vista", "src")).split("?")[0] === "assets/listones/arrieta-jorge.png");
   const navG = await p.$$eval(".nav-inferior a", (a) => a.filter((x) => !x.hidden && getComputedStyle(x).display !== "none").map((x) => x.textContent.trim()).join("|"));
-  ok("Graduando: navegación exacta (Inicio|Programa|Mi listón)", navG === "Inicio|Programa|Mi listón", navG);
+  ok("Graduando: navegación exacta (Inicio|Programa|Mi listón|Palabras|Aportes)", navG === "Inicio|Programa|Mi listón|Palabras|Aportes", navG);
   await p.evaluate(() => { location.hash = "confirmar"; }); await p.waitForTimeout(400);
   ok("Graduando: la ruta #confirmar no está disponible", (await p.evaluate(() => document.body.dataset.vistaActiva)) === "liston");
   await irVista(p, "invitacion");
@@ -331,16 +331,15 @@ async function responder(p, resp) {
   p = await nuevaPagina(ctx, errores, externos);
   await rutaB(p, "r2", "Residente Prueba");
   const navR = await p.$$eval(".nav-inferior a", (a) => a.filter((x) => !x.hidden && getComputedStyle(x).display !== "none").map((x) => x.textContent.trim()).join("|"));
-  ok("Residente: navegación sin Mi listón (Inicio|Programa|Confirmar|Mi pase)", navR === "Inicio|Programa|Confirmar|Mi pase", navR);
+  ok("Residente: navegación sin Mi listón (Inicio|Programa|Confirmar|Mi pase)", navR === "Inicio|Programa|Confirmar|Mi pase|Palabras|Aportes", navR);
   await p.evaluate(() => { location.hash = "liston"; }); await p.waitForTimeout(400);
   ok("Residente: ruta #liston no accesible", (await p.evaluate(() => document.body.dataset.vistaActiva)) !== "liston");
   await p.close();
   }
   p = await nuevaPagina(ctx, errores, externos);
 
-  // ===== Dedicatorias y aportes (públicos). El widget de Cloudflare se sustituye por un DOBLE DE PRUEBA (no hay red hacia Cloudflare). =====
+  // ===== Dedicatorias y aportes (públicos, sin CAPTCHA externo) =====
   p = await nuevaPagina(ctx, errores, externos);
-  await p.route("https://challenges.cloudflare.com/**", (r) => r.fulfill({ contentType: "application/javascript", body: "window.turnstile={render:function(el,o){setTimeout(function(){o.callback('TOKEN-VALIDO-PRUEBA')},50);return 1},reset:function(){}};" }));
   await p.goto(BASE, { waitUntil: "networkidle" });
   ok("Bienvenida: accesos públicos a dedicatorias y aportes sin código", (await p.isVisible('[data-visitante="dedicatorias"]')) && (await p.isVisible('[data-visitante="aportes"]')));
   await p.click('[data-visitante="dedicatorias"]'); await p.waitForFunction(() => document.body.dataset.vistaActiva === "dedicatorias");
@@ -363,8 +362,10 @@ async function responder(p, resp) {
   await p.click("#dd-enviar"); await p.waitForSelector("#dd-gracias:not([hidden])", { timeout: 10000 });
   ok("Dedicatorias: mensaje de gracias y aviso de revisión", (await p.textContent("#dd-gracias")).includes("Gracias por dejar una huella en nuestra historia") && (await p.textContent("#dd-gracias")).includes("revisada antes de publicarse"));
   const hdr = { apikey: "x", "Content-Type": "application/json" };
-  const rbd = await p.request.post(API + "/rest/v1/rpc/dedicatoria_enviar", { headers: hdr, data: { p_destinatario: "promocion", p_mensaje: "Mensaje directo sin verificación", p_autor: "Bot", p_telefono: "+584120000001", p_stickers: [], p_turnstile: "falso-falso-falso" } });
-  ok("Llamada directa a la API sin Turnstile válido es rechazada", rbd.status() === 400 && /verificacion_fallida/.test(await rbd.text()), rbd.status());
+  const rbd = await p.request.post(API + "/rest/v1/rpc/dedicatoria_enviar", { headers: hdr, data: { p_destinatario: "promocion", p_mensaje: "Mensaje de un robot", p_autor: "Bot", p_telefono: "+584120000001", p_stickers: [], p_trampa: "http://spam" } });
+  ok("Llamada directa con el campo trampa lleno es rechazada por el servidor", rbd.status() === 400 && /solicitud_rechazada/.test(await rbd.text()), rbd.status());
+  const rbx = await p.request.post(API + "/rest/v1/rpc/dedicatoria_enviar", { headers: hdr, data: { p_destinatario: "promocion", p_mensaje: "<script>x</script>", p_autor: "A", p_telefono: "no-es-telefono", p_stickers: ["💖"] } });
+  ok("Llamada directa con datos inválidos es rechazada (validación en servidor)", rbx.status() === 400, rbx.status());
   const pub = await (await p.request.post(API + "/rest/v1/rpc/dedicatorias_publicas", { headers: hdr, data: {} })).json();
   ok("Dedicatoria pendiente: no aparece en el libro público", pub.length === 0);
   const lect = await p.request.get(API + "/rest/v1/dedicatorias?select=telefono", { headers: hdr });
@@ -389,6 +390,33 @@ async function responder(p, resp) {
   ok("Aportes: sin desplazamiento horizontal en móvil", sw2[0] <= sw2[1], sw2.join(" ≤ "));
   await p.close();
 
+  // ===== «Otros invitados»: cinco funcionalidades de acceso libre, visibles desde Inicio =====
+  p = await nuevaPagina(ctx, errores, externos);
+  await rutaB(p, "otro", "Visitante Otros");
+  const ops = await p.$$eval("#otros-tarjetas .op b", (b) => b.map((x) => x.textContent));
+  ok("Otros: cinco tarjetas visibles desde Inicio", ops.join("|") === "Ver invitación|Programa|Dejar una dedicatoria|Aporte voluntario|Solicitar invitación" && (await p.isVisible("#otros-tarjetas")), ops.join("|"));
+  ok("Otros: sin contraseña ni registro previo (acceso libre)", !(await p.isVisible("#paso-codigo")));
+  await p.screenshot({ path: `${OUT}/19-otros-inicio.png`, fullPage: true });
+  await p.click('#otros-tarjetas [data-ir="solicitar"]'); await p.waitForFunction(() => document.body.dataset.vistaActiva === "solicitar");
+  await p.waitForFunction(() => !document.getElementById("sol-enviar").disabled, null, { timeout: 8000 });
+  await p.fill("#sol-nombre", "Familiar Prueba"); await p.selectOption("#sol-tipo", "padrino"); await p.fill("#sol-tel", "+58 414 5550000");
+  ok("Solicitud: seis opciones de quién invita", (await p.$$eval("#sol-tipo option", (o) => o.map((x) => x.textContent).join("|"))) === "Padrino o madrina|Radiólogo 2026|Residente R1|Residente R2|Docente o egresado|Otro");
+  await p.click("#sol-enviar"); await p.waitForTimeout(300);
+  ok("Solicitud: el nombre de quien invita es obligatorio", (await p.textContent("#sol-estado")).includes("nombre de quien te invita") && await p.isVisible("#form-solic"));
+  await p.fill("#sol-quien", "Dra. Analy Falcón");
+  await p.click("#sol-enviar"); await p.waitForSelector("#sol-gracias:not([hidden])", { timeout: 10000 });
+  ok("Solicitar invitación: identifica quién invita y confirma el envío", (await p.textContent("#sol-gracias")).includes("Hemos recibido tu solicitud"));
+  const rsol = await p.request.post(API + "/rest/v1/rpc/solicitar_invitacion", { headers: { apikey: "x", "Content-Type": "application/json" }, data: { p_nombre: "Bot", p_invita_tipo: "otro", p_invita_nombre: "", p_telefono: "+584140000000" } });
+  ok("Solicitud directa sin quién invita es rechazada por el servidor", rsol.status() === 400 && /invita_invalido/.test(await rsol.text()));
+  await p.click('.nav-inferior [data-ir="dedicatorias"], .nav-superior [data-ir="dedicatorias"]').catch(() => {});
+  await p.evaluate(() => { location.hash = "dedicatorias"; }); await p.waitForFunction(() => document.body.dataset.vistaActiva === "dedicatorias");
+  ok("Otros: dedicatorias disponibles aunque su solicitud no esté autorizada", await p.isVisible("#form-dedic"));
+  await p.evaluate(() => { location.hash = "aportes"; }); await p.waitForFunction(() => document.body.dataset.vistaActiva === "aportes");
+  await p.waitForSelector("#pm-tarjeta:not([hidden])", { timeout: 8000 });
+  ok("Otros: aportes disponibles sin confirmar asistencia", await p.isVisible("#pm-tarjeta"));
+  const navOt = await p.$$eval(".nav-inferior a", (a) => a.filter((x) => !x.hidden && getComputedStyle(x).display !== "none").map((x) => x.textContent.trim()).join("|"));
+  ok("Otros: navegación Inicio|Programa|Palabras|Aportes|Solicitar", navOt === "Inicio|Programa|Palabras|Aportes|Solicitar", navOt);
+  await p.close();
   // Docentes y egresados
   p = await nuevaPagina(ctx, errores, externos);
   await p.goto(BASE, { waitUntil: "networkidle" }); await conCodigo(p, "docentes"); await p.waitForSelector("#opciones-cat .opcion-cat");
@@ -423,7 +451,7 @@ async function responder(p, resp) {
   p = await nuevaPagina(ctx, errores, externos);
   await rutaB(p, "otro", "Visitante Libre");
   const navO = await p.$$eval(".nav-inferior a", (a) => a.filter((x) => !x.hidden && getComputedStyle(x).display !== "none").map((x) => x.textContent.trim()).join("|"));
-  ok("Otros: navegación Inicio|Programa (sin confirmar ni pase hasta ser autorizado)", navO === "Inicio|Programa", navO);
+  ok("Otros: navegación Inicio|Programa|Palabras|Aportes|Solicitar (sin confirmar ni pase hasta ser autorizado)", navO === "Inicio|Programa|Palabras|Aportes|Solicitar", navO);
   await p.evaluate(() => { location.hash = "confirmar"; }); await p.waitForTimeout(400);
   ok("Otros: la ruta #confirmar no está disponible", (await p.evaluate(() => document.body.dataset.vistaActiva)) !== "confirmar");
   ok("Otros: ve la tarjeta personalizada", (await p.getAttribute("#img-portada", "src")).split("?")[0] === "assets/img/C-portada-1400.jpg");
@@ -528,6 +556,13 @@ async function responder(p, resp) {
   await pe.goto("about:blank"); await pe.goto(enl, { waitUntil: "networkidle" }); await pe.waitForTimeout(800);
   ok("Revocar: el enlace deja de funcionar", (await pe.textContent("#acceso-pregunta")).includes("ya no está vigente"));
   await pe.close();
+  await a.selectOption("#ci-cat", "");
+  // Solicitudes de invitación en el panel
+  await a.click("#solic > summary"); await a.waitForSelector('#solic-tabla [data-ap="1"]');
+  ok("Panel: solicitud con teléfono y «Lo invita» (Dra. Analy Falcón)", /Dra\. Analy Falcón/.test(await a.textContent("#solic-tabla")) && /\+584145550000/.test(await a.textContent("#solic-tabla")));
+  await a.click('#solic-tabla [data-ap="1"]'); await a.waitForTimeout(1500);
+  await a.selectOption("#ci-cat", "otro");
+  ok("Aprobar: el solicitante aparece en el Centro de invitaciones como Otro invitado", /Familiar Prueba/.test(await a.textContent("#ci-tabla")));
   await a.selectOption("#ci-cat", "");
   // Moderación de dedicatorias en el panel
   await a.click("details:has(#dd-tabla) summary"); await a.waitForSelector("#dd-tabla tbody tr");

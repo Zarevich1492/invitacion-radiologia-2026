@@ -272,7 +272,7 @@
   /* ---------- Vistas: Inicio · Programa · Confirmar · Mi pase · Mi listón ----------
      Navegación con el fragmento (#programa, #liston, …): el botón Atrás funciona y se puede entrar
      directamente a un apartado. El fragmento #t=… (enlace individual) se trata aparte, al inicio. */
-  const VISTAS = ["invitacion", "programa", "confirmar", "pase", "liston", "dedicatorias", "aportes"];
+  const VISTAS = ["invitacion", "programa", "confirmar", "pase", "liston", "dedicatorias", "aportes", "solicitar"];
   let vistaActual = null;
   const vistaDeHash = () => { const h = location.hash.slice(1); if (h === "inicio") return "invitacion"; return VISTAS.includes(h) ? h : null; };
   const esGraduando = () => ID && ID.categoria === "graduando";
@@ -282,6 +282,7 @@
   const permitida = (v) => {
     if (esGraduando()) return v === "invitacion" || v === "programa" || v === "liston" || v === "dedicatorias" || v === "aportes";
     if (v === "invitacion" || v === "programa" || v === "dedicatorias" || v === "aportes") return true;   // públicas para todos
+    if (v === "solicitar") return esOtro() && !servidor;   // «Otros» aún sin invitación autorizada
     if (v === "liston") return tieneListon();
     if (esOtro() && !servidor) return false;
     return v === "confirmar" || v === "pase";
@@ -291,6 +292,12 @@
     const n = document.querySelectorAll("#nav-inferior a:not([hidden])").length;
     $("#nav-inferior").style.gridTemplateColumns = `repeat(${n || 1},1fr)`;
     $("#btn-prog-confirmar").hidden = !permitida("confirmar");
+    // Dedicatorias y aportes siempre visibles en Inicio (todos los perfiles); «Otros» ve además las cinco opciones
+    $("#otros-tarjetas").hidden = false;
+    document.querySelectorAll("#otros-tarjetas [data-solo-otros]").forEach((li) => { li.hidden = !esOtro(); });
+    $("#op-solicitar").closest("li").hidden = !permitida("solicitar");
+    $("#t-otros").textContent = esOtro() ? "Acompáñanos como tú prefieras" : "Un gesto para nuestra promoción";
+    $("#nav-inferior").classList.toggle("nav-denso", n >= 6);
   }
   function mostrarVista(v, { foco = true } = {}) {
     if (!VISTAS.includes(v)) v = esGraduando() ? "liston" : "invitacion";
@@ -305,6 +312,7 @@
     if (v === "pase" && !esGraduando()) prepararPase();
     if (v === "dedicatorias" && window.Dedicatorias) window.Dedicatorias.abrir();
     if (v === "aportes" && window.Dedicatorias) window.Dedicatorias.abrirAportes();
+    if (v === "solicitar" && window.Dedicatorias) window.Dedicatorias.abrirSolicitud();
     if (foco) {
       const sel = v === "invitacion" && esGraduando() ? "#esp-nombre" : `section[data-vista="${v}"] h1, section[data-vista="${v}"] h2`;
       const t = document.querySelector(sel);
@@ -312,6 +320,8 @@
     }
   }
   document.addEventListener("click", (e) => {
+    const ver = e.target.closest("[data-accion=ver]");
+    if (ver && ID) { e.preventDefault(); document.querySelector(".inv-tarjeta").scrollIntoView({ behavior: "smooth", block: "center" }); return; }
     const a = e.target.closest("[data-ir]");
     if (!a || !ID) return;
     e.preventDefault();

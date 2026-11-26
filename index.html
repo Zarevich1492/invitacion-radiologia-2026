@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="version-recursos" content="202611260533">
+<meta name="version-recursos" content="202611260553">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>XXIV Promoción de Radiólogos | Invitación especial</title>
 <meta name="description" content="Tres momentos. Una misma celebración. Sábado 28 de noviembre de 2026.">
@@ -30,7 +30,7 @@
 <link rel="preload" href="assets/fonts/BodoniModa-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/EBGaramond-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/logos/promocion-xxiv-560.jpg" as="image">
-<link rel="stylesheet" href="css/estilos.css?v=202611260533">
+<link rel="stylesheet" href="css/estilos.css?v=202611260553">
 </head>
 <body>
 
@@ -109,7 +109,7 @@
       <button class="btn btn-primario" type="button" id="btn-token-continuar">Abrir mi invitación</button>
       <button class="btn btn-texto" type="button" id="btn-token-otro">No soy yo</button>
     </div>
-    <p class="nota nota-privacidad">La selección del nombre personaliza la invitación; no requiere cuenta ni contraseña.</p>
+    <p class="nota nota-privacidad">Selecciona cómo nos acompañas y descubre tu invitación personalizada.</p>
   </div>
 </section>
 
@@ -128,6 +128,7 @@
       <a href="#liston" data-ir="liston" hidden>Mi listón</a>
       <a href="#dedicatorias" data-ir="dedicatorias" class="nav-extra">Palabras</a>
       <a href="#aportes" data-ir="aportes" class="nav-extra">Aportes</a>
+      <a href="#solicitar" data-ir="solicitar" class="nav-extra" hidden>Solicitar invitación</a>
     </nav>
     <button class="btn btn-texto cambiar-nombre" type="button" id="btn-cambiar-nombre">Cambiar nombre</button>
   </div>
@@ -195,6 +196,18 @@
         <p class="mas-secciones"><a class="btn btn-texto" href="#dedicatorias" data-ir="dedicatorias">Dejar unas palabras</a><a class="btn btn-texto" href="#aportes" data-ir="aportes">Aportes voluntarios</a></p>
       </div>
     </div>
+
+    <section class="otros-tarjetas" id="otros-tarjetas" aria-labelledby="t-otros" hidden>
+      <h2 id="t-otros" class="otros-tit">Acompáñanos como tú prefieras</h2>
+      <ul class="op-lista">
+        <li data-solo-otros><a class="op" href="#invitacion" data-accion="ver"><svg viewBox="0 0 24 24" aria-hidden="true" class="op-ico"><path d="M4 7l8 6 8-6"/><rect x="3.5" y="5" width="17" height="14" rx="2"/></svg><b>Ver invitación</b><span>Abre la tarjeta de la promoción.</span></a></li>
+        <li data-solo-otros><a class="op" href="#programa" data-ir="programa"><svg viewBox="0 0 24 24" aria-hidden="true" class="op-ico"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><b>Programa</b><span>Las tres actividades del 28 de noviembre.</span></a></li>
+        <li><a class="op" href="#dedicatorias" data-ir="dedicatorias"><svg viewBox="0 0 24 24" aria-hidden="true" class="op-ico"><path d="M5 4h11l3 3v13H5z"/><path d="M8 11h8M8 15h5"/></svg><b>Dejar una dedicatoria</b><span>Unas palabras para nuestros especialistas.</span></a></li>
+        <li><a class="op" href="#aportes" data-ir="aportes"><svg viewBox="0 0 24 24" aria-hidden="true" class="op-ico"><path d="M12 20s-7-4.4-7-10a4 4 0 017-2.500A4 4 0 0119 10c0 5.600-7 10-7 10z"/></svg><b>Aporte voluntario</b><span>Un gesto por Pago Móvil, sin compromiso.</span></a></li>
+        <li data-solo-otros><a class="op" href="#solicitar" data-ir="solicitar" id="op-solicitar"><svg viewBox="0 0 24 24" aria-hidden="true" class="op-ico"><circle cx="9" cy="8" r="3.500"/><path d="M3 20c0-3.300 2.700-6 6-6s6 2.700 6 6M18 8v6M15 11h6"/></svg><b>Solicitar invitación</b><span>Cuéntanos quién te invita.</span></a></li>
+      </ul>
+      <p class="nota">Dedicatorias y aportes están abiertos a todos, sin contraseña, y no dependen de la asistencia.</p>
+    </section>
   </section>
 
   <!-- 02 · Programa -->
@@ -350,7 +363,6 @@
           <div class="dd-sticker-fila" id="dd-stickers"></div>
         </fieldset>
         <input class="trampa" id="dd-web" type="text" tabindex="-1" autocomplete="off" aria-hidden="true">
-        <div id="dd-turnstile" class="dd-turnstile"></div>
         <p class="rsvp-estado" id="dd-estado" role="status" aria-live="polite"></p>
         <button class="btn btn-primario" type="submit" id="dd-enviar">Enviar mis palabras</button>
         <p class="nota">Cada dedicatoria se revisa antes de publicarse en el libro.</p>
@@ -389,6 +401,42 @@
     <div class="vista-pie"><a class="btn btn-texto" href="#invitacion" data-ir="invitacion"><span aria-hidden="true">←</span> Inicio</a><a class="btn btn-texto" href="#dedicatorias" data-ir="dedicatorias">Dejar unas palabras</a></div>
   </section>
 
+  <!-- 08 · Solicitar invitación (Otros invitados) -->
+  <section class="vista vista-solicitar" id="vista-solicitar" data-vista="solicitar" aria-labelledby="t-solicitar" hidden>
+    <header class="vista-enc">
+      <span class="versalita">Otros invitados</span>
+      <h2 id="t-solicitar" tabindex="-1">Solicitar <em>invitación</em></h2>
+      <p>Cuéntanos quién eres y quién te invita. La organización revisará tu solicitud y te escribirá.</p>
+    </header>
+    <form class="papel" id="form-solic" novalidate autocomplete="off" style="max-width:560px">
+      <label class="etiqueta" for="sol-nombre">Nombre y apellido</label>
+      <input class="campo" id="sol-nombre" maxlength="80" autocomplete="name">
+      <label class="etiqueta" for="sol-tipo">¿Quién te invita?</label>
+      <select class="campo" id="sol-tipo">
+        <option value="padrino">Padrino o madrina</option>
+        <option value="especialista">Radiólogo 2026</option>
+        <option value="r1">Residente R1</option>
+        <option value="r2">Residente R2</option>
+        <option value="docente">Docente o egresado</option>
+        <option value="otro">Otro</option>
+      </select>
+      <label class="etiqueta" for="sol-quien">Nombre de quien te invita (obligatorio)</label>
+      <input class="campo" id="sol-quien" maxlength="80" list="sol-sugerencias" autocomplete="off">
+      <datalist id="sol-sugerencias"></datalist>
+      <label class="etiqueta" for="sol-tel">Teléfono de contacto, con prefijo internacional</label>
+      <input class="campo" id="sol-tel" type="tel" inputmode="tel" maxlength="24" placeholder="+58 412 1234567" autocomplete="tel">
+      <p class="nota">Tu número de teléfono será tratado de forma privada y solo lo usará la organización para responderte.</p>
+      <input class="trampa" id="sol-web" type="text" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <p class="rsvp-estado" id="sol-estado" role="status" aria-live="polite"></p>
+      <button class="btn btn-primario" type="submit" id="sol-enviar">Enviar solicitud</button>
+    </form>
+    <div class="dd-gracias" id="sol-gracias" hidden tabindex="-1">
+      <h3>Hemos recibido tu solicitud</h3>
+      <p class="nota">La organización la revisará y se comunicará contigo. Mientras tanto, puedes dejar una dedicatoria o conocer el programa.</p>
+    </div>
+    <div class="vista-pie"><a class="btn btn-texto" href="#invitacion" data-ir="invitacion"><span aria-hidden="true">←</span> Inicio</a><a class="btn btn-texto" href="#dedicatorias" data-ir="dedicatorias">Dejar unas palabras</a></div>
+  </section>
+
 </main>
 
 <!-- Navegación inferior (móviles) -->
@@ -398,6 +446,9 @@
   <a href="#confirmar" data-ir="confirmar"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M8 12.3l2.7 2.7L16.2 9.5"/></svg><span>Confirmar</span></a>
   <a href="#pase" data-ir="pase"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16v3a2 2 0 000 4v3H4v-3a2 2 0 000-4z"/><path d="M14 7v10" stroke-dasharray="1.6 1.8"/></svg><span>Mi pase</span></a>
   <a href="#liston" data-ir="liston" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg><span>Mi listón</span></a>
+  <a href="#dedicatorias" data-ir="dedicatorias"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h11l3 3v13H5z"/><path d="M8 11h8M8 15h5"/></svg><span>Palabras</span></a>
+  <a href="#aportes" data-ir="aportes"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 017-2.500A4 4 0 0119 10c0 5.600-7 10-7 10z"/></svg><span>Aportes</span></a>
+  <a href="#solicitar" data-ir="solicitar" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.500"/><path d="M3 20c0-3.300 2.700-6 6-6s6 2.700 6 6M18 8v6M15 11h6"/></svg><span>Solicitar</span></a>
 </nav>
 
 <!-- Escena 7 · Pase digital -->
@@ -409,11 +460,11 @@
   <style>.bienvenida{display:none!important}</style>
 </noscript>
 
-<script src="js/config.js?v=202611260533"></script>
-<script src="js/api.js?v=202611260533"></script>
-<script src="js/pase.js?v=202611260533"></script>
-<script src="js/app.js?v=202611260533"></script>
-<script src="js/dedicatorias.js?v=202611260533"></script>
-<script src="js/inicio.js?v=202611260533"></script>
+<script src="js/config.js?v=202611260553"></script>
+<script src="js/api.js?v=202611260553"></script>
+<script src="js/pase.js?v=202611260553"></script>
+<script src="js/app.js?v=202611260553"></script>
+<script src="js/dedicatorias.js?v=202611260553"></script>
+<script src="js/inicio.js?v=202611260553"></script>
 </body>
 </html>

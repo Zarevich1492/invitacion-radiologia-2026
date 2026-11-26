@@ -5,6 +5,15 @@ https://zarevich1492.github.io/invitacion-radiologia-2026/ (misma dirección sie
 Reversión: `git revert <commit>` o volver a una etiqueta: `git checkout -B main <etiqueta> && git push -f origin main`
 (solo con autorización expresa).
 
+## v2.12 · Cierre: acceso por contraseña, Otros invitados, dedicatorias/aportes visibles para todos, sin CAPTCHA (rama `acceso-por-codigo`; pendiente de publicar tras la migración SQL)
+- Cuatro contraseñas por categoría validadas en Supabase (hash bcrypt, sesiones de 12 h, límite de intentos, revocación); panel «Seguridad y accesos» para cambiarlas y revocar sesiones. «Otros invitados» de acceso libre.
+- Cloudflare Turnstile y toda verificación externa/telefónica **eliminados** (código, panel y SQL). Protección solo en servidor: validación, frecuencia, duplicados, saneamiento, topes y moderación obligatoria (aprobar, rechazar, ocultar, eliminar).
+- «Otros invitados»: cinco opciones visibles en Inicio (ver invitación, programa, dedicatoria, aporte, solicitar invitación). Solicitud con quién invita obligatorio (Padrino o madrina · Radiólogo 2026 · Residente R1 · R2 · Docente o egresado · Otro) y aprobación desde el panel; las pendientes no cuentan como asistencia.
+- «Palabras» y «Aportes» visibles en la barra de navegación y en Inicio de todos los perfiles.
+- Textos coherentes con el nuevo acceso: «Selecciona cómo nos acompañas y descubre tu invitación personalizada».
+- `supabase/instalar.sql` consolidado (esquema + acceso + dedicatorias + invitaciones + semilla), probado sobre la versión publicada sin pérdida de datos (`herramientas/probar_migracion.sh`).
+- Pruebas: SQL 46+30+25+37, aceptación 190, responsive 244, contraste 577.
+
 ## v2.11 · Centro de invitaciones (rama `acceso-por-codigo`; pendiente de publicar tras la migración SQL)
 - Generación masiva de enlaces individuales únicos, privados, reutilizables y revocables (selección múltiple, filtros, «Seleccionar todos»).
 - Autorización de actividades por invitado (individual o masiva, «Autorizar las tres», «Restablecer según categoría») sin cambiar el enlace ni las confirmaciones; el servidor aplica los permisos vigentes y se registra en una bitácora; los indicadores los reflejan.
