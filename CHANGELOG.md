@@ -5,6 +5,12 @@ https://zarevich1492.github.io/invitacion-radiologia-2026/ (misma dirección sie
 Reversión: `git revert <commit>` o volver a una etiqueta: `git checkout -B main <etiqueta> && git push -f origin main`
 (solo con autorización expresa).
 
+## v2.6 · Preparación de Supabase (clave publishable)
+- `api.js` compatible con la clave `sb_publishable_…` (no es un JWT: solo se envía en `apikey`).
+- `supabase/instalar.sql`: esquema + semilla en un solo archivo, probado en una base vacía.
+- `habilitaciones` también se retira del acceso público; `herramientas/verificar_supabase.js` (pruebas reales de RLS y persistencia).
+- La conexión (`js/config.js`) se publicará cuando la base de datos responda y supere la verificación.
+
 ## v2.5 · Docentes y egresados, cinco accesos y habilitación por actividad
 - Bienvenida con cinco accesos: Padrinos y madrinas · Docentes y egresados · Residentes R1 y R2 · Otros invitados ·
   Especialistas 2026 (este último solo cuando el módulo de listones esté publicado; usa `#btn-integrante`).

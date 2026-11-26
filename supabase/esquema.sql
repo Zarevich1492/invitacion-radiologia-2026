@@ -123,7 +123,7 @@ drop policy if exists admin_lectura on public.administradores;
 create policy admin_lectura on public.administradores for select to authenticated using (public.es_admin());
 -- intentos: sin políticas (solo accesible desde funciones security definer).
 
-revoke all on public.invitados, public.confirmaciones, public.intentos, public.administradores from anon;
+revoke all on public.invitados, public.confirmaciones, public.intentos, public.administradores, public.habilitaciones from anon;
 grant select on public.actividades, public.padrinos, public.categorias to anon, authenticated;
 grant select, insert, update, delete on public.actividades, public.padrinos, public.categorias, public.habilitaciones, public.invitados, public.confirmaciones to authenticated;
 grant select on public.administradores to authenticated;

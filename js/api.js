@@ -13,7 +13,7 @@
         const ctrl = new AbortController(); const t = setTimeout(() => ctrl.abort(), 12000);
         const r = await fetch(`${C.supabaseUrl}/rest/v1/rpc/${nombre}`, {
           method: "POST", signal: ctrl.signal,
-          headers: { "Content-Type": "application/json", apikey: C.supabaseAnonKey, Authorization: `Bearer ${C.supabaseAnonKey}` },
+          headers: Object.assign({ "Content-Type": "application/json", apikey: C.supabaseAnonKey }, /^eyJ/.test(C.supabaseAnonKey) ? { Authorization: `Bearer ${C.supabaseAnonKey}` } : {}),   // claves anon heredadas (JWT) y publishable (sb_publishable_…)
           body: JSON.stringify(args || {}),
         });
         clearTimeout(t);

@@ -17,4 +17,5 @@ python3 herramientas/generar_recursos.py
 node herramientas/componer_listones.js http://127.0.0.1:8765/ >/dev/null
 python3 herramientas/componer_listones.py
 python3 herramientas/generar_semilla_sql.py
+bash herramientas/generar_instalacion_sql.sh
 echo "Listo. Si cambió la semilla, vuelva a ejecutar supabase/semilla.sql en Supabase (SQL Editor)."

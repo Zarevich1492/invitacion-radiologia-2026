@@ -64,19 +64,18 @@ Tras identificarse, la invitación se organiza en cuatro apartados dentro de la 
 - Cada apartado tiene su dirección (`#invitacion`, `#programa`, `#confirmar`, `#pase`). Así, el botón Atrás funciona y se puede entrar directamente a cualquiera.
 - Los enlaces individuales `#t=…` se procesan antes y no interfieren con la navegación.
 
-## Puesta en marcha de Supabase (una sola vez, unos 10 minutos)
-1. Cree un proyecto gratuito en <https://supabase.com>. Elija una región cercana, por ejemplo `us-east-1`.
-2. Ejecute `supabase/esquema.sql`: *SQL Editor → New query →* pegue el archivo → **Run**.
-3. Ejecute `supabase/semilla.sql` de la misma forma. Crea las 3 actividades, las 4 categorías y los 10 padrinos, cada uno con su registro oficial «sin responder».
-4. Desactive el registro público: *Authentication → Sign In / Providers → Email*, opción **Allow new users to sign up** apagada.
-5. Cree a los organizadores en *Authentication → Users → Add user* (correo y contraseña).
-6. Autorícelos ejecutando en el SQL Editor:
+## Puesta en marcha de Supabase
+1. Cree un proyecto gratuito en <https://supabase.com> (ya existe: `cutihnjpffjlfkqngdry`).
+2. En *SQL Editor → New query*, pegue **todo** `supabase/instalar.sql` (esquema + semilla, un solo archivo) y pulse **Run**. Es idempotente: se puede repetir.
+3. Desactive el registro público: *Authentication → Sign In / Providers → Email* (o *Settings*) → **Allow new users to sign up: Off**. Sin esto, cualquiera puede crear una cuenta; no accede a datos (el acceso exige figurar en `administradores`), pero conviene cerrarlo.
+4. Cree a los organizadores en *Authentication → Users → Add user* (correo y contraseña).
+5. Autorícelos ejecutando en el SQL Editor:
    ```sql
    insert into public.administradores(user_id, email)
    select id, email from auth.users where email in ('organizador1@correo.com', 'organizador2@correo.com');
    ```
-7. Copie *Project Settings → API → Project URL* y la clave **anon / publishable** en `js/config.js`.
-   **Nunca use la clave `service_role`.**
+6. En *Project Settings → API Keys* copie la **Publishable key** (`sb_publishable_…`) y la *Project URL* en `js/config.js`. **Nunca** use la clave *secret* ni la `service_role`.
+7. Verifique: `NODE_USE_ENV_PROXY=1 node herramientas/verificar_supabase.js` (solo lectura) y, si lo desea, con `--escribir` (crea 2 registros «PRUEBA AUTOMÁTICA» que se eliminan desde el panel).
 
 ## Instrucciones para los organizadores (panel)
 Dirección: `https://zarevich1492.github.io/invitacion-radiologia-2026/admin/`. Se entra con correo y contraseña.
