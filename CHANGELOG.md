@@ -5,6 +5,11 @@ https://zarevich1492.github.io/invitacion-radiologia-2026/ (misma dirección sie
 Reversión: `git revert <commit>` o volver a una etiqueta: `git checkout -B main <etiqueta> && git push -f origin main`
 (solo con autorización expresa).
 
+## v2.13 · Pretarjeta (sobre con sello XXIV) y «Familia radiológica»
+- Enlaces individuales: escena de recepción obligatoria antes de la tarjeta 3D (sobre crema con sello rojo XXIV, tres logotipos oficiales, «Has recibido una invitación especial», nombre recuperado de Supabase, mensaje institucional, «Abrir mi invitación», animación de apertura y transición). Se muestra también con sesión previa en el navegador y nunca el formulario de categorías. Los enlaces y tokens existentes no cambian.
+- «Docentes y egresados» pasa a «Familia radiológica» («Quienes hacen posible nuestra historia»): una sola comunidad sin subdivisiones; misma contraseña; registros, permisos y enlaces anteriores intactos (códigos internos `docente`/`egresado` conservados); panel, filtros, indicadores, solicitudes y mensajes actualizados.
+- Pruebas: aceptación 207, responsive 244.
+
 ## v2.12.1 · Corrección de seguridad de autorización administrativa (rama `acceso-por-codigo`)
 - `_es_gestor()` y `admin_sincronizar_padrinos()` usaban `current_user`, que en funciones SECURITY DEFINER es siempre el propietario: cualquier usuario autenticado habría pasado la comprobación (en `admin_sincronizar_padrinos` ya desde v2.8). Ahora solo `es_admin()` (tabla `administradores`).
 - La inicialización desde el SQL Editor se separó en `init_definir_codigo`, `init_definir_aportes` y `_sincronizar_padrinos` (sin permisos para API) y la autorización por RPC en `admin_*`.

@@ -45,7 +45,7 @@ async function entrar(ctx, perfil) {
   const perfiles = [
     { nombre: "Padrinos", grupo: "padrinos", identificar: async (p) => { await p.waitForSelector("#lista-nombres [data-padrino]"); await p.click('[data-padrino="falcon-analy"]'); } },
     { nombre: "Especialistas", grupo: "especialistas", identificar: async (p) => { await p.waitForSelector("#lista-graduandos [data-graduando]"); await p.click('[data-graduando="arrieta-jorge"]'); } },
-    { nombre: "Docentes y egresados", grupo: "docentes", identificar: async (p) => { await p.waitForSelector("#opciones-cat .opcion-cat"); await p.click('[data-cat="docente"]'); await p.fill("#campo-nombre", "Prueba Visual"); await p.click("#form-nombre button[type=submit]"); } },
+    { nombre: "Familia radiológica", grupo: "docentes", identificar: async (p) => { await p.waitForSelector("#form-nombre:not([hidden])"); await p.fill("#campo-nombre", "Prueba Visual"); await p.click("#form-nombre button[type=submit]"); } },
     { nombre: "Residentes", grupo: "residentes", identificar: async (p) => { await p.waitForSelector("#opciones-cat .opcion-cat"); await p.click('[data-cat="r1"]'); await p.fill("#campo-nombre", "Prueba Visual"); await p.click("#form-nombre button[type=submit]"); } },
     { nombre: "Otros invitados", grupo: "otros", identificar: async (p) => { await p.waitForSelector("#form-nombre:not([hidden])"); await p.fill("#campo-nombre", "Prueba Visual"); await p.click("#form-nombre button[type=submit]"); } },
   ];
@@ -63,7 +63,7 @@ async function entrar(ctx, perfil) {
   const ops = await p.$$eval("#otros-tarjetas .op b", (x) => x.filter((e) => e.offsetParent).map((e) => e.textContent));
   ok("Otros: cinco tarjetas en Inicio", ops.join("|") === "Ver invitación|Programa|Dejar una dedicatoria|Aporte voluntario|Solicitar invitación", ops.join("|"));
   await p.evaluate(() => { location.hash = "solicitar"; }); await p.waitForFunction(() => document.body.dataset.vistaActiva === "solicitar");
-  ok("Solicitud: seis opciones de quién invita", (await p.$$eval("#sol-tipo option", (o) => o.map((x) => x.textContent).join("|"))) === "Padrino o madrina|Radiólogo 2026|Residente R1|Residente R2|Docente o egresado|Otro");
+  ok("Solicitud: seis opciones de quién invita", (await p.$$eval("#sol-tipo option", (o) => o.map((x) => x.textContent).join("|"))) === "Padrino o madrina|Radiólogo 2026|Residente R1|Residente R2|Familia radiológica|Otro");
   await p.screenshot({ path: process.env.CAPTURAS ? process.env.CAPTURAS + "/real-otros.png" : "/tmp/real-otros.png", fullPage: true });
   await b.close();
   console.log(`\n${n - fallos}/${n} comprobaciones reales de perfiles superadas`);

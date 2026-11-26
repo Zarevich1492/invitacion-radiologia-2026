@@ -79,13 +79,13 @@
       "variante": "A"
     },
     "docente": {
-      "etiqueta": "Docente",
-      "pase": "DOCENTE DE RADIOLOGÍA",
+      "etiqueta": "Familia radiológica",
+      "pase": "FAMILIA RADIOLÓGICA",
       "variante": "C"
     },
     "egresado": {
-      "etiqueta": "Egresado",
-      "pase": "EGRESADO DE RADIOLOGÍA",
+      "etiqueta": "Familia radiológica",
+      "pase": "FAMILIA RADIOLÓGICA",
       "variante": "C"
     },
     "r1": {

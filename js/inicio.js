@@ -69,7 +69,7 @@
   /* ---------- Acceso por código (el servidor valida el hash; la sesión es temporal) ---------- */
   const GRUPOS = {
     padrinos: { titulo: "Padrinos y madrinas", sub: "Invitados de honor" },
-    docentes: { titulo: "Docentes y egresados", sub: "Nuestra comunidad académica" },
+    docentes: { titulo: "Familia radiológica", sub: "Quienes hacen posible nuestra historia" },
     residentes: { titulo: "Residentes R1 y R2", sub: "Compañeros del posgrado" },
     especialistas: { titulo: "Especialistas 2026", sub: "Integrantes de la XXIV Promoción" },
   };
@@ -143,12 +143,12 @@
 
   let categoriaElegida = null;
   function mostrarPaso(p, aviso) {
-    for (const n of ["acceso", "codigo", "lista", "categoria", "token", "graduando"]) $("#paso-" + n).hidden = p !== n;
+    for (const n of ["acceso", "codigo", "lista", "categoria", "graduando"]) $("#paso-" + n).hidden = p !== n;
     if (p === "acceso") $("#acceso-pregunta").textContent = aviso ? "Tu nombre no aparece en el listado de padrinos. Elige cómo nos acompañas:" : "¿Cómo nos acompañas en esta celebración?";
   }
-  // Subcategorías por acceso (la categoría final se guarda en la base de datos como docente, egresado, r1, r2 u otro)
+  // Subcategorías por acceso (la categoría final se guarda como docente [= Familia radiológica], r1, r2 u otro; los registros «egresado» anteriores se conservan)
   const ACCESOS = {
-    docentes: { pregunta: "Docentes y egresados", opciones: [["docente", "Docente", "Docente del postgrado de Radiología"], ["egresado", "Egresado", "Egresado del postgrado de Radiología"]] },
+    docentes: { pregunta: "Familia radiológica", opciones: null, categoria: "docente" },   // una sola comunidad: sin subdivisiones (código interno «docente»)
     residentes: { pregunta: "Residentes R1 y R2", opciones: [["r1", "Residente de primer año", "R1 · Postgrado de Radiología"], ["r2", "Residente de segundo año", "R2 · Postgrado de Radiología"]] },
     otros: { pregunta: "Otros invitados", opciones: null, categoria: "otro" },
   };
@@ -181,19 +181,36 @@
   });
   $("#campo-nombre").addEventListener("input", () => $("#campo-nombre").setCustomValidity(""));
 
+  // Pretarjeta: sobre crema con sello XXIV. Se muestra SIEMPRE al abrir un enlace individual válido (aunque haya sesión previa),
+  // con el nombre recuperado de Supabase, y solo entonces se pasa a la tarjeta tridimensional.
+  const sinMovimiento = () => window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const espera = (ms) => new Promise((r) => setTimeout(r, sinMovimiento() ? 0 : ms));
+  function salirDelSobre() { document.documentElement.classList.remove("modo-sobre"); }
   async function usarToken(token) {
+    const esc = $("#sobre-escena");
     try {
       const v = await window.API.miInvitacion(token);
-      if (!v) { mostrarPaso("acceso"); $("#acceso-pregunta").textContent = "Este enlace de invitación ya no está vigente. Elige cómo nos acompañas:"; return; }
+      if (!v) { salirDelSobre(); mostrarPaso("acceso"); $("#acceso-pregunta").textContent = "Este enlace de invitación ya no está vigente. Elige cómo nos acompañas:"; return; }
       const id = { categoria: v.categoria, padrinoId: v.padrino_id, nombre: v.nombre };
       window.API.recordarToken(claveIdentidad(id), token);
       servidor = v;
+      document.documentElement.classList.add("modo-sobre");
       $("#token-saludo").textContent = v.nombre;
-      mostrarPaso("token");
-      $("#btn-token-continuar").onclick = () => entrar(id, v);
-      $("#btn-token-otro").onclick = () => { servidor = null; mostrarPaso("acceso"); };
-    } catch (e) { mostrarPaso("acceso"); }
+      esc.classList.remove("cargando");
+      const btn = $("#btn-token-continuar"); btn.disabled = false; btn.focus({ preventScroll: true });
+      btn.onclick = async () => {
+        btn.disabled = true; esc.classList.add("abierto");           // el sobre se abre
+        await espera(1250);
+        await entrar(id, v);                                          // prepara la tarjeta 3D detrás del sobre
+        esc.classList.add("saliendo");                                // transición suave hacia la tarjeta
+        await espera(750);
+        salirDelSobre(); esc.classList.remove("saliendo", "abierto"); esc.classList.add("cargando");
+      };
+      $("#btn-token-otro").onclick = () => { servidor = null; salirDelSobre(); mostrarPaso("acceso"); };
+    } catch (e) { salirDelSobre(); mostrarPaso("acceso"); }
   }
+  // Un enlace individual pegado en una pestaña ya abierta: se recarga para mostrar siempre el sobre
+  addEventListener("hashchange", () => { if (/^#t=[A-Za-z0-9_-]{20,100}$/.test(location.hash)) location.reload(); });
 
   /* ---------- Elegibilidad y variante ---------- */
   function actividadesDe(id) {

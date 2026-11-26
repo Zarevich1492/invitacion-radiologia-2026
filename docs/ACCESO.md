@@ -2,7 +2,7 @@
 
 ## Qué protege y qué no
 - Los códigos se guardan **solo como hash bcrypt** en Supabase; nunca están en el repositorio. Sesiones de 12 h, 8 intentos fallidos por IP cada 10 min, revocación por categoría.
-- El servidor separa permisos por categoría (`guardar_con_sesion`): padrinos, docentes y egresados, residentes y especialistas (estos últimos no confirman asistencia). «Otros invitados», Dedicatorias y Aportes son de acceso libre. «Otros» no confirma sin autorización.
+- El servidor separa permisos por categoría (`guardar_con_sesion`): padrinos, familia radiológica, residentes y especialistas (estos últimos no confirman asistencia). «Otros invitados», Dedicatorias y Aportes son de acceso libre. «Otros» no confirma sin autorización.
 - Un código colectivo **no verifica identidad individual**.
 - **Pendiente (bloqueo externo):** los archivos de `assets/listones/` y los nombres de `datos/evento.json` siguen siendo públicos en el repositorio hasta migrarlos a almacenamiento privado (requiere desplegar una función en Supabase). Ver CHANGELOG.
 

@@ -70,6 +70,7 @@
       r2: P.filter((x) => x.categoria === "r2").length,
       docentes: P.filter((x) => x.categoria === "docente").length,
       egresados: P.filter((x) => x.categoria === "egresado").length,
+      familia: P.filter((x) => x.categoria === "docente" || x.categoria === "egresado").length,   // Familia radiológica (una sola comunidad)
       posiblesDuplicados: P.filter((x) => x.duplicado).length,
       otros: P.filter((x) => x.categoria === "otro").length,
       invitadosUnicos: P.length,

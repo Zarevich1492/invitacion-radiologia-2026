@@ -55,7 +55,7 @@ async function rutaB(p, cat, nombre) {
   await p.goto(BASE, { waitUntil: "networkidle" });
   const acceso = { r1: "residentes", r2: "residentes", otro: "otros", docente: "docentes", egresado: "docentes" }[cat];
   if (acceso === "otros") await p.click(`[data-acceso="otros"]`); else await conCodigo(p, acceso);
-  if (cat !== "otro") await p.click(`[data-cat="${cat}"]`);
+  if (cat === "r1" || cat === "r2") await p.click(`[data-cat="${cat}"]`);   // «Familia radiológica» y «Otros» no se subdividen
   await p.fill("#campo-nombre", nombre);
   await p.click("#form-nombre button[type=submit]"); await p.waitForTimeout(2300);
 }
@@ -80,7 +80,7 @@ async function responder(p, resp) {
 
   // Pantalla inicial: cinco accesos, Especialistas destacado en rojo, candado en los cuatro restringidos
   const accesos = await p.$$eval(".acceso", (a) => a.filter((x) => !x.hidden && x.getBoundingClientRect().width > 0).map((x) => x.querySelector("b").textContent.replace(" (acceso con código)", "").trim() + "·" + x.querySelector("span:not(.sr-solo)").textContent.trim()));
-  ok("Bienvenida: cinco accesos con sus subtítulos", accesos.join("|") === "Padrinos y madrinas·Invitados de honor|Docentes y egresados·Nuestra comunidad académica|Residentes R1 y R2·Compañeros del posgrado|Otros invitados·Familiares, amigos y colegas|Especialistas 2026·Integrantes de la XXIV Promoción", accesos.join("|"));
+  ok("Bienvenida: cinco accesos con sus subtítulos", accesos.join("|") === "Padrinos y madrinas·Invitados de honor|Familia radiológica·Quienes hacen posible nuestra historia|Residentes R1 y R2·Compañeros del posgrado|Otros invitados·Familiares, amigos y colegas|Especialistas 2026·Integrantes de la XXIV Promoción", accesos.join("|"));
   ok("Bienvenida: candado discreto en las cuatro categorías restringidas (no en «Otros»)", (await p.$$eval(".acceso .candado", (c) => c.length)) === 4 && (await p.$$eval('[data-acceso="otros"] .candado', (c) => c.length)) === 0);
   ok("Bienvenida: «Especialistas 2026» con fondo rojo institucional", (await p.$eval("#btn-integrante", (b) => getComputedStyle(b).backgroundColor)) === "rgb(185, 28, 28)");
   ok("Bienvenida: frase institucional intacta", (await p.textContent("#bienvenida-titulo")).replace(/\s+/g, " ").trim() === "Hay momentos que merecen ser compartidos");
@@ -92,7 +92,7 @@ async function responder(p, resp) {
   ok("Código incorrecto: mensaje y no avanza", (await p.textContent("#codigo-estado")).includes("no es correcto") && !(await p.isVisible("#lista-nombres")));
   await p.click("#btn-volver-inicio"); ok("Volver al inicio regresa a los cinco accesos", await p.isVisible('[data-acceso="especialistas"]'));
   await p.click('[data-acceso="docentes"]'); await p.fill("#campo-codigo", codigoDe("padrinos")); await p.click("#btn-ingresar"); await p.waitForTimeout(700);
-  ok("El código de padrinos NO abre «Docentes y egresados»", !(await p.isVisible("#opciones-cat")) && (await p.textContent("#codigo-estado")).includes("no es correcto"));
+  ok("El código de padrinos NO abre «Familia radiológica»", !(await p.isVisible("#opciones-cat")) && (await p.textContent("#codigo-estado")).includes("no es correcto"));
   await p.click("#btn-volver-inicio");
   await conCodigo(p, "padrinos");
   // Identificación
@@ -400,7 +400,7 @@ async function responder(p, resp) {
   await p.click('#otros-tarjetas [data-ir="solicitar"]'); await p.waitForFunction(() => document.body.dataset.vistaActiva === "solicitar");
   await p.waitForFunction(() => !document.getElementById("sol-enviar").disabled, null, { timeout: 8000 });
   await p.fill("#sol-nombre", "Familiar Prueba"); await p.selectOption("#sol-tipo", "padrino"); await p.fill("#sol-tel", "+58 414 5550000");
-  ok("Solicitud: seis opciones de quién invita", (await p.$$eval("#sol-tipo option", (o) => o.map((x) => x.textContent).join("|"))) === "Padrino o madrina|Radiólogo 2026|Residente R1|Residente R2|Docente o egresado|Otro");
+  ok("Solicitud: seis opciones de quién invita", (await p.$$eval("#sol-tipo option", (o) => o.map((x) => x.textContent).join("|"))) === "Padrino o madrina|Radiólogo 2026|Residente R1|Residente R2|Familia radiológica|Otro");
   await p.click("#sol-enviar"); await p.waitForTimeout(300);
   ok("Solicitud: el nombre de quien invita es obligatorio", (await p.textContent("#sol-estado")).includes("nombre de quien te invita") && await p.isVisible("#form-solic"));
   await p.fill("#sol-quien", "Dra. Analy Falcón");
@@ -417,13 +417,13 @@ async function responder(p, resp) {
   const navOt = await p.$$eval(".nav-inferior a", (a) => a.filter((x) => !x.hidden && getComputedStyle(x).display !== "none").map((x) => x.textContent.trim()).join("|"));
   ok("Otros: navegación Inicio|Programa|Palabras|Aportes|Solicitar", navOt === "Inicio|Programa|Palabras|Aportes|Solicitar", navOt);
   await p.close();
-  // Docentes y egresados
+  // Familia radiológica (una sola comunidad, sin subdivisiones)
   p = await nuevaPagina(ctx, errores, externos);
-  await p.goto(BASE, { waitUntil: "networkidle" }); await conCodigo(p, "docentes"); await p.waitForSelector("#opciones-cat .opcion-cat");
-  const subs = await p.$$eval("#opciones-cat .opcion-cat b", (b) => b.map((x) => x.textContent).join("|"));
-  ok("Docentes y egresados: elegir entre Docente y Egresado", subs === "Docente|Egresado", subs);
-  await p.click('[data-cat="docente"]'); await p.fill("#campo-nombre", "Dr. Luis Ángel Núñez"); await p.click("#form-nombre button[type=submit]"); await p.waitForTimeout(2300);
-  ok("Docente: invitación personalizada y variante general", (await p.textContent("#saludo-eyebrow")) === "Docente" && (await p.textContent("#saludo-nombre")) === "Dr. Luis Ángel Núñez" && (await p.evaluate(() => window.__flujo.identidad.variante)) === "C");
+  await p.goto(BASE, { waitUntil: "networkidle" }); await conCodigo(p, "docentes"); await p.waitForSelector("#form-nombre:not([hidden])");
+  ok("Familia radiológica: sin subdivisiones visibles (no se elige docente/egresado)", !(await p.isVisible("#opciones-cat")) && (await p.$$("#opciones-cat .opcion-cat")).length === 0);
+  ok("Familia radiológica: título de la identificación", (await p.textContent("#categoria-pregunta")) === "Familia radiológica");
+  await p.fill("#campo-nombre", "Dr. Luis Ángel Núñez"); await p.click("#form-nombre button[type=submit]"); await p.waitForTimeout(2300);
+  ok("Familia radiológica: invitación personalizada y variante general", (await p.textContent("#saludo-eyebrow")) === "Familia radiológica" && (await p.textContent("#saludo-nombre")) === "Dr. Luis Ángel Núñez" && (await p.evaluate(() => window.__flujo.identidad.variante)) === "C");
   ok("Docente: la recepción no se asume (solo clase y caravana)", (await p.evaluate(() => window.__flujo.actividades.join())) === "clase,caravana");
   const rd = await responder(p, { clase: "asistira", caravana: "por_confirmar" });
   ok("Docente: confirmación guardada", rd.clase.includes("exito"), rd.texto);
@@ -431,8 +431,12 @@ async function responder(p, resp) {
   ok("Docente: pase con su categoría", true);
   await p.close();
   p = await nuevaPagina(ctx, errores, externos);
-  await rutaB(p, "egresado", "Dra. Marta Rivas");
-  ok("Egresado: invitación y confirmación", (await p.textContent("#saludo-eyebrow")) === "Egresado" && (await responder(p, { clase: "no_asistira" })).clase.includes("exito"));
+  // Registro anterior como «egresado» (creado antes del cambio): se conserva y se presenta como Familia radiológica
+  const ses = await (await p.request.post(API + "/rest/v1/rpc/acceso_validar", { headers: { apikey: "x", "Content-Type": "application/json" }, data: { p_grupo: "docentes", p_codigo: "codigo-e2e-docentes" } })).json();
+  const leg = await (await p.request.post(API + "/rest/v1/rpc/guardar_con_sesion", { headers: { apikey: "x", "Content-Type": "application/json" }, data: { p_sesion: ses.sesion, p_token: null, p_categoria: "egresado", p_padrino_id: null, p_nombre: "Dra. Marta Rivas", p_respuestas: { clase: "no_asistira" }, p_trampa: null, p_nota: null } })).json();
+  ok("Registro «egresado» anterior sigue siendo válido (permisos conservados)", leg.invitacion && leg.invitacion.categoria === "egresado" && leg.invitacion.actividades.join() === "clase,caravana");
+  await p.goto(BASE + "#t=" + leg.token, { waitUntil: "networkidle" }); await p.waitForSelector("#sobre-escena:not(.cargando)"); await p.click("#btn-token-continuar"); await p.waitForTimeout(2300);
+  ok("Registro anterior: se presenta como «Familia radiológica»", (await p.textContent("#saludo-eyebrow")) === "Familia radiológica");
   await p.close();
   p = await nuevaPagina(ctx, errores, externos);
   await p.goto(BASE, { waitUntil: "networkidle" }); await conCodigo(p, "padrinos"); await p.click("#btn-no-aparece");
@@ -491,19 +495,17 @@ async function responder(p, resp) {
   ok("CSV compatible con Excel (BOM UTF-8, «;»)", txt.charCodeAt(0) === 0xfeff && txt.split("\r\n")[0].includes(";") && txt.includes("Dra. Analy Falcón"), txt.split("\r\n")[0]);
 
   const tD = await a.$$eval(".adm-tile", (t) => Object.fromEntries(t.map((x) => [x.querySelector("span").textContent, +x.querySelector("b").textContent])));
-  ok("Panel: docentes y egresados en los indicadores", tD["Docentes registrados"] === 1 && tD["Egresados registrados"] === 1, JSON.stringify({ d: tD["Docentes registrados"], e: tD["Egresados registrados"] }));
-  await a.selectOption("#f-cat", "egresado");
-  ok("Panel: filtro por categoría Egresado", (await a.$$("#tabla tbody tr")).length === 1);
-  await a.selectOption("#f-cat", "docente");
-  ok("Panel: filtro por categoría Docente", (await a.$$("#tabla tbody tr")).length === 1 && /Docente/.test(await a.textContent("#tabla tbody")));
+  ok("Panel: «Familia radiológica registrada» agrupa docentes y egresados", tD["Familia radiológica registrada"] === 2 && !("Docentes registrados" in tD) && !("Egresados registrados" in tD), JSON.stringify(tD));
+  await a.selectOption("#f-cat", "familia");
+  ok("Panel: filtro «Familia radiológica» incluye ambos registros", (await a.$$("#tabla tbody tr")).length === 2 && /Familia radiológica/.test(await a.textContent("#tabla tbody")));
   await a.selectOption("#f-cat", "");
   const dcsv2 = a.waitForEvent("download"); await a.click("#exportar"); const csv2 = await dcsv2; await csv2.saveAs(`${OUT}/confirmaciones-2.csv`);
   const txt2 = fs.readFileSync(`${OUT}/confirmaciones-2.csv`, "utf8");
-  ok("CSV incluye docentes y egresados con su categoría", /Dr\. Luis Ángel Núñez";"Docente"/.test(txt2) && /Dra\. Marta Rivas";"Egresado"/.test(txt2));
+  ok("CSV: ambos registros con la denominación «Familia radiológica»", /Dr\. Luis Ángel Núñez";"Familia radiológica"/.test(txt2) && /Dra\. Marta Rivas";"Familia radiológica"/.test(txt2));
   // ===== Centro de invitaciones: enlaces masivos, autorizaciones con el mismo enlace, mensajes, revocación =====
   await a.click("#ci > summary"); await a.waitForSelector("#ci-tabla tbody tr");
-  await a.selectOption("#ci-cat", "docente");
-  ok("Centro: filtro por categoría", (await a.$$("#ci-tabla tbody tr")).length === 1);
+  await a.selectOption("#ci-cat", "familia"); ok("Centro: filtro «Familia radiológica» agrupa ambos registros", (await a.$$("#ci-tabla tbody tr")).length === 2); await a.fill("#ci-buscar", "Luis Ángel");
+  ok("Centro: filtro por categoría y búsqueda", (await a.$$("#ci-tabla tbody tr")).length === 1);
   await a.check("#ci-todos"); ok("Centro: «Seleccionar todos» marca los visibles", (await a.textContent("#ci-n")).startsWith("1 seleccionados"));
   await a.click("#ci-generar"); await a.waitForTimeout(900);
   ok("Centro: enlaces generados y vigentes", /Vigente/.test(await a.textContent("#ci-tabla")) && /Sin enviar/.test(await a.textContent("#ci-tabla")));
@@ -519,14 +521,14 @@ async function responder(p, resp) {
   await a.fill("#ci-c-docentes", "codigo-e2e-docentes"); await a.click('[data-cod="docentes"]'); await a.waitForTimeout(500);
   await a.click("#ci-copiar-res"); await a.waitForTimeout(300);
   const mr = await a.evaluate(() => window.__cp[1]);
-  ok("Mensaje de acceso reservado: categoría, contraseña vigente e instrucciones", /Acceso reservado · Docentes y egresados/.test(mr) && mr.includes("Contraseña vigente: codigo-e2e-docentes") && /1\. Abre la invitación/.test(mr), mr.slice(0, 100));
+  ok("Mensaje de acceso reservado: categoría, contraseña vigente e instrucciones", /Acceso reservado · Familia radiológica/.test(mr) && mr.includes("Contraseña vigente: codigo-e2e-docentes") && /1\. Abre la invitación/.test(mr), mr.slice(0, 100));
   ok("La contraseña no se persiste en el navegador", await a.evaluate(() => !JSON.stringify(Object.assign({}, localStorage, sessionStorage)).includes("codigo-e2e")));
   await a.click("#ci-colectivos"); await a.click('[data-col="res"][data-c="otro"]'); await a.waitForTimeout(300);
   ok("Invitación colectiva de «Otros»: acceso libre sin contraseña", /no requiere contraseña/.test(await a.evaluate(() => window.__cp[2])));
   // El destinatario abre su enlace: bienvenida personalizada y actividades vigentes
   const pe = await nuevaPagina(ctx, errores, externos);
-  await pe.goto("about:blank"); await pe.goto(enl, { waitUntil: "networkidle" }); await pe.waitForSelector("#paso-token:not([hidden])");
-  ok("Destinatario: «Has recibido una invitación especial», nombre y botón «Abrir mi invitación»", (await pe.textContent("#paso-token")).includes("Has recibido una invitación especial") && (await pe.textContent("#token-saludo")) === "Dr. Luis Ángel Núñez" && (await pe.textContent("#btn-token-continuar")) === "Abrir mi invitación");
+  await pe.goto("about:blank"); await pe.goto(enl, { waitUntil: "networkidle" }); await pe.waitForSelector("#sobre-escena:not(.cargando)");
+  ok("Destinatario: «Has recibido una invitación especial», nombre y botón «Abrir mi invitación»", (await pe.textContent("#sobre-escena")).includes("Has recibido una invitación especial") && (await pe.textContent("#token-saludo")) === "Dr. Luis Ángel Núñez" && (await pe.textContent("#btn-token-continuar")) === "Abrir mi invitación");
   await pe.click("#btn-token-continuar"); await pe.waitForTimeout(2200);
   const a0 = await pe.evaluate(() => window.__flujo.actividades.join());
   ok("Destinatario: actividades según la categoría (clase, caravana)", a0 === "clase,caravana", a0);
@@ -556,7 +558,7 @@ async function responder(p, resp) {
   await pe.goto("about:blank"); await pe.goto(enl, { waitUntil: "networkidle" }); await pe.waitForTimeout(800);
   ok("Revocar: el enlace deja de funcionar", (await pe.textContent("#acceso-pregunta")).includes("ya no está vigente"));
   await pe.close();
-  await a.selectOption("#ci-cat", "");
+  await a.fill("#ci-buscar", ""); await a.selectOption("#ci-cat", "");
   // Solicitudes de invitación en el panel
   await a.click("#solic > summary"); await a.waitForSelector('#solic-tabla [data-ap="1"]');
   ok("Panel: solicitud con teléfono y «Lo invita» (Dra. Analy Falcón)", /Dra\. Analy Falcón/.test(await a.textContent("#solic-tabla")) && /\+584145550000/.test(await a.textContent("#solic-tabla")));
@@ -564,6 +566,40 @@ async function responder(p, resp) {
   await a.selectOption("#ci-cat", "otro");
   ok("Aprobar: el solicitante aparece en el Centro de invitaciones como Otro invitado", /Familiar Prueba/.test(await a.textContent("#ci-tabla")));
   await a.selectOption("#ci-cat", "");
+  // ===== Pretarjeta (sobre con sello XXIV) en sesión privada y móvil, también con sesión previa en el navegador =====
+  {
+    const ses2 = await (await p.request.post(API + "/rest/v1/rpc/acceso_validar", { headers: { apikey: "x", "Content-Type": "application/json" }, data: { p_grupo: "docentes", p_codigo: "codigo-e2e-docentes" } })).json();
+    const reg = await (await p.request.post(API + "/rest/v1/rpc/guardar_con_sesion", { headers: { apikey: "x", "Content-Type": "application/json" }, data: { p_sesion: ses2.sesion, p_token: null, p_categoria: "docente", p_padrino_id: null, p_nombre: "Dra. Sobre Prueba", p_respuestas: { clase: "asistira" }, p_trampa: null, p_nota: null } })).json();
+    const enlaceSobre = BASE + "#t=" + reg.token;
+    for (const [etq, opts] of [["sesión privada · móvil", { ...devices["iPhone 13"] }], ["sesión privada · escritorio", { viewport: { width: 1366, height: 768 } }]]) {
+      const cx = await browser.newContext(opts); const px = await nuevaPagina(cx, errores, externos);
+      await px.goto(enlaceSobre, { waitUntil: "domcontentloaded" });
+      ok(`Sobre (${etq}): el formulario general de categorías no se muestra`, !(await px.isVisible("#paso-acceso")) && !(await px.isVisible(".accesos")));
+      await px.waitForSelector("#sobre-escena:not(.cargando)", { timeout: 10000 });
+      const t = await px.textContent("#sobre-escena");
+      ok(`Sobre (${etq}): «Has recibido una invitación especial», nombre de Supabase, mensaje y botón`, t.includes("Has recibido una invitación especial") && (await px.textContent("#token-saludo")) === "Dra. Sobre Prueba" && t.includes("desea compartir contigo este momento tan significativo") && (await px.textContent("#btn-token-continuar")) === "Abrir mi invitación");
+      ok(`Sobre (${etq}): sello rojo XXIV y tres logotipos oficiales`, (await px.textContent(".sello")).trim() === "XXIV" && (await px.$$eval(".sobre-logos img", (i) => i.filter((x) => x.complete && x.naturalWidth > 0).length)) === 3);
+      const sw = await px.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth, document.getElementById("btn-token-continuar").getBoundingClientRect().bottom, innerHeight]);
+      ok(`Sobre (${etq}): sin desplazamiento horizontal y botón a la vista`, sw[0] <= sw[1] && sw[2] <= sw[3], sw.join(","));
+      await px.screenshot({ path: `${OUT}/20-sobre-${etq.includes("móvil") ? "movil" : "escritorio"}.png` });
+      await px.click("#btn-token-continuar"); await px.waitForTimeout(500);
+      ok(`Sobre (${etq}): animación de apertura (solapa y carta)`, await px.evaluate(() => document.getElementById("sobre-escena").classList.contains("abierto") && getComputedStyle(document.querySelector(".sello")).opacity !== "1" || document.getElementById("sobre-escena").classList.contains("abierto")));
+      await px.waitForFunction(() => document.body.classList.contains("identificado") && !document.documentElement.classList.contains("modo-sobre"), null, { timeout: 12000 });
+      ok(`Sobre (${etq}): transición a la tarjeta tridimensional personalizada`, (await px.isVisible("#escenario")) && (await px.textContent("#saludo-nombre")) === "Dra. Sobre Prueba");
+      await px.screenshot({ path: `${OUT}/21-tarjeta-tras-sobre-${etq.includes("móvil") ? "movil" : "escritorio"}.png` });
+      // Vuelve a abrir el mismo enlace con la sesión anterior del navegador (identidad y token guardados): debe mostrarse el sobre otra vez
+      await px.goto("about:blank"); await px.goto(enlaceSobre, { waitUntil: "domcontentloaded" });
+      await px.waitForSelector("#sobre-escena:not(.cargando)", { timeout: 10000 });
+      ok(`Sobre (${etq}): con sesión previa en el navegador se muestra de nuevo, sin saltar a Inicio ni al formulario`, !(await px.isVisible(".accesos")) && !(await px.evaluate(() => document.body.classList.contains("identificado"))) && (await px.isVisible("#btn-token-continuar")));
+      await cx.close();
+    }
+    // Un enlace pegado en una pestaña ya abierta también muestra el sobre
+    const pz = await nuevaPagina(ctx, errores, externos);
+    await pz.goto(BASE, { waitUntil: "networkidle" }); await pz.evaluate((h) => { location.hash = h; }, "t=" + reg.token);
+    await pz.waitForSelector("#sobre-escena:not(.cargando)", { timeout: 10000 });
+    ok("Sobre: enlace pegado en una pestaña ya abierta muestra la escena", await pz.isVisible("#btn-token-continuar"));
+    await pz.close();
+  }
   // Moderación de dedicatorias en el panel
   await a.click("details:has(#dd-tabla) summary"); await a.waitForSelector("#dd-tabla tbody tr");
   const ddTile = await a.$$eval("#dd-indicadores .adm-tile", (t) => Object.fromEntries(t.map((x) => [x.querySelector("span").textContent, +x.querySelector("b").textContent])));
@@ -582,7 +618,7 @@ async function responder(p, resp) {
   ok("Ocultar: la dedicatoria deja de ser pública", (await (await a.request.post(API + "/rest/v1/rpc/dedicatorias_publicas", { headers: { apikey: "x", "Content-Type": "application/json" }, data: {} })).json()).length === 0);
   await a.click("details:has(#reglas) summary");
   const matriz = await a.$$eval("#reglas tbody tr", (f) => f.map((r) => r.querySelector("th").textContent.trim()));
-  ok("Panel: matriz de habilitación con las seis categorías", matriz.length === 6 && matriz.some((m) => /Docente/.test(m)) && matriz.some((m) => /Egresado/.test(m)), matriz.join(" | "));
+  ok("Panel: matriz de habilitación con Familia radiológica como una sola fila", matriz.length === 5 && matriz.filter((m) => /Familia radiológica/.test(m)).length === 1, matriz.join(" | "));
   await a.check('#reglas input[data-cat="docente"][data-act="recepcion"]'); await a.waitForTimeout(1500);
   const pdoc = await nuevaPagina(ctx, errores, externos);
   await rutaB(pdoc, "docente", "Dra. Ana Soto");
@@ -606,7 +642,7 @@ async function responder(p, resp) {
   await a.click("#dlg-enlace [data-cerrar]");
   const pi = await nuevaPagina(ctx, errores, externos);
   await pi.goto(BASE + "#t=" + enlace.split("#t=")[1], { waitUntil: "networkidle" }); await pi.waitForTimeout(800);
-  ok("Enlace individual: reconoce a la persona", (await pi.textContent("#token-saludo")) === "Dra. Jenny Sosa" && (await pi.textContent("#paso-token")).includes("Has recibido una invitación especial"));
+  ok("Enlace individual: reconoce a la persona", (await pi.textContent("#token-saludo")) === "Dra. Jenny Sosa" && (await pi.textContent("#sobre-escena")).includes("Has recibido una invitación especial"));
   ok("Enlace individual: el token se retira de la barra de direcciones", !pi.url().includes("#t="));
   await pi.click("#btn-token-continuar"); await pi.waitForTimeout(2200);
   const ri = await responder(pi, { clase: "asistira", caravana: "asistira", recepcion: "asistira" });

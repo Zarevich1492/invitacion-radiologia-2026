@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="version-recursos" content="202611260608">
+<meta name="version-recursos" content="202611261227">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>XXIV Promoción de Radiólogos | Invitación especial</title>
 <meta name="description" content="Tres momentos. Una misma celebración. Sábado 28 de noviembre de 2026.">
@@ -11,6 +11,7 @@
 <meta name="color-scheme" content="only light">
 <meta name="supported-color-schemes" content="light">
 <meta name="darkreader-lock">
+<script>if(/^#t=/.test(location.hash))document.documentElement.classList.add("modo-sobre")</script>
 <meta name="referrer" content="no-referrer">
 <link rel="canonical" href="https://zarevich1492.github.io/invitacion-radiologia-2026/">
 <meta property="og:type" content="website">
@@ -30,11 +31,34 @@
 <link rel="preload" href="assets/fonts/BodoniModa-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/EBGaramond-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/logos/promocion-xxiv-560.jpg" as="image">
-<link rel="stylesheet" href="css/estilos.css?v=202611260608">
+<link rel="stylesheet" href="css/estilos.css?v=202611261227">
 </head>
 <body>
 
 <!-- ===================== Escena 1 · Bienvenida e identificación ===================== -->
+<!-- Pretarjeta: recepción del enlace individual (sobre crema con sello XXIV) -->
+<section class="sobre-escena cargando" id="sobre-escena" aria-labelledby="sobre-titulo">
+  <div class="sobre-caja">
+    <div class="sobre-logos" aria-label="Universidad de Los Andes · Departamento de Radiología y Diagnóstico por Imagen · XXIV Promoción">
+      <img src="assets/logos/ula.jpg" alt="Universidad de Los Andes, Venezuela" width="1215" height="392">
+      <img class="logo-depto" src="assets/logos/departamento-radiologia.jpg" alt="Departamento de Radiología y Diagnóstico por Imagen" width="603" height="707">
+      <img class="logo-promo" src="assets/logos/promocion-xxiv-560.jpg" alt="XXIV Promoción de Radiólogos, ULA 2026" width="560" height="784">
+    </div>
+    <div class="sobre" aria-hidden="true">
+      <div class="sobre-fondo"></div>
+      <div class="sobre-carta"><i></i><i></i><i></i></div>
+      <div class="sobre-frente"></div>
+      <div class="sobre-solapa"></div>
+      <div class="sello"><span>XXIV</span></div>
+    </div>
+    <span class="versalita" id="sobre-titulo">Has recibido una invitación especial</span>
+    <h1 class="sobre-nombre" id="token-saludo" aria-live="polite">Preparando tu invitación…</h1>
+    <p class="sobre-msg">La XXIV Promoción de Radiólogos de la Universidad de Los Andes desea compartir contigo este momento tan significativo.</p>
+    <button class="btn btn-primario" type="button" id="btn-token-continuar" disabled>Abrir mi invitación</button>
+    <button class="btn btn-texto" type="button" id="btn-token-otro">No soy yo</button>
+  </div>
+</section>
+
 <section class="bienvenida" id="bienvenida" aria-labelledby="bienvenida-titulo">
   <div class="bienvenida-caja">
     <div class="logos-inst" aria-label="Universidad de Los Andes · Departamento de Radiología y Diagnóstico por Imagen">
@@ -51,7 +75,7 @@
       <p class="pregunta" id="acceso-pregunta">¿Cómo nos acompañas en esta celebración?</p>
       <div class="accesos" role="group" aria-label="Elige cómo nos acompañas">
         <button class="acceso" type="button" data-acceso="padrinos"><b>Padrinos y madrinas<svg class="candado" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11V8a5 5 0 0110 0v3M6 11h12a1 1 0 011 1v8a1 1 0 01-1 1H6a1 1 0 01-1-1v-8a1 1 0 011-1z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr-solo"> (acceso con código)</span></b><span>Invitados de honor</span></button>
-        <button class="acceso" type="button" data-acceso="docentes"><b>Docentes y egresados<svg class="candado" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11V8a5 5 0 0110 0v3M6 11h12a1 1 0 011 1v8a1 1 0 01-1 1H6a1 1 0 01-1-1v-8a1 1 0 011-1z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr-solo"> (acceso con código)</span></b><span>Nuestra comunidad académica</span></button>
+        <button class="acceso" type="button" data-acceso="docentes"><b>Familia radiológica<svg class="candado" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11V8a5 5 0 0110 0v3M6 11h12a1 1 0 011 1v8a1 1 0 01-1 1H6a1 1 0 01-1-1v-8a1 1 0 011-1z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr-solo"> (acceso con código)</span></b><span>Quienes hacen posible nuestra historia</span></button>
         <button class="acceso" type="button" data-acceso="residentes"><b>Residentes R1 y R2<svg class="candado" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11V8a5 5 0 0110 0v3M6 11h12a1 1 0 011 1v8a1 1 0 01-1 1H6a1 1 0 01-1-1v-8a1 1 0 011-1z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr-solo"> (acceso con código)</span></b><span>Compañeros del posgrado</span></button>
         <button class="acceso" type="button" data-acceso="otros"><b>Otros invitados</b><span>Familiares, amigos y colegas</span></button>
         <button class="acceso" type="button" data-acceso="especialistas" id="btn-integrante"><b>Especialistas 2026<svg class="candado" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11V8a5 5 0 0110 0v3M6 11h12a1 1 0 011 1v8a1 1 0 01-1 1H6a1 1 0 01-1-1v-8a1 1 0 011-1z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr-solo"> (acceso con código)</span></b><span>Integrantes de la XXIV Promoción</span></button>
@@ -59,7 +83,7 @@
       <p class="mas-bienvenida"><button class="btn btn-texto" type="button" data-visitante="dedicatorias">Dejar unas palabras a la promoción</button><button class="btn btn-texto" type="button" data-visitante="aportes">Aportes voluntarios</button></p>
     </div>
 
-    <!-- Código de acceso (padrinos, docentes y egresados, residentes, especialistas) -->
+    <!-- Código de acceso (padrinos, familia radiológica, residentes, especialistas) -->
     <div class="paso" id="paso-codigo" hidden>
       <p class="pregunta" id="codigo-titulo">Código de acceso</p>
       <p class="nota" style="text-align:center;margin:0" id="codigo-sub">Escribe el código que recibiste con tu invitación.</p>
@@ -90,7 +114,7 @@
       <button class="btn btn-texto" type="button" id="btn-volver-lista-2">← Otras opciones</button>
     </div>
 
-    <!-- Docentes y egresados · Residentes · Otros: subcategoría y nombre -->
+    <!-- Familia radiológica · Residentes · Otros: nombre (y R1/R2 para residentes) -->
     <div class="paso" id="paso-categoria" hidden>
       <p class="pregunta" id="categoria-pregunta"></p>
       <div class="opciones-cat" id="opciones-cat" role="radiogroup" aria-label="Categoría de invitado"></div>
@@ -102,13 +126,6 @@
       <button class="btn btn-texto" type="button" id="btn-volver-lista">← Otras opciones</button>
     </div>
 
-    <!-- Paso alterno: enlace individual reconocido -->
-    <div class="paso" id="paso-token" hidden>
-      <span class="versalita" style="text-align:center">Has recibido una invitación especial</span>
-      <p class="pregunta" id="token-saludo"></p>
-      <button class="btn btn-primario" type="button" id="btn-token-continuar">Abrir mi invitación</button>
-      <button class="btn btn-texto" type="button" id="btn-token-otro">No soy yo</button>
-    </div>
     <p class="nota nota-privacidad">Selecciona cómo nos acompañas y descubre tu invitación personalizada.</p>
   </div>
 </section>
@@ -417,7 +434,7 @@
         <option value="especialista">Radiólogo 2026</option>
         <option value="r1">Residente R1</option>
         <option value="r2">Residente R2</option>
-        <option value="docente">Docente o egresado</option>
+        <option value="docente">Familia radiológica</option>
         <option value="otro">Otro</option>
       </select>
       <label class="etiqueta" for="sol-quien">Nombre de quien te invita (obligatorio)</label>
@@ -460,11 +477,11 @@
   <style>.bienvenida{display:none!important}</style>
 </noscript>
 
-<script src="js/config.js?v=202611260608"></script>
-<script src="js/api.js?v=202611260608"></script>
-<script src="js/pase.js?v=202611260608"></script>
-<script src="js/app.js?v=202611260608"></script>
-<script src="js/dedicatorias.js?v=202611260608"></script>
-<script src="js/inicio.js?v=202611260608"></script>
+<script src="js/config.js?v=202611261227"></script>
+<script src="js/api.js?v=202611261227"></script>
+<script src="js/pase.js?v=202611261227"></script>
+<script src="js/app.js?v=202611261227"></script>
+<script src="js/dedicatorias.js?v=202611261227"></script>
+<script src="js/inicio.js?v=202611261227"></script>
 </body>
 </html>

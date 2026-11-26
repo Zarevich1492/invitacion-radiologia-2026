@@ -705,3 +705,31 @@ body{background-image:linear-gradient(#f4e6d1 0,#f4e6d1 55%,#efdfc6 100%);backgr
 /* Barra inferior con 6-7 apartados (Palabras y Aportes siempre visibles) */
 .nav-inferior.nav-denso a{font-size:.62rem;letter-spacing:0;padding:0 1px;white-space:nowrap}
 .nav-inferior.nav-denso svg{width:20px;height:20px}
+
+/* ---------- Pretarjeta: sobre crema con sello XXIV (enlaces individuales) ---------- */
+.sobre-escena{display:none;position:fixed;inset:0;z-index:70;background:var(--fondo);overflow-y:auto;align-items:center;justify-content:center;padding:18px 16px;transition:opacity .7s ease,transform .7s ease}
+.modo-sobre .sobre-escena{display:flex}
+.modo-sobre .bienvenida{display:none!important}
+.sobre-escena.saliendo{opacity:0;transform:scale(1.04);pointer-events:none}
+.sobre-caja{width:100%;max-width:440px;margin:auto;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
+.sobre-logos{display:flex;align-items:center;justify-content:center;gap:14px;height:46px}
+.sobre-logos img{height:100%;width:auto;display:block;object-fit:contain}
+.sobre-logos .logo-depto{height:44px}.sobre-logos .logo-promo{height:46px}
+.sobre{position:relative;width:min(80vw,330px);aspect-ratio:3/2;margin:10px auto 6px;perspective:1000px}
+.sobre>*{position:absolute}
+.sobre-fondo{inset:0;background:#e6d2b2;border-radius:6px;box-shadow:0 20px 32px -18px rgba(35,27,21,.7)}
+.sobre-carta{left:7%;right:7%;top:7%;bottom:9%;background:#fbf2e1;border:1px solid rgba(35,27,21,.22);border-radius:4px;z-index:1;display:flex;flex-direction:column;gap:9px;padding:14px 16px;transition:transform .9s .3s cubic-bezier(.45,.05,.2,1)}
+.sobre-carta i{display:block;height:2px;background:rgba(35,27,21,.22);border-radius:2px}.sobre-carta i:nth-child(2){width:70%}.sobre-carta i:nth-child(3){width:45%}
+.sobre-frente{inset:0;z-index:2;background:linear-gradient(180deg,#f3e3c8,#ecd9ba);clip-path:polygon(0 0,50% 56%,100% 0,100% 100%,0 100%);border-radius:6px}
+.sobre-solapa{left:0;right:0;top:0;height:56%;z-index:3;background:linear-gradient(180deg,#f6e8d0,#eedcbc);clip-path:polygon(0 0,100% 0,50% 100%);transform-origin:top center;transition:transform .9s cubic-bezier(.45,.05,.2,1),z-index 0s .45s;filter:drop-shadow(0 2px 2px rgba(35,27,21,.25))}
+.sello{left:50%;top:56%;width:25%;aspect-ratio:1;transform:translate(-50%,-50%);z-index:4;border-radius:50%;background:radial-gradient(circle at 35% 30%,#d33a3a,#b91c1c 55%,#8f1616);box-shadow:0 3px 8px rgba(35,27,21,.45),inset 0 0 0 3px rgba(244,230,209,.28);display:grid;place-items:center;transition:opacity .35s,transform .5s}
+.sello span{font-family:var(--f-display);font-weight:700;font-size:clamp(.78rem,3.6vw,1.05rem);letter-spacing:.04em;color:#f4e6d1}
+.sobre-escena.abierto .sobre-solapa{transform:rotateX(180deg);z-index:0}
+.sobre-escena.abierto .sello{opacity:0;transform:translate(-50%,-50%) scale(.6)}
+.sobre-escena.abierto .sobre-carta{transform:translateY(-46%)}
+.sobre-nombre{font-family:var(--f-display);font-weight:700;font-size:clamp(1.7rem,7vw,2.3rem);line-height:1.1;margin:0;text-wrap:balance;overflow-wrap:anywhere}
+.sobre-escena.cargando .sobre-nombre{font-size:1.1rem;font-weight:500;font-style:italic;color:var(--tinta-suave)}
+.sobre-msg{margin:0;color:var(--tinta-suave);max-width:34ch}
+.sobre-escena .btn-primario{min-width:220px;margin-top:4px}
+@media (max-height:640px){.sobre-logos{height:36px}.sobre{width:min(62vw,250px)}}
+@media (prefers-reduced-motion:reduce){.sobre-escena,.sobre-solapa,.sobre-carta,.sello{transition-duration:.01s!important;transition-delay:0s!important}}

@@ -10,7 +10,8 @@
   const csvSeguro = (v) => { const t = String(v ?? ""); return /^[=+\-@\t\r]/.test(t) ? "'" + t : t; };
   const fecha = (v) => (v ? new Date(v).toLocaleString("es-VE", { dateStyle: "short", timeStyle: "short" }) : "—");
   const ETQ = { asistira: "Asistirá", no_asistira: "No asistirá", por_confirmar: "Por confirmar", sin_responder: "Sin responder", no_aplica: "No aplica" };
-  const CAT = { padrino: "Padrino/Madrina", docente: "Docente", egresado: "Egresado", r1: "R1", r2: "R2", otro: "Otro invitado" };
+  const CAT = { padrino: "Padrino/Madrina", docente: "Familia radiológica", egresado: "Familia radiológica", r1: "R1", r2: "R2", otro: "Otro invitado" };
+  const cuadra = (categoria, filtro) => (filtro === "familia" ? categoria === "docente" || categoria === "egresado" : categoria === filtro);   // «Familia radiológica» agrupa docente y egresado
   const ORDEN_CAT = ["padrino", "docente", "egresado", "r1", "r2", "otro"];
   const CLAVE_SESION = "invitacion-ula-2026:admin";
   let sesion = null, EV = null, D = null, R = null;
@@ -84,7 +85,7 @@
     const tile = (n, t, s) => `<div class="adm-tile"><b>${n}</b><span>${t}</span>${s ? `<small>${s}</small>` : ""}</div>`;
     $("#indicadores").innerHTML =
       tile(g.padrinos, "Padrinos y madrinas") + tile(g.padrinosRespondieron, "Padrinos que respondieron") + tile(g.padrinosPendientes, "Padrinos pendientes") +
-      tile(g.docentes, "Docentes registrados") + tile(g.egresados, "Egresados registrados") + tile(g.r1, "R1 registrados") + tile(g.r2, "R2 registrados") + tile(g.otros, "Otros invitados registrados") +
+      tile(g.familia, "Familia radiológica registrada") + tile(g.r1, "R1 registrados") + tile(g.r2, "R2 registrados") + tile(g.otros, "Otros invitados registrados") +
       tile(g.invitadosUnicos, "Invitados únicos", "10 padrinos + registrados") + tile(g.respuestas, "Respuestas registradas", "personas con al menos una respuesta") +
       tile(g.asistiranTres, "Asistirán a 3 actividades") + tile(g.asistiranDos, "Asistirán a 2") + tile(g.asistiranUna, "Asistirán a 1") +
       tile(g.graduandos, "Graduandos (anfitriones)", "fuera de las tasas de respuesta");
@@ -106,7 +107,7 @@
   /* ---------- Tabla ---------- */
   function filtradas() {
     const q = normal($("#f-buscar").value), cat = $("#f-cat").value, act = $("#f-act").value, est = $("#f-estado").value;
-    return R.personas.filter((p) => (!q || normal(p.nombre).includes(q)) && (!cat || p.categoria === cat) &&
+    return R.personas.filter((p) => (!q || normal(p.nombre).includes(q)) && (!cat || cuadra(p.categoria, cat)) &&
       (!est || (act ? p.estados[act] === est : Object.values(p.estados).includes(est))));
   }
   function pintarTabla() {
@@ -194,14 +195,14 @@
   /* ---------- Habilitación de actividades por categoría ---------- */
   const reglaDe = (cat, act) => { const r = D.habilitaciones.find((h) => h.categoria === cat && h.actividad === act); return r ? !!r.habilitada : act !== "recepcion"; };
   function pintarReglas() {
-    const cats = D.categorias.slice().sort((a, b) => ORDEN_CAT.indexOf(a.codigo) - ORDEN_CAT.indexOf(b.codigo));
+    const cats = D.categorias.filter((c) => c.codigo !== "egresado").slice().sort((a, b) => ORDEN_CAT.indexOf(a.codigo) - ORDEN_CAT.indexOf(b.codigo));
     $("#reglas").innerHTML = `<div class="adm-tabla-caja"><table class="adm-tabla adm-matriz"><thead><tr><th>Categoría</th>${D.actividades.map((a) => `<th>${esc(a.titulo)}<br><small>${esc(a.hora_texto)}</small></th>`).join("")}</tr></thead><tbody>`
-      + cats.map((c) => `<tr><th scope="row">${esc(c.etiqueta)}</th>${D.actividades.map((a) => `<td><label class="adm-regla"><input type="checkbox" data-cat="${c.codigo}" data-act="${a.codigo}"${reglaDe(c.codigo, a.codigo) ? " checked" : ""} aria-label="${esc(c.etiqueta)}: ${esc(a.titulo)}"> <span>${reglaDe(c.codigo, a.codigo) ? "Habilitada" : "No"}</span></label></td>`).join("")}</tr>`).join("")
+      + cats.map((c) => `<tr><th scope="row">${esc(CAT[c.codigo] || c.etiqueta)}</th>${D.actividades.map((a) => `<td><label class="adm-regla"><input type="checkbox" data-cat="${c.codigo}" data-act="${a.codigo}"${reglaDe(c.codigo, a.codigo) ? " checked" : ""} aria-label="${esc(c.etiqueta)}: ${esc(a.titulo)}"> <span>${reglaDe(c.codigo, a.codigo) ? "Habilitada" : "No"}</span></label></td>`).join("")}</tr>`).join("")
       + `</tbody></table></div>`;
   }
   $("#reglas").addEventListener("change", async (e) => {
     const c = e.target.dataset.cat, a = e.target.dataset.act; if (!c || !a) return;
-    try { await api("habilitaciones", { method: "POST", headers: { Prefer: "resolution=merge-duplicates" }, body: JSON.stringify({ categoria: c, actividad: a, habilitada: e.target.checked }) }); await cargar(); toast("Habilitación actualizada"); }
+    try { for (const cat of (c === "docente" ? ["docente", "egresado"] : [c])) await api("habilitaciones", { method: "POST", headers: { Prefer: "resolution=merge-duplicates" }, body: JSON.stringify({ categoria: cat, actividad: a, habilitada: e.target.checked }) }); await cargar(); toast("Habilitación actualizada"); }
     catch (err) { toast("No se guardó: " + err.message); }
   });
 
@@ -247,8 +248,8 @@
 
 
   /* ---------- Centro de invitaciones ---------- */
-  const GRUPO_DE = { padrino: ["padrinos", "Padrinos y madrinas"], docente: ["docentes", "Docentes y egresados"], egresado: ["docentes", "Docentes y egresados"], r1: ["residentes", "Residentes R1 y R2"], r2: ["residentes", "Residentes R1 y R2"], otro: ["otros", "Otros invitados"], graduando: ["especialistas", "Especialistas 2026"] };
-  const GRUPOS_COD = [["padrinos", "Padrinos y madrinas"], ["docentes", "Docentes y egresados"], ["residentes", "Residentes R1 y R2"], ["especialistas", "Especialistas 2026"]];
+  const GRUPO_DE = { padrino: ["padrinos", "Padrinos y madrinas"], docente: ["docentes", "Familia radiológica"], egresado: ["docentes", "Familia radiológica"], r1: ["residentes", "Residentes R1 y R2"], r2: ["residentes", "Residentes R1 y R2"], otro: ["otros", "Otros invitados"], graduando: ["especialistas", "Especialistas 2026"] };
+  const GRUPOS_COD = [["padrinos", "Padrinos y madrinas"], ["docentes", "Familia radiológica"], ["residentes", "Residentes R1 y R2"], ["especialistas", "Especialistas 2026"]];
   const ACT_NOM = { clase: "Clase magistral", caravana: "Caravana", recepcion: "Recepción" };
   let CODIGOS = {};           // solo en memoria durante la sesión del panel (nunca en almacenamiento)
   let ENL = new Map();        // id → { token, enviado_en }
@@ -267,7 +268,7 @@
   }
   function visiblesCI() {
     const q = ($("#ci-buscar").value || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase(), c = $("#ci-cat").value, e = $("#ci-estado").value;
-    return personasCI().filter((p) => (!c || p.categoria === c) && (!q || p.nombre.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().includes(q)) &&
+    return personasCI().filter((p) => (!c || cuadra(p.categoria, c)) && (!q || p.nombre.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().includes(q)) &&
       (!e || (e === "sin" ? !ENL.has(p.id) : e === "vigente" ? ENL.has(p.id) && !ENL.get(p.id).enviado_en : ENL.has(p.id) && !!ENL.get(p.id).enviado_en)));
   }
   const seleccion = () => personasCI().filter((p) => SEL.has(p.id));
@@ -367,7 +368,7 @@
 
 
   /* ---------- Seguridad y accesos ---------- */
-  const GRUPOS_SEG = [["padrinos", "Padrinos y madrinas"], ["docentes", "Docentes y egresados"], ["residentes", "Residentes R1 y R2"], ["especialistas", "Especialistas 2026"]];
+  const GRUPOS_SEG = [["padrinos", "Padrinos y madrinas"], ["docentes", "Familia radiológica"], ["residentes", "Residentes R1 y R2"], ["especialistas", "Especialistas 2026"]];
   async function cargarSeg() {
     let e = {};
     try { e = await rpc("admin_estado_acceso"); } catch (err) { $("#seg-estado").textContent = "Ejecute supabase/instalar.sql para activar el acceso por contraseña (" + err.message + ")"; }
@@ -387,7 +388,7 @@
   /* ---------- Solicitudes de invitación ---------- */
   let SOL = [];
   const ETQ_SOL = { pendiente: "Pendiente", aprobada: "Autorizada", rechazada: "Rechazada" };
-  const TIPO_INV = { padrino: "Padrino/madrina", especialista: "Radiólogo 2026", r1: "Residente R1", r2: "Residente R2", docente: "Docente o egresado", otro: "Otro" };
+  const TIPO_INV = { padrino: "Padrino/madrina", especialista: "Radiólogo 2026", r1: "Residente R1", r2: "Residente R2", docente: "Familia radiológica", otro: "Otro" };
   const llave = (t) => String(t || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
   function pintarSolic() {
     const cuenta = {};   // invitados asociados a cada responsable (pendientes y autorizados; las rechazadas no cuentan)
