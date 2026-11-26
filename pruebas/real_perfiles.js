@@ -35,6 +35,7 @@ async function entrar(ctx, perfil) {
   ok(`${perfil.nombre}: al elegirla, cinco datos con botones de copiar`, (await p.$$("#pm-datos .pm-copiar")).length === 5);
   await p.click("#dd-abrir"); await p.waitForTimeout(1200);
   ok(`${perfil.nombre}: «Dejar unas palabras» abre el formulario (sin CAPTCHA externo)`, !(await p.$eval("#dd-enviar", (b) => b.disabled)) && (await p.$$("#dd-stickers .sticker")).length === 6);
+  const sw = await p.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth]);
   ok(`${perfil.nombre}: sin desplazamiento horizontal`, sw[0] <= sw[1], sw.join(" ≤ "));
   ok(`${perfil.nombre}: sin errores de JavaScript`, errores.length === 0, errores.join(" | "));
   await p.close();
