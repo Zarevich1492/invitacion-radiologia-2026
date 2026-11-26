@@ -24,6 +24,8 @@ for c in CATS:
         L.append(f"insert into public.habilitaciones(categoria, actividad, habilitada) values ({q(c)}, {q(a['codigo'])}, {v}) on conflict (categoria, actividad) do nothing;")
 for p in E["padrinos"]:
     L.append(f"insert into public.padrinos(id, nombre, apellido) values ({q(p['id'])}, {q(p['nombre'])}, {q(p['apellido'])})\n  on conflict (id) do update set nombre = excluded.nombre, apellido = excluded.apellido;")
+for g in E["graduandos_lista"]:
+    L.append(f"insert into public.graduandos(id, nombre, apellido) values ({q(g['id'])}, {q(g['nombre'])}, {q(g['apellido'])})\n  on conflict (id) do update set nombre = excluded.nombre, apellido = excluded.apellido;")
 L.append("select public.admin_sincronizar_padrinos();")
 L.append("-- Renombrado seguro: el nombre oficial se propaga a todos los registros vinculados (mismo id, mismas respuestas, sin duplicados).\nupdate public.invitados i set nombre = p.nombre from public.padrinos p where i.padrino_id = p.id and i.nombre <> p.nombre;")
 L.append("commit;")

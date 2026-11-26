@@ -57,6 +57,20 @@ insert into public.padrinos(id, nombre, apellido) values ('uzcategui-reyna', 'Dr
   on conflict (id) do update set nombre = excluded.nombre, apellido = excluded.apellido;
 insert into public.padrinos(id, nombre, apellido) values ('vina-daniel', 'Dr. Daniel Viña', 'Viña')
   on conflict (id) do update set nombre = excluded.nombre, apellido = excluded.apellido;
+insert into public.graduandos(id, nombre, apellido) values ('arrieta-jorge', 'Dr. Jorge Arrieta', 'Arrieta')
+  on conflict (id) do update set nombre = excluded.nombre, apellido = excluded.apellido;
+insert into public.graduandos(id, nombre, apellido) values ('paez-nelson', 'Dr. Nelson Páez', 'Páez')
+  on conflict (id) do update set nombre = excluded.nombre, apellido = excluded.apellido;
+insert into public.graduandos(id, nombre, apellido) values ('guillen-diego', 'Dr. Diego Guillén', 'Guillén')
+  on conflict (id) do update set nombre = excluded.nombre, apellido = excluded.apellido;
+insert into public.graduandos(id, nombre, apellido) values ('sanchez-jose', 'Dr. José Sánchez', 'Sánchez')
+  on conflict (id) do update set nombre = excluded.nombre, apellido = excluded.apellido;
+insert into public.graduandos(id, nombre, apellido) values ('montes-andrea', 'Dra. Andrea Montes', 'Montes')
+  on conflict (id) do update set nombre = excluded.nombre, apellido = excluded.apellido;
+insert into public.graduandos(id, nombre, apellido) values ('mendez-francia', 'Dra. Francia Méndez', 'Méndez')
+  on conflict (id) do update set nombre = excluded.nombre, apellido = excluded.apellido;
+insert into public.graduandos(id, nombre, apellido) values ('hernandez-oriana', 'Dra. Oriana Hernández', 'Hernández')
+  on conflict (id) do update set nombre = excluded.nombre, apellido = excluded.apellido;
 select public.admin_sincronizar_padrinos();
 -- Renombrado seguro: el nombre oficial se propaga a todos los registros vinculados (mismo id, mismas respuestas, sin duplicados).
 update public.invitados i set nombre = p.nombre from public.padrinos p where i.padrino_id = p.id and i.nombre <> p.nombre;
