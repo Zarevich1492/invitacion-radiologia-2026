@@ -63,12 +63,20 @@ def imagenes():
     # Banda de montañas y hospital (parte inferior del interior original) para el pase.
     guardar_jpg(ancho(interior.crop((0, 3300, 6250, 4830)), 1440), A / "img/banda-merida-1440.jpg", 86)
 
-    # Logotipos: recorte directo, sin redibujar.
+    # Logotipos: recorte directo de portada sin modificar originales existentes; el Departamento usa el oficial entregado.
     pad = 24
     (ORIG / "logos-extraidos").mkdir(exist_ok=True)
     for nombre, (x0, y0, x1, y1) in LOGOS.items():
         rec = portada.crop((x0 - pad, y0 - pad, x1 + pad, y1 + pad))
-        rec.save(ORIG / f"logos-extraidos/{nombre}.png", optimize=True)
+        dest_orig = ORIG / f"logos-extraidos/{nombre}.png"
+        if not dest_orig.exists():
+            rec.save(dest_orig, optimize=True)
+        if nombre == "departamento-radiologia":
+            oficial = ORIG / "logos" / "logo_departamento_radiologia_original (1).png"
+            if oficial.exists():
+                dep = Image.open(oficial).convert("RGB")
+                guardar_jpg(dep, A / f"logos/{nombre}.jpg", 94)
+                continue
         web = ancho(rec, 1000) if nombre == "promocion-xxiv" else rec
         guardar_jpg(web, A / f"logos/{nombre}.jpg", 88 if nombre == "promocion-xxiv" else 90)
     guardar_jpg(ancho(portada.crop((LOGOS["promocion-xxiv"][0] - pad, LOGOS["promocion-xxiv"][1] - pad, LOGOS["promocion-xxiv"][2] + pad, LOGOS["promocion-xxiv"][3] + pad)), 560), A / "logos/promocion-xxiv-560.jpg", 84)

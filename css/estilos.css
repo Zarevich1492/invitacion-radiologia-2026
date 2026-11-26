@@ -242,7 +242,8 @@ button,input,a{font:inherit;color:inherit}
 .pie{margin-top:40px;text-align:center;color:var(--tinta-suave);font-size:.92rem}
 .pie-logos{display:flex;justify-content:center;align-items:center;gap:14px;margin-bottom:10px}
 .pie-logos img{height:42px;width:auto}
-.pie-logos i{width:1px;height:36px;background:var(--tinta)}
+.pie-logos img.logo-depto{height:60px}
+.pie-logos i{width:1px;height:42px;background:var(--tinta)}
 
 /* ---------- Hojas modales ---------- */
 dialog{
@@ -286,7 +287,8 @@ dialog::backdrop{background:rgba(32,22,16,.62)}
 .bienvenida-caja{padding-block:8px}
 .logos-inst{display:flex;align-items:center;justify-content:center;gap:12px;animation:aparecer .8s ease-out both}
 .logos-inst img{height:34px;width:auto}
-.logos-inst i{width:1px;height:30px;background:var(--tinta)}
+.logos-inst img.logo-depto{height:52px}
+.logos-inst i{width:1px;height:36px;background:var(--tinta)}
 .bienvenida-sub{font-size:1.08rem}
 .paso{width:100%;display:flex;flex-direction:column;gap:10px;text-align:left;animation:aparecer .6s ease-out both}
 .etiqueta{font-weight:600;font-size:.98rem}
@@ -508,8 +510,9 @@ body.identificado{padding-bottom:calc(var(--nav-inf) + env(safe-area-inset-botto
   :root{--barra:64px}
   body.identificado{padding-bottom:0}
   .nav-inferior{display:none!important}
-  .nav-superior{display:flex;gap:4px;margin-left:auto}
-  .nav-superior a{position:relative;display:flex;align-items:center;min-height:44px;padding:0 14px;text-decoration:none;color:var(--tinta-suave);font-weight:600;font-size:.98rem;border-radius:999px}
+  .nav-superior{display:flex;gap:2px;margin-left:auto}
+  .nav-superior a{position:relative;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 11px;text-decoration:none;color:var(--tinta-suave);font-weight:600;font-size:.95rem;border-radius:999px;white-space:nowrap}
+  .nav-superior .ico-casa{width:17px;height:17px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
   .nav-superior a:hover{color:var(--tinta);background:rgba(35,27,24,.05)}
   .nav-superior a[aria-current="page"]{color:var(--tinta)}
   .nav-superior a[aria-current="page"]::after{content:"";position:absolute;left:14px;right:14px;bottom:4px;height:2px;background:var(--rojo)}
@@ -562,10 +565,26 @@ body.identificado{padding-bottom:calc(var(--nav-inf) + env(safe-area-inset-botto
 .liston-fig .liston-vista{display:block;width:auto;height:auto;max-height:min(62svh,520px);max-width:min(260px,62vw);aspect-ratio:709/1417;filter:drop-shadow(0 12px 18px rgba(50,28,15,.28))}
 @supports not (height:1svh){.liston-fig .liston-vista{max-height:min(62vh,520px)}}
 a.btn-sec{text-decoration:underline;text-underline-offset:.2em}
-/* Graduandos: solo «Programa» y «Mi listón» */
-body.rol-graduando .nav-vistas [data-ir="invitacion"]:not(.marca),body.rol-graduando .nav-vistas [data-ir="confirmar"]{display:none!important}
-body.rol-graduando .nav-inferior{grid-template-columns:repeat(2,1fr)}
+/* Graduandos (Especialistas 2026): Inicio | Programa | Mi listón (sin confirmar ni pase) */
+body.rol-graduando .nav-vistas [data-ir="confirmar"],body.rol-graduando .nav-vistas [data-ir="pase"]{display:none!important}
+body.rol-graduando .inv-grid{display:none!important}
+body.rol-graduando .nav-inferior{grid-template-columns:repeat(3,1fr)}
+/* Padrinos y madrinas con listón: Inicio | Programa | Confirmar | Mi pase | Mi listón */
+body.con-liston:not(.rol-graduando) .nav-inferior{grid-template-columns:repeat(5,1fr)}
+body.con-liston:not(.rol-graduando) .nav-inferior a{font-size:.73rem;letter-spacing:0;white-space:nowrap;padding:0 1px}
+body.con-liston:not(.rol-graduando) .nav-inferior svg{width:22px;height:22px}
+@media (max-width:380px){
+  body.con-liston:not(.rol-graduando) .nav-inferior a{font-size:.66rem}
+  body.con-liston:not(.rol-graduando) .nav-inferior svg{width:20px;height:20px}
+}
+/* Espacio conmemorativo personalizado (Inicio para Especialistas 2026) */
+.espacio-especialista{max-width:540px;margin:18px auto 0;padding:28px 22px;border-radius:18px;border:1px solid rgba(185,28,28,.28);background:#faf0e1;display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px}
+.esp-logo{width:auto;height:min(24svh,190px);aspect-ratio:1910/2674;display:block}
+.esp-fecha{margin:4px 0 0;font-family:var(--f-display);font-weight:600;font-size:1.05rem;color:var(--tinta);font-variation-settings:"opsz" 11}
+.esp-acciones{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:8px;width:100%}
+.vista-liston .pie{margin-top:30px}
 @media (min-width:640px){ .liston-fig .liston-vista{max-width:100%} }
+@media (min-width:900px){ .vista-liston .pase-grid{grid-template-columns:340px minmax(0,560px);justify-content:start;gap:48px} }
 
 
 /* =====================================================================
@@ -612,4 +631,6 @@ body{background-image:linear-gradient(#f4e6d1 0,#f4e6d1 55%,#efdfc6 100%);backgr
 .acceso::after{content:"→";position:absolute;right:16px;top:50%;transform:translateY(-50%);color:var(--rojo)}
 .acceso:hover,.acceso:focus-visible{border-color:var(--rojo);background:#fff6e8}
 .acceso[hidden]{display:none}
+.acceso[data-acceso="especialistas"]{border:1.5px solid var(--rojo);background:#faf0e1}
+.acceso[data-acceso="especialistas"] b{color:var(--rojo)}
 @media (min-width:640px){.accesos{display:grid;grid-template-columns:1fr 1fr}.accesos .acceso:last-child:nth-child(odd){grid-column:1 / -1}}

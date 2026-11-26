@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="version-recursos" content="202611260204">
+<meta name="version-recursos" content="202611260250">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>XXIV Promoción de Radiólogos | Invitación especial</title>
 <meta name="description" content="Tres momentos. Una misma celebración. Sábado 28 de noviembre de 2026.">
@@ -30,7 +30,7 @@
 <link rel="preload" href="assets/fonts/BodoniModa-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/EBGaramond-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/logos/promocion-xxiv-560.jpg" as="image">
-<link rel="stylesheet" href="css/estilos.css?v=202611260204">
+<link rel="stylesheet" href="css/estilos.css?v=202611260250">
 </head>
 <body>
 
@@ -40,7 +40,7 @@
     <div class="logos-inst" aria-label="Universidad de Los Andes · Departamento de Radiología y Diagnóstico por Imagen">
       <img src="assets/logos/ula.jpg" alt="Universidad de Los Andes, Venezuela" width="1215" height="392">
       <i aria-hidden="true"></i>
-      <img src="assets/logos/departamento-radiologia.jpg" alt="Departamento de Radiología y Diagnóstico por Imagen" width="1120" height="392">
+      <img class="logo-depto" src="assets/logos/departamento-radiologia.jpg" alt="Departamento de Radiología y Diagnóstico por Imagen" width="603" height="707">
     </div>
     <img class="bienvenida-logo" src="assets/logos/promocion-xxiv-560.jpg" width="560" height="784" alt="Logotipo de la XXIV Promoción de Radiólogos, ULA 2026">
     <h1 id="bienvenida-titulo">Hay momentos que merecen <em>ser compartidos</em></h1>
@@ -70,9 +70,10 @@
 
     <!-- Especialistas 2026 (módulo de listones; coordinado con Antigravity) -->
     <div class="paso" id="paso-graduando" hidden>
+      <span class="versalita" style="text-align:center">Espacio conmemorativo · XXIV Promoción</span>
       <p class="pregunta">Especialistas 2026</p>
-      <p class="nota" style="text-align:center;margin:0">Elige tu nombre para obtener tu listón conmemorativo.</p>
-      <ul class="lista-nombres" id="lista-graduandos" role="listbox" aria-label="Integrantes de la XXIV Promoción"></ul>
+      <p class="nota" style="text-align:center;margin:0">Elige tu nombre para acceder a tu listón conmemorativo y al programa de la jornada.</p>
+      <ul class="lista-nombres" id="lista-graduandos" role="listbox" aria-label="Especialistas 2026 · XXIV Promoción"></ul>
       <button class="btn btn-texto" type="button" id="btn-volver-lista-2">← Otras opciones</button>
     </div>
 
@@ -101,15 +102,16 @@
 <!-- ===================== Navegación permanente ===================== -->
 <header class="barra" id="barra" hidden>
   <div class="barra-int">
-    <a class="marca" href="#invitacion" data-ir="invitacion" aria-label="Ir a la invitación">
+    <a class="marca" href="#invitacion" data-ir="invitacion" aria-label="Ir al inicio">
       <img src="assets/logos/promocion-xxiv-560.jpg" alt="" width="560" height="784">
       <span><b>XXIV Promoción</b><small>Radiólogos · ULA 2026</small></span>
     </a>
     <nav class="nav-vistas nav-superior" aria-label="Secciones de la invitación">
-      <a href="#invitacion" data-ir="invitacion">Invitación</a>
+      <a href="#invitacion" data-ir="invitacion" class="nav-inicio"><svg class="ico-casa" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5L12 3l9 7.5"/><path d="M5.5 9.5V20h4.5v-5.5h4V20h4.5V9.5"/></svg><span>Inicio</span></a>
       <a href="#programa" data-ir="programa">Programa</a>
       <a href="#confirmar" data-ir="confirmar">Confirmar asistencia</a>
       <a href="#pase" data-ir="pase">Mi pase</a>
+      <a href="#liston" data-ir="liston" hidden>Mi listón</a>
     </nav>
     <button class="btn btn-texto cambiar-nombre" type="button" id="btn-cambiar-nombre">Cambiar nombre</button>
   </div>
@@ -117,8 +119,19 @@
 
 <main class="experiencia" id="experiencia" aria-hidden="true">
 
-  <!-- 01 · Invitación -->
+  <!-- 01 · Inicio (tarjeta interactiva para invitados · espacio conmemorativo para Especialistas 2026) -->
   <section class="vista vista-invitacion" id="vista-invitacion" data-vista="invitacion" aria-labelledby="saludo-nombre">
+    <div class="espacio-especialista" id="espacio-especialista" hidden>
+      <img class="esp-logo" src="assets/logos/promocion-xxiv-560.jpg" width="560" height="784" alt="Logotipo de la XXIV Promoción de Radiólogos, ULA 2026">
+      <span class="versalita">Especialista 2026 · XXIV Promoción</span>
+      <h1 class="saludo-nombre" id="esp-nombre" tabindex="-1"></h1>
+      <p class="saludo-texto">Espacio conmemorativo de nuestra promoción. Conserva tu listón oficial y consulta el programa de nuestra jornada de celebración.</p>
+      <p class="esp-fecha" id="esp-fecha"></p>
+      <div class="esp-acciones">
+        <a class="btn btn-primario" href="#liston" data-ir="liston">Ver mi listón conmemorativo <span aria-hidden="true">→</span></a>
+        <a class="btn btn-siguiente" href="#programa" data-ir="programa">Ver el programa <span aria-hidden="true">→</span></a>
+      </div>
+    </div>
     <div class="inv-grid">
       <header class="inv-enc saludo">
         <span class="versalita" id="saludo-eyebrow">Invitación especial</span>
@@ -175,8 +188,9 @@
     </header>
     <ol class="programa" id="programa"></ol>
     <div class="vista-pie">
-      <a class="btn btn-texto" href="#invitacion" data-ir="invitacion"><span aria-hidden="true">←</span> Invitación</a>
-      <a class="btn btn-primario" href="#confirmar" data-ir="confirmar">Confirmar asistencia <span aria-hidden="true">→</span></a>
+      <a class="btn btn-texto" href="#invitacion" data-ir="invitacion"><span aria-hidden="true">←</span> Inicio</a>
+      <a class="btn btn-primario" id="btn-prog-confirmar" href="#confirmar" data-ir="confirmar">Confirmar asistencia <span aria-hidden="true">→</span></a>
+      <a class="btn btn-primario" id="btn-prog-liston" href="#liston" data-ir="liston" hidden>Ver mi listón <span aria-hidden="true">→</span></a>
     </div>
   </section>
 
@@ -214,11 +228,7 @@
       <span class="versalita">Para conservar</span>
       <h2 id="t-pase" tabindex="-1">Mi pase</h2>
     </header>
-    <div class="pestanas" id="pestanas-pase" role="tablist" aria-label="Recuerdos para conservar" hidden>
-      <button type="button" role="tab" id="tab-pase" aria-controls="panel-pase" aria-selected="true">Mi pase digital</button>
-      <button type="button" role="tab" id="tab-liston" aria-controls="panel-liston" aria-selected="false" tabindex="-1">Mi listón conmemorativo</button>
-    </div>
-    <div class="pase-grid" id="panel-pase" role="tabpanel" aria-labelledby="tab-pase">
+    <div class="pase-grid" id="panel-pase">
       <figure class="pase-fig">
         <img class="pase-vista" id="pase-vista" alt="Vista previa de tu pase de invitado especial" width="720" height="1280">
         <figcaption class="nota">Recuerdo y guía rápida de la jornada; no es una credencial de acceso.</figcaption>
@@ -248,18 +258,38 @@
         </div>
       </div>
     </div>
-    <div class="pase-grid liston-grid" id="panel-liston" role="tabpanel" aria-labelledby="tab-liston" hidden>
+    <footer class="pie">
+      <div class="pie-logos">
+        <img src="assets/logos/ula.jpg" alt="Universidad de Los Andes, Venezuela" loading="lazy" width="1215" height="392">
+        <i aria-hidden="true"></i>
+        <img class="logo-depto" src="assets/logos/departamento-radiologia.jpg" alt="Departamento de Radiología y Diagnóstico por Imagen" loading="lazy" width="603" height="707">
+      </div>
+      XXIV Promoción de Radiólogos · Postgrado de Radiología · Universidad de Los Andes
+    </footer>
+  </section>
+
+  <!-- 05 · Mi listón (independiente de Mi pase · exclusivo para los 7 graduandos y 10 padrinos/madrinas oficiales) -->
+  <section class="vista vista-liston" id="vista-liston" data-vista="liston" aria-labelledby="t-liston" hidden>
+    <header class="vista-enc">
+      <span class="versalita" id="liston-eyebrow">Conmemorativo</span>
+      <h2 id="t-liston" tabindex="-1">Mi listón</h2>
+      <p id="liston-sub"></p>
+    </header>
+    <div class="pase-grid liston-grid" id="panel-liston">
       <figure class="pase-fig liston-fig">
         <img class="liston-vista" id="liston-vista" alt="" width="709" height="1417" loading="lazy">
         <figcaption class="nota">Listón conmemorativo · 60 × 120 mm con terminación en V. Sin actividades ni horarios.</figcaption>
       </figure>
       <div class="pase-acciones">
         <a class="btn btn-primario btn-ancho" id="liston-png" download>Descargar mi listón · PNG 300 ppp</a>
-        <div class="formatos"><a class="btn-sec" id="liston-pdf" download>PDF a tamaño real (60 × 120 mm)</a></div>
-        <p class="nota">Para imprimir: PDF al 100 % (sin «ajustar a la página»). Si la descarga no comienza dentro de WhatsApp, mantén presionada la imagen y elige «Guardar imagen».</p>
+        <div class="formatos">
+          <a class="btn-sec" id="liston-png-600" download>PNG 600 ppp (alta resolución)</a>
+          <a class="btn-sec" id="liston-pdf" download>PDF vectorial (60 × 120 mm)</a>
+        </div>
+        <p class="nota">Para imprimir: PDF vectorial al 100 % (sin «ajustar a la página»). Si la descarga no comienza dentro de WhatsApp, mantén presionada la imagen y elige «Guardar imagen».</p>
         <div class="modulos" id="liston-colectivos" hidden>
-          <a class="modulo modulo-enlace" href="assets/listones/listones-especialistas-2026-A4.pdf" download><b>Listones de los especialistas</b><span>PDF A4 para imprimir · 7 listones con marcas de corte</span></a>
-          <a class="modulo modulo-enlace" href="assets/listones/listones-padrinos-madrinas-A4.pdf" download><b>Listones de padrinos y madrinas</b><span>PDF A4 para imprimir · 10 listones con marcas de corte</span></a>
+          <a class="modulo modulo-enlace" href="assets/listones/listones-especialistas-2026-A4.pdf" download><b>Listones de los 7 especialistas (A4)</b><span>PDF A4 vectorial para imprimir · 7 listones con marcas de corte</span></a>
+          <a class="modulo modulo-enlace" href="assets/listones/listones-padrinos-madrinas-A4.pdf" download><b>Listones de padrinos y madrinas (A4)</b><span>PDF A4 vectorial para imprimir · 10 listones con marcas de corte</span></a>
         </div>
       </div>
     </div>
@@ -267,7 +297,7 @@
       <div class="pie-logos">
         <img src="assets/logos/ula.jpg" alt="Universidad de Los Andes, Venezuela" loading="lazy" width="1215" height="392">
         <i aria-hidden="true"></i>
-        <img src="assets/logos/departamento-radiologia.jpg" alt="Departamento de Radiología y Diagnóstico por Imagen" loading="lazy" width="1120" height="392">
+        <img class="logo-depto" src="assets/logos/departamento-radiologia.jpg" alt="Departamento de Radiología y Diagnóstico por Imagen" loading="lazy" width="603" height="707">
       </div>
       XXIV Promoción de Radiólogos · Postgrado de Radiología · Universidad de Los Andes
     </footer>
@@ -276,10 +306,11 @@
 
 <!-- Navegación inferior (móviles) -->
 <nav class="nav-vistas nav-inferior" id="nav-inferior" aria-label="Secciones de la invitación" hidden>
-  <a href="#invitacion" data-ir="invitacion"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M3.5 6l8.5 7 8.5-7"/></svg><span>Invitación</span></a>
+  <a href="#invitacion" data-ir="invitacion"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5L12 3l9 7.5"/><path d="M5.5 9.5V20h4.5v-5.5h4V20h4.5V9.5"/></svg><span>Inicio</span></a>
   <a href="#programa" data-ir="programa"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span>Programa</span></a>
   <a href="#confirmar" data-ir="confirmar"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M8 12.3l2.7 2.7L16.2 9.5"/></svg><span>Confirmar</span></a>
   <a href="#pase" data-ir="pase"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16v3a2 2 0 000 4v3H4v-3a2 2 0 000-4z"/><path d="M14 7v10" stroke-dasharray="1.6 1.8"/></svg><span>Mi pase</span></a>
+  <a href="#liston" data-ir="liston" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg><span>Mi listón</span></a>
 </nav>
 
 <!-- Escena 7 · Pase digital -->
@@ -291,10 +322,10 @@
   <style>.bienvenida{display:none!important}</style>
 </noscript>
 
-<script src="js/config.js?v=202611260204"></script>
-<script src="js/api.js?v=202611260204"></script>
-<script src="js/pase.js?v=202611260204"></script>
-<script src="js/app.js?v=202611260204"></script>
-<script src="js/inicio.js?v=202611260204"></script>
+<script src="js/config.js?v=202611260250"></script>
+<script src="js/api.js?v=202611260250"></script>
+<script src="js/pase.js?v=202611260250"></script>
+<script src="js/app.js?v=202611260250"></script>
+<script src="js/inicio.js?v=202611260250"></script>
 </body>
 </html>

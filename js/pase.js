@@ -168,14 +168,14 @@
     fade.addColorStop(0, C.crema); fade.addColorStop(1, "rgba(245,231,211,0)");
     g.fillStyle = fade; g.fillRect(X0, by - 2, TW, bh * 0.6 + 2);
 
-    // Logotipos institucionales
-    const ih = 96;
-    const uw = Math.round(ih * r.ula.naturalWidth / r.ula.naturalHeight);
-    const dw = Math.round(ih * r.depto.naturalWidth / r.depto.naturalHeight);
-    const gap = 52, total = uw + gap * 2 + dw, lx = CX - total / 2, ly = yId + 88;
-    g.drawImage(r.ula, lx, ly, uw, ih);
-    g.fillStyle = C.tinta; g.fillRect(lx + uw + gap - 1, ly + 6, 2, ih - 12);
-    g.drawImage(r.depto, lx + uw + gap * 2, ly, dw, ih);
+    // Logotipos institucionales (ULA + logotipo oficial vertical del Departamento)
+    const uh = 90, dh = 128;
+    const uw = Math.round(uh * r.ula.naturalWidth / r.ula.naturalHeight);
+    const dw = Math.round(dh * r.depto.naturalWidth / r.depto.naturalHeight);
+    const gap = 48, total = uw + gap * 2 + dw, lx = CX - total / 2, lyMid = yId + 84 + dh / 2;
+    g.drawImage(r.ula, lx, Math.round(lyMid - uh / 2), uw, uh);
+    g.fillStyle = C.tinta; g.fillRect(lx + uw + gap - 1, Math.round(lyMid - 48), 2, 96);
+    g.drawImage(r.depto, lx + uw + gap * 2, Math.round(lyMid - dh / 2), dw, dh);
     g.restore();
     return c;
   }

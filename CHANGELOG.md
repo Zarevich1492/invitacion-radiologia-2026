@@ -5,6 +5,14 @@ https://zarevich1492.github.io/invitacion-radiologia-2026/ (misma dirección sie
 Reversión: `git revert <commit>` o volver a una etiqueta: `git checkout -B main <etiqueta> && git push -f origin main`
 (solo con autorización expresa).
 
+## v2.7 · Botón Inicio, sección independiente Mi listón, espacio Especialistas 2026, logotipo oficial y 17 listones (Dirección B)
+- Botón «Inicio» con icono de casa en barra superior y barra inferior: regresa a la tarjeta conservando su último estado e identidad (y al espacio conmemorativo personalizado para Especialistas 2026).
+- Sección independiente «Mi listón» (`#liston`) separada de «Mi pase», visible exclusivamente para los 7 graduandos y 10 padrinos/madrinas oficiales; oculta para docentes, egresados, residentes y otros invitados.
+- Navegación por categoría: Padrinos (`Inicio | Programa | Confirmar asistencia | Mi pase | Mi listón`), Especialistas 2026 (`Inicio | Programa | Mi listón`) y Docentes/Egresados/R1/R2/Otros (`Inicio | Programa | Confirmar asistencia | Mi pase`).
+- Logotipo oficial del Departamento de Radiología (`originales/logos/logo_departamento_radiologia_original (1).png`, sin modificar el original) integrado en bienvenida, pie de página, pase digital y los 17 listones.
+- 17 listones conmemorativos (Dirección B — Protocolar, 60 × 120 mm, terminación en V, nombres aprobados `Dra. Omaira Berrios` y `Dra. Ma. del Carmen Gutiérrez`): 17 PNG 300 ppp, 17 PNG 600 ppp, 17 PDF vectoriales individuales y 2 PDF colectivos A4 vectoriales. `modulos.listones: true`.
+- Conservadas íntegramente todas las correcciones de `v2.3`–`v2.6` (incluyendo Supabase).
+
 ## v2.6 · Preparación de Supabase (clave publishable)
 - `api.js` compatible con la clave `sb_publishable_…` (no es un JWT: solo se envía en `apikey`).
 - `supabase/instalar.sql`: esquema + semilla en un solo archivo, probado en una base vacía.

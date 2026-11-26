@@ -104,8 +104,10 @@ async function responder(p, resp) {
   ok("Programa: recepción 9:00 p. m. destacada como celebración social", (await p.$$("#programa li.social")).length === 1 && /9:00 p\. m\./.test(prog));
   await p.screenshot({ path: `${OUT}/02-portada-variante-A.png` });
 
-  // Navegación por vistas
-  ok("Navegación: 4 apartados, «Invitación» activo al entrar", (await p.$$eval(".nav-inferior [data-ir]", (a) => a.map((x) => x.textContent.trim()).join("|"))) === "Invitación|Programa|Confirmar|Mi pase" && (await p.getAttribute('.nav-inferior [data-ir="invitacion"]', "aria-current")) === "page");
+  // Navegación por vistas (padrinos: 5 apartados con Inicio y Mi listón independiente)
+  const navEsperadaPadrino = EV.modulos && EV.modulos.listones ? "Inicio|Programa|Confirmar|Mi pase|Mi listón" : "Inicio|Programa|Confirmar|Mi pase";
+  const navPadrino = await p.$$eval(".nav-inferior [data-ir]", (a) => a.filter((x) => !x.hidden && getComputedStyle(x).display !== "none").map((x) => x.textContent.trim()).join("|"));
+  ok("Navegación padrino: «Inicio» activo al entrar y apartados exactos", navPadrino === navEsperadaPadrino && (await p.getAttribute('.nav-inferior [data-ir="invitacion"]', "aria-current")) === "page", navPadrino);
   await irVista(p, "programa"); await irVista(p, "pase");
   ok("Navegación: sección activa marcada", (await p.getAttribute('.nav-inferior [data-ir="pase"]', "aria-current")) === "page" && (await p.isHidden("#vista-invitacion")));
   await p.goBack(); await p.waitForTimeout(400);
@@ -274,41 +276,49 @@ async function responder(p, resp) {
   if (!(EV.modulos && EV.modulos.listones)) {
     p = await nuevaPagina(ctx, errores, externos);
     await elegirPadrino(p, "rojas-gustavo"); await irVista(p, "pase");
-    ok("Módulo de listones no publicado: acceso y pestañas ocultos (sin funciones incompletas)", (await p.isHidden("#pestanas-pase")) && (await p.isVisible("#panel-pase")) && (await p.evaluate(() => document.getElementById("btn-integrante").hidden)));
+    ok("Módulo de listones no publicado: acceso y sección Mi listón ocultos", (await p.isHidden('.nav-inferior [data-ir="liston"]')) && (await p.isVisible("#panel-pase")) && (await p.evaluate(() => document.getElementById("btn-integrante").hidden)));
     await p.close();
   } else {
-  // Integrantes de la promoción: acceso directo al listón, sin confirmación
+  // Especialistas 2026: acceso directo a Mi listón, Inicio regresa al espacio conmemorativo, sin confirmación
   p = await nuevaPagina(ctx, errores, externos);
   await p.goto(BASE, { waitUntil: "networkidle" });
-  ok("Inicio: acceso «Soy integrante de la XXIV Promoción»", await p.isVisible("#btn-integrante"));
+  ok("Inicio: acceso «Especialistas 2026» visible", await p.isVisible("#btn-integrante"));
   await p.click("#btn-integrante");
   const grads = await p.$$eval("#lista-graduandos [data-graduando]", (e) => e.map((x) => x.textContent));
   ok("Integrantes: los 7 graduandos", grads.join("|") === "Dr. Jorge Arrieta|Dr. Nelson Páez|Dr. Diego Guillén|Dr. José Sánchez|Dra. Andrea Montes|Dra. Francia Méndez|Dra. Oriana Hernández", grads.join("|"));
   await p.click('[data-graduando="arrieta-jorge"]'); await p.waitForTimeout(1500);
-  ok("Graduando: entra directamente a su listón", (await p.evaluate(() => document.body.dataset.vistaActiva)) === "pase" && (await p.isVisible("#panel-liston")) && (await p.getAttribute("#liston-vista", "src")).split("?")[0] === "assets/listones/arrieta-jorge.png");
-  const navG = await p.$$eval(".nav-inferior a", (a) => a.filter((x) => getComputedStyle(x).display !== "none").map((x) => x.textContent.trim()).join("|"));
-  ok("Graduando: sin confirmación de asistencia (solo Programa y Mi listón)", navG === "Programa|Mi listón", navG);
+  ok("Graduando: entra directamente a su listón", (await p.evaluate(() => document.body.dataset.vistaActiva)) === "liston" && (await p.isVisible("#vista-liston")) && (await p.getAttribute("#liston-vista", "src")).split("?")[0] === "assets/listones/arrieta-jorge.png");
+  const navG = await p.$$eval(".nav-inferior a", (a) => a.filter((x) => !x.hidden && getComputedStyle(x).display !== "none").map((x) => x.textContent.trim()).join("|"));
+  ok("Graduando: navegación exacta (Inicio|Programa|Mi listón)", navG === "Inicio|Programa|Mi listón", navG);
   await p.evaluate(() => { location.hash = "confirmar"; }); await p.waitForTimeout(400);
-  ok("Graduando: la ruta #confirmar no está disponible", (await p.evaluate(() => document.body.dataset.vistaActiva)) === "pase");
+  ok("Graduando: la ruta #confirmar no está disponible", (await p.evaluate(() => document.body.dataset.vistaActiva)) === "liston");
+  await irVista(p, "invitacion");
+  ok("Graduando: botón Inicio regresa al espacio conmemorativo personalizado", (await p.isVisible("#espacio-especialista")) && (await p.textContent("#esp-nombre")) === "Dr. Jorge Arrieta");
+  await irVista(p, "liston");
   ok("Graduando: PDF colectivos A4 disponibles", await p.isVisible("#liston-colectivos"));
-  for (const [sel, tipo] of [["#liston-png", "image/png"], ["#liston-pdf", "application/pdf"]]) {
+  for (const [sel, tipo] of [["#liston-png", "image/png"], ["#liston-png-600", "image/png"], ["#liston-pdf", "application/pdf"]]) {
     const r = await p.request.get(BASE + (await p.getAttribute(sel, "href")));
-    ok(`Listón descargable (${tipo})`, r.ok() && (r.headers()["content-type"] || "").startsWith(tipo), r.status());
+    ok(`Listón descargable (${sel} · ${tipo})`, r.ok() && (r.headers()["content-type"] || "").startsWith(tipo), r.status());
   }
   await p.screenshot({ path: `${OUT}/16-graduando-liston.png` });
   await p.close();
-  // Padrino: dos opciones en Mi pase
+  // Padrino: Mi listón como sección independiente de Mi pase + botón Inicio conserva estado de tarjeta
   p = await nuevaPagina(ctx, errores, externos);
-  await elegirPadrino(p, "rojas-gustavo"); await irVista(p, "pase");
-  ok("Padrino: pestañas «Mi pase digital» y «Mi listón conmemorativo»", (await p.isVisible("#pestanas-pase")) && (await p.textContent("#pestanas-pase")).replace(/\s+/g, " ").trim() === "Mi pase digital Mi listón conmemorativo");
-  await p.click("#tab-liston"); await p.waitForTimeout(300);
-  ok("Padrino: listón personalizado", (await p.getAttribute("#liston-vista", "src")).split("?")[0] === "assets/listones/rojas-gustavo.png" && (await p.isHidden("#panel-pase")) && (await p.isHidden("#liston-colectivos")));
+  await elegirPadrino(p, "rojas-gustavo");
+  await p.click("#btn-principal"); await esperarEstado(p, "abierta");
+  await irVista(p, "liston");
+  ok("Padrino: sección independiente Mi listón personalizada (sin colectivos)", (await p.evaluate(() => document.body.dataset.vistaActiva)) === "liston" && (await p.getAttribute("#liston-vista", "src")).split("?")[0] === "assets/listones/rojas-gustavo.png" && (await p.isHidden("#vista-pase")) && (await p.isHidden("#liston-colectivos")));
   await p.screenshot({ path: `${OUT}/17-padrino-liston.png` });
+  await irVista(p, "invitacion");
+  ok("Botón Inicio: regresa a la tarjeta conservando estado abierto e identidad", (await est(p)).e === "abierta" && (await p.textContent("#saludo-nombre")) === "Dr. Gustavo Rojas");
   await p.close();
-  // Residente: sin listón
+  // Residente: sin opción Mi listón en menú y ruta #liston bloqueada
   p = await nuevaPagina(ctx, errores, externos);
-  await rutaB(p, "r2", "Residente Prueba"); await irVista(p, "pase");
-  ok("Residente: solo pase digital (sin listón)", (await p.isHidden("#pestanas-pase")) && (await p.isVisible("#panel-pase")));
+  await rutaB(p, "r2", "Residente Prueba");
+  const navR = await p.$$eval(".nav-inferior a", (a) => a.filter((x) => !x.hidden && getComputedStyle(x).display !== "none").map((x) => x.textContent.trim()).join("|"));
+  ok("Residente: navegación sin Mi listón (Inicio|Programa|Confirmar|Mi pase)", navR === "Inicio|Programa|Confirmar|Mi pase", navR);
+  await p.evaluate(() => { location.hash = "liston"; }); await p.waitForTimeout(400);
+  ok("Residente: ruta #liston no accesible", (await p.evaluate(() => document.body.dataset.vistaActiva)) !== "liston");
   await p.close();
   }
   p = await nuevaPagina(ctx, errores, externos);

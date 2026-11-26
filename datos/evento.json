@@ -242,7 +242,7 @@
   },
   "modulos": {
     "_nota": "Interruptores de publicación: un módulo solo se muestra en la web pública cuando está completo y verificado.",
-    "listones": false
+    "listones": true
   },
   "habilitacion_por_defecto": {
     "padrino": {

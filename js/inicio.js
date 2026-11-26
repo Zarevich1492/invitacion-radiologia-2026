@@ -199,38 +199,47 @@
     $("#experiencia").removeAttribute("aria-hidden");
     $("#barra").hidden = false; $("#nav-inferior").hidden = false; document.body.classList.add("identificado");
     setTimeout(() => { bv.hidden = true; }, 650);
-    mostrarVista(vistaDeHash() || (id.categoria === "graduando" ? "pase" : "invitacion"), { foco: false });
+    mostrarVista(vistaDeHash() || (id.categoria === "graduando" ? "liston" : "invitacion"), { foco: false });
     if (id.categoria !== "graduando") window.Tarjeta.mostrar();
   }
   $("#btn-cambiar-nombre").addEventListener("click", () => {
     window.Tarjeta.detener();
-    $("#barra").hidden = true; $("#nav-inferior").hidden = true; document.body.classList.remove("identificado", "rol-graduando");
+    $("#barra").hidden = true; $("#nav-inferior").hidden = true; document.body.classList.remove("identificado", "rol-graduando", "con-liston");
     const bv = $("#bienvenida"); bv.hidden = false; bv.removeAttribute("aria-hidden");
     requestAnimationFrame(() => bv.classList.remove("saliendo"));
     $("#experiencia").setAttribute("aria-hidden", "true");
     mostrarPaso("acceso"); buscar.value = ""; pintarLista(""); if (ID) marcarPrevio(ID);
   });
 
-  /* ---------- Vistas: Invitación · Programa · Confirmar · Mi pase ----------
-     Navegación con el fragmento (#programa, …): el botón Atrás funciona y se puede entrar
+  /* ---------- Vistas: Inicio · Programa · Confirmar · Mi pase · Mi listón ----------
+     Navegación con el fragmento (#programa, #liston, …): el botón Atrás funciona y se puede entrar
      directamente a un apartado. El fragmento #t=… (enlace individual) se trata aparte, al inicio. */
-  const VISTAS = ["invitacion", "programa", "confirmar", "pase"];
+  const VISTAS = ["invitacion", "programa", "confirmar", "pase", "liston"];
   let vistaActual = null;
-  const vistaDeHash = () => { const h = location.hash.slice(1); return VISTAS.includes(h) ? h : null; };
+  const vistaDeHash = () => { const h = location.hash.slice(1); if (h === "inicio") return "invitacion"; return VISTAS.includes(h) ? h : null; };
   const esGraduando = () => ID && ID.categoria === "graduando";
-  const permitida = (v) => !esGraduando() || v === "programa" || v === "pase";
+  const tieneListon = () => !!(ID && listonDe(ID));
+  const permitida = (v) => {
+    if (esGraduando()) return v === "invitacion" || v === "programa" || v === "liston";
+    if (v === "liston") return tieneListon();
+    return VISTAS.includes(v);
+  };
   function mostrarVista(v, { foco = true } = {}) {
-    if (!VISTAS.includes(v)) v = esGraduando() ? "pase" : "invitacion";
-    if (!permitida(v)) v = "pase";
+    if (!VISTAS.includes(v)) v = esGraduando() ? "liston" : "invitacion";
+    if (!permitida(v)) v = esGraduando() ? "liston" : "invitacion";
     if (vistaActual === "invitacion" && v !== "invitacion") window.Tarjeta.detener();
     vistaActual = v;
     for (const n of VISTAS) document.querySelector(`section[data-vista="${n}"]`).hidden = n !== v;
     document.querySelectorAll(".nav-vistas [data-ir]").forEach((a) => { if (a.dataset.ir === v) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
     document.body.dataset.vistaActiva = v;
     window.scrollTo(0, 0);
-    if (v === "invitacion") requestAnimationFrame(() => window.Tarjeta.medir());
-    if (v === "pase" && !esGraduando() && pestanaActual === "pase") prepararPase();
-    if (foco) { const t = document.querySelector(`section[data-vista="${v}"] h1, section[data-vista="${v}"] h2`); if (t) t.focus({ preventScroll: true }); }
+    if (v === "invitacion" && !esGraduando()) requestAnimationFrame(() => window.Tarjeta.medir());
+    if (v === "pase" && !esGraduando()) prepararPase();
+    if (foco) {
+      const sel = v === "invitacion" && esGraduando() ? "#esp-nombre" : `section[data-vista="${v}"] h1, section[data-vista="${v}"] h2`;
+      const t = document.querySelector(sel);
+      if (t) t.focus({ preventScroll: true });
+    }
   }
   document.addEventListener("click", (e) => {
     const a = e.target.closest("[data-ir]");
@@ -348,46 +357,38 @@
     $("#mapas").innerHTML = acts.map((a) => `<a class="btn" target="_blank" rel="noopener noreferrer" href="https://www.google.com/maps/search/?api=1&amp;query=${encodeURIComponent(a.mapa)}">${esc(a.titulo)} <small>${esc(a.lugar)}</small></a>`).join("");
   }
 
-  /* ---------- Listón conmemorativo (graduandos y padrinos del listado oficial) ---------- */
-  let pestanaActual = "pase";
+  /* ---------- Listón conmemorativo (sección independiente: 7 graduandos y 10 padrinos oficiales) ---------- */
   const listonesActivos = () => !!(EV.modulos && EV.modulos.listones);   // interruptor de publicación (datos/evento.json)
   function listonDe(id) {
     if (!listonesActivos()) return null;
     if (id.categoria === "graduando") return id.graduandoId;
     if (id.categoria === "padrino" && EV.padrinos.some((p) => p.id === id.padrinoId)) return id.padrinoId;
-    return null;   // R1, R2 y otros invitados no tienen listón
+    return null;   // docentes, egresados, R1, R2 y otros invitados no tienen listón
   }
   function pintarListon(id) {
     const lid = listonDe(id), grad = id.categoria === "graduando";
-    $("#pestanas-pase").hidden = !lid || grad;
+    document.body.classList.toggle("con-liston", !!lid);
+    document.querySelectorAll('.nav-vistas [data-ir="liston"]').forEach((el) => { el.hidden = !lid; });
+    $("#espacio-especialista").hidden = !grad;
+    $("#btn-prog-confirmar").hidden = grad;
+    $("#btn-prog-liston").hidden = !grad;
     $("#liston-colectivos").hidden = !grad;
-    document.querySelectorAll('.nav-vistas [data-ir="pase"] span, .nav-superior [data-ir="pase"]').forEach((el) => {
-      if (el.tagName === "SPAN" || !el.querySelector("span")) el.textContent = grad ? "Mi listón" : "Mi pase";
-    });
-    $("#t-pase").textContent = grad ? "Mi listón" : "Mi pase";
+    if (grad) {
+      $("#esp-nombre").textContent = id.nombre;
+      $("#esp-fecha").textContent = EV.fecha_texto + " · " + EV.ciudad;
+    }
     if (lid) {
       const img = $("#liston-vista"), x = [...EV.graduandos_lista, ...EV.padrinos].find((p) => p.id === lid);
+      const nom = x.nombre_liston || x.nombre;
+      $("#liston-eyebrow").textContent = x.denominacion;
+      $("#liston-sub").textContent = `${nom} · XXIV Promoción de Radiólogos`;
       img.src = `assets/listones/${lid}.png`;
-      img.alt = `Listón conmemorativo: ${x.denominacion}, ${x.nombre}. XXIV Promoción de Radiólogos, Universidad de Los Andes, Mérida, 2026.`;
-      $("#liston-png").href = `assets/listones/${lid}.png`; $("#liston-png").setAttribute("download", `liston-${lid}.png`);
+      img.alt = `Listón conmemorativo: ${x.denominacion}, ${nom}. XXIV Promoción de Radiólogos, Universidad de Los Andes, Mérida, 2026.`;
+      $("#liston-png").href = `assets/listones/${lid}.png`; $("#liston-png").setAttribute("download", `liston-${lid}-300ppp.png`);
+      $("#liston-png-600").href = `assets/listones/${lid}-600ppp.png`; $("#liston-png-600").setAttribute("download", `liston-${lid}-600ppp.png`);
       $("#liston-pdf").href = `assets/listones/${lid}.pdf`; $("#liston-pdf").setAttribute("download", `liston-${lid}.pdf`);
     }
-    elegirPestana(grad ? "liston" : "pase", false);
   }
-  function elegirPestana(t, foco = true) {
-    pestanaActual = t;
-    $("#panel-pase").hidden = t !== "pase"; $("#panel-liston").hidden = t !== "liston";
-    for (const [b, n] of [["#tab-pase", "pase"], ["#tab-liston", "liston"]]) {
-      $(b).setAttribute("aria-selected", String(n === t)); $(b).tabIndex = n === t ? 0 : -1;
-    }
-    if (t === "pase" && vistaActual === "pase") prepararPase();
-    if (foco) $(t === "pase" ? "#tab-pase" : "#tab-liston").focus();
-  }
-  $("#tab-pase").addEventListener("click", () => elegirPestana("pase"));
-  $("#tab-liston").addEventListener("click", () => elegirPestana("liston"));
-  $("#pestanas-pase").addEventListener("keydown", (e) => {
-    if (e.key === "ArrowRight" || e.key === "ArrowLeft") { e.preventDefault(); elegirPestana(pestanaActual === "pase" ? "liston" : "pase"); }
-  });
 
   /* ---------- Pase digital ---------- */
   let paseCache = null, paseURL = null;
