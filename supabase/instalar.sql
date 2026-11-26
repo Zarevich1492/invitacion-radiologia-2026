@@ -126,6 +126,8 @@ create policy admin_lectura on public.administradores for select to authenticate
 
 revoke all on public.invitados, public.confirmaciones, public.intentos, public.administradores, public.habilitaciones from anon;
 grant select on public.actividades, public.padrinos, public.categorias to anon, authenticated;
+-- Segunda barrera (además de RLS): el público no tiene permisos de escritura sobre los catálogos.
+revoke insert, update, delete, truncate, references, trigger on public.actividades, public.padrinos, public.categorias from anon;
 grant select, insert, update, delete on public.actividades, public.padrinos, public.categorias, public.habilitaciones, public.invitados, public.confirmaciones to authenticated;
 grant select on public.administradores to authenticated;
 

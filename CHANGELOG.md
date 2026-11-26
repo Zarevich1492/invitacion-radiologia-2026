@@ -13,6 +13,12 @@ Reversión: `git revert <commit>` o volver a una etiqueta: `git checkout -B main
 - 17 listones conmemorativos (Dirección B — Protocolar, 60 × 120 mm, terminación en V, nombres aprobados `Dra. Omaira Berrios` y `Dra. Ma. del Carmen Gutiérrez`): 17 PNG 300 ppp, 17 PNG 600 ppp, 17 PDF vectoriales individuales y 2 PDF colectivos A4 vectoriales. `modulos.listones: true`.
 - Conservadas íntegramente todas las correcciones de `v2.3`–`v2.6` (incluyendo Supabase).
 
+## v2.8 · Supabase conectado y verificado
+- `js/config.js` con la Project URL y la clave publishable (pública por diseño; la seguridad la imponen RLS y las funciones).
+- Verificación real: 26/26 (permisos, antispam, categorías, persistencia, modificación con token sin duplicar, reglas de habilitación).
+- Interfaz verificada contra el servidor real: guardado, recuperación y modificación de una confirmación.
+- `supabase/endurecer.sql`: segunda barrera de permisos para el rol público.
+
 ## v2.6 · Preparación de Supabase (clave publishable)
 - `api.js` compatible con la clave `sb_publishable_…` (no es un JWT: solo se envía en `apikey`).
 - `supabase/instalar.sql`: esquema + semilla en un solo archivo, probado en una base vacía.

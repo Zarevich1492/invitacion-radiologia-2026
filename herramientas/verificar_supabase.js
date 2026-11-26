@@ -40,7 +40,7 @@ const rpc = (f, a) => http("POST", `/rest/v1/rpc/${f}`, a || {});
   ok("El público NO puede añadir padrinos", ins.s === 401 || ins.s === 403, `HTTP ${ins.s}`);
   const upd = await http("PATCH", "/rest/v1/padrinos?id=eq.falcon-analy", { nombre: "Dra. Alterada" });
   const aun = await rpc("invitacion_config");
-  ok("El público NO puede modificar padrinos", aun.j.padrinos.some((p) => p.nombre === "Dra. Analy Falcón"), `HTTP ${upd.s}`);
+  ok("El público NO puede modificar padrinos (los datos no cambian)", aun.j.padrinos.some((p) => p.nombre === "Dra. Analy Falcón"), `HTTP ${upd.s}` + (upd.s === 204 ? " (RLS filtra 0 filas; ejecute supabase/endurecer.sql para además denegar el permiso)" : ""));
   for (const f of ["admin_generar_enlace", "admin_crear_invitado", "admin_sincronizar_padrinos", "admin_eliminar_registros"]) {
     const r = await rpc(f, { p_invitado: "00000000-0000-0000-0000-000000000000", p_nombre: "X", p_categoria: "otro", p_confirmacion: "no" });
     ok(`El público NO ejecuta ${f}`, r.s === 401 || r.s === 403 || r.s === 404, `HTTP ${r.s}`);
