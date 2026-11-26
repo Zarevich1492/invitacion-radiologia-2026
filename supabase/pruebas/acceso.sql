@@ -5,17 +5,17 @@ do $$
 declare r jsonb; s_p text; s_o text; s_e text; s_d text; tok text; n int; h text; v_err text; t jsonb; lista jsonb; ped uuid;
 begin
   -- Definir códigos (como postgres/gestor): solo se almacena el hash bcrypt
-  perform public.admin_definir_codigo('padrinos', 'codigo-prueba-padrinos');
-  perform public.admin_definir_codigo('docentes', 'codigo-prueba-docentes');
-  perform public.admin_definir_codigo('residentes', 'codigo-prueba-residentes');
-  perform public.admin_definir_codigo('especialistas', 'codigo-prueba-especial');
+  perform public.init_definir_codigo('padrinos', 'codigo-prueba-padrinos');
+  perform public.init_definir_codigo('docentes', 'codigo-prueba-docentes');
+  perform public.init_definir_codigo('residentes', 'codigo-prueba-residentes');
+  perform public.init_definir_codigo('especialistas', 'codigo-prueba-especial');
   select hash into h from public.codigos_acceso where grupo = 'padrinos';
   perform public._ok('el código se guarda como hash bcrypt, no en texto plano', h like '$2%' and h not like '%codigo-prueba%');
-  begin perform public.admin_definir_codigo('padrinos', 'corto'); perform public._ok('rechaza códigos cortos', false);
+  begin perform public.init_definir_codigo('padrinos', 'corto'); perform public._ok('rechaza códigos cortos', false);
   exception when others then perform public._ok('rechaza códigos cortos', sqlerrm = 'codigo_demasiado_corto'); end;
 
   execute 'set local role anon';
-  begin perform public.admin_definir_codigo('padrinos', 'intruso-intruso'); perform public._ok('anon NO define códigos', false);
+  begin perform public.init_definir_codigo('padrinos', 'intruso-intruso'); perform public._ok('anon NO define códigos', false);
   exception when insufficient_privilege then perform public._ok('anon NO define códigos', true); end;
   begin perform count(*) from public.codigos_acceso; perform public._ok('anon NO lee códigos', false);
   exception when insufficient_privilege then perform public._ok('anon NO lee códigos', true); end;
@@ -80,7 +80,7 @@ begin
   execute 'set local role anon';
   perform public._ok('sesión revocada deja de valer', public.acceso_estado(s_p) = '{"ok": false}'::jsonb and public.acceso_estado(s_d)->>'ok' = 'true');
   execute 'reset role';
-  perform public.admin_definir_codigo('docentes', 'nuevo-codigo-docentes');
+  perform public.init_definir_codigo('docentes', 'nuevo-codigo-docentes');
   execute 'set local role anon';
   perform public._ok('cambiar el código cierra sesiones previas', public.acceso_estado(s_d) = '{"ok": false}'::jsonb);
   perform public._ok('el código anterior ya no sirve', not (public.acceso_validar('docentes', 'codigo-prueba-docentes')->>'ok')::boolean);

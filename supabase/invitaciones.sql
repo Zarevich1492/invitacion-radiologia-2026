@@ -4,7 +4,7 @@
 -- revocar un enlace lo elimina y deja de funcionar de inmediato.
 
 create or replace function public._admin_id() returns text
-language sql stable as $$ select coalesce((select email from public.administradores where user_id = auth.uid()), current_user); $$;
+language sql stable as $$ select coalesce((select email from public.administradores where user_id = auth.uid()), 'desconocido'); $$;
 
 create or replace function public._bitacora(p_accion text, p_detalle jsonb) returns void
 language sql volatile security definer set search_path = public as $$

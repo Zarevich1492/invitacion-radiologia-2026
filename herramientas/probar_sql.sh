@@ -23,3 +23,4 @@ psql -U postgres -d $DB -v ON_ERROR_STOP=1 -f supabase/pruebas/pruebas.sql
 psql -U postgres -d $DB -v ON_ERROR_STOP=1 -f supabase/pruebas/acceso.sql
 psql -U postgres -d $DB -v ON_ERROR_STOP=1 -f supabase/pruebas/dedicatorias.sql
 psql -U postgres -d $DB -v ON_ERROR_STOP=1 -f supabase/pruebas/invitaciones.sql
+psql -U postgres -d $DB -v ON_ERROR_STOP=1 -f supabase/pruebas/seguridad_admin.sql

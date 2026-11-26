@@ -345,18 +345,26 @@ begin
   return v_id;
 end $$;
 
--- Sincroniza el registro oficial (uno por padrino activo). Se ejecuta al añadir padrinos.
-create or replace function public.admin_sincronizar_padrinos() returns int
+-- Sincroniza el registro oficial (uno por padrino activo).
+-- · _sincronizar_padrinos(): lógica interna SIN comprobación; nadie del API puede ejecutarla (solo el propietario: SQL Editor/semilla).
+-- · admin_sincronizar_padrinos(): vía RPC, exige una cuenta de la tabla «administradores».
+create or replace function public._sincronizar_padrinos() returns int
 language plpgsql volatile security definer set search_path = public as $$
 declare n int;
 begin
-  if not public.es_admin() and current_user not in ('postgres','supabase_admin') then raise exception 'no_autorizado' using errcode = '42501'; end if;
   insert into public.invitados(categoria, padrino_id, nombre, origen, verificado)
   select 'padrino', p.id, p.nombre, 'oficial', false from public.padrinos p
   where p.activo and not exists (select 1 from public.invitados i where i.padrino_id = p.id and i.origen = 'oficial');
   get diagnostics n = row_count;
   update public.invitados i set nombre = p.nombre from public.padrinos p where i.padrino_id = p.id and i.origen = 'oficial' and i.nombre <> p.nombre;
   return n;
+end $$;
+
+create or replace function public.admin_sincronizar_padrinos() returns int
+language plpgsql volatile security definer set search_path = public as $$
+begin
+  if not public.es_admin() then raise exception 'no_autorizado' using errcode = '42501'; end if;
+  return public._sincronizar_padrinos();
 end $$;
 
 -- Eliminación de registros personales tras el evento (conserva catálogos y padrinos oficiales sin respuestas).
@@ -380,7 +388,7 @@ revoke all on function public.invitacion_config(), public.mi_invitacion(text), p
 grant execute on function public.invitacion_config(), public.mi_invitacion(text), public.guardar_confirmacion(text,text,text,text,jsonb,text,text), public.informar_omision(text,text) to anon, authenticated;
 revoke all on function public.admin_generar_enlace(uuid), public.admin_crear_invitado(text,text), public.admin_sincronizar_padrinos(), public.admin_eliminar_registros(text) from public, anon;
 grant execute on function public.admin_generar_enlace(uuid), public.admin_crear_invitado(text,text), public.admin_sincronizar_padrinos(), public.admin_eliminar_registros(text) to authenticated;
-revoke all on function public._hash(text), public._nuevo_token(), public._habilitadas(text,boolean), public._actividades_de(public.invitados), public._override_de(public.invitados), public._vista(public.invitados) from public, anon, authenticated;
+revoke all on function public._sincronizar_padrinos(), public._hash(text), public._nuevo_token(), public._habilitadas(text,boolean), public._actividades_de(public.invitados), public._override_de(public.invitados), public._vista(public.invitados) from public, anon, authenticated;
 
 -- ACCESO POR CÓDIGO DE CATEGORÍA (idempotente). Se ejecuta DESPUÉS de esquema.sql.
 -- · Los códigos se guardan solo como hash bcrypt (nunca en texto plano ni en el repositorio).
@@ -503,20 +511,37 @@ begin
   return public._vista(v);
 end $$;
 
--- ---------- Administración (SQL Editor como postgres, o panel con sesión de administrador) ----------
+-- ---------- Administración ----------
+-- AUTORIZACIÓN: solo cuentas de la tabla «administradores» (JWT de Supabase Auth → auth.uid()).
+-- Nunca se usa current_user: dentro de una función SECURITY DEFINER vale siempre el propietario (postgres) y permitiría a cualquiera pasar.
 create or replace function public._es_gestor() returns boolean
-language sql stable as $$ select public.es_admin() or current_user in ('postgres','supabase_admin'); $$;
+language sql stable as $$ select public.es_admin(); $$;
 
-create or replace function public.admin_definir_codigo(p_grupo text, p_codigo text) returns boolean
+-- INICIALIZACIÓN (SQL Editor): funciones internas sin comprobación, SIN permisos para anon ni authenticated (no son invocables por API).
+create or replace function public._definir_codigo(p_grupo text, p_codigo text) returns boolean
 language plpgsql volatile security definer set search_path = public, extensions as $$
 begin
-  if not public._es_gestor() then raise exception 'no_autorizado' using errcode = '42501'; end if;
   if p_grupo not in ('padrinos','docentes','residentes','especialistas') then raise exception 'grupo_invalido' using errcode = 'P0001'; end if;
   if p_codigo is null or char_length(p_codigo) < 8 then raise exception 'codigo_demasiado_corto' using errcode = 'P0001'; end if;
   insert into public.codigos_acceso(grupo, hash) values (p_grupo, extensions.crypt(p_codigo, extensions.gen_salt('bf', 10)))
     on conflict (grupo) do update set hash = excluded.hash, actualizado = now();
   update public.sesiones_acceso set revocada = true where grupo = p_grupo and not revocada;   -- cambiar el código cierra las sesiones previas
   return true;
+end $$;
+
+create or replace function public.init_definir_codigo(p_grupo text, p_codigo text) returns boolean
+language plpgsql volatile security definer set search_path = public, extensions as $$
+begin
+  if session_user not in ('postgres', 'supabase_admin') then raise exception 'solo_inicializacion' using errcode = '42501'; end if;   -- defensa adicional: conexión directa del propietario
+  return public._definir_codigo(p_grupo, p_codigo);
+end $$;
+
+-- Vía RPC (panel): exige administrador
+create or replace function public.admin_definir_codigo(p_grupo text, p_codigo text) returns boolean
+language plpgsql volatile security definer set search_path = public, extensions as $$
+begin
+  if not public._es_gestor() then raise exception 'no_autorizado' using errcode = '42501'; end if;
+  return public._definir_codigo(p_grupo, p_codigo);
 end $$;
 
 create or replace function public.admin_revocar_sesiones(p_grupo text default null) returns int
@@ -543,6 +568,7 @@ revoke all on function public.acceso_validar(text,text), public.acceso_estado(te
   public.guardar_con_sesion(text,text,text,text,text,jsonb,text,text), public.mi_invitacion_sesion(text,text) from public;
 grant execute on function public.acceso_validar(text,text), public.acceso_estado(text), public.lista_nombres(text),
   public.guardar_con_sesion(text,text,text,text,text,jsonb,text,text), public.mi_invitacion_sesion(text,text) to anon, authenticated;
+revoke all on function public._definir_codigo(text,text), public.init_definir_codigo(text,text) from public, anon, authenticated;
 revoke all on function public.admin_definir_codigo(text,text), public.admin_revocar_sesiones(text), public.admin_estado_acceso() from public, anon;
 grant execute on function public.admin_definir_codigo(text,text), public.admin_revocar_sesiones(text), public.admin_estado_acceso() to authenticated;
 
@@ -674,11 +700,10 @@ begin
   return jsonb_build_object('aportes', coalesce((select valor from public.ajustes where clave = 'aportes'), '{}'));
 end $$;
 
-create or replace function public.admin_definir_aportes(p_valor jsonb) returns boolean
+create or replace function public._definir_aportes(p_valor jsonb) returns boolean
 language plpgsql volatile security definer set search_path = public as $$
 declare k text;
 begin
-  if not public._es_gestor() then raise exception 'no_autorizado' using errcode = '42501'; end if;
   if jsonb_typeof(p_valor) <> 'object' then raise exception 'valor_invalido' using errcode = 'P0001'; end if;
   for k in select jsonb_object_keys(p_valor) loop
     if k not in ('activo','intro','gracias','banco','codigo','titular','cedula','telefono') then raise exception 'campo_invalido' using errcode = 'P0001'; end if;
@@ -687,6 +712,21 @@ begin
   return true;
 end $$;
 
+create or replace function public.init_definir_aportes(p_valor jsonb) returns boolean
+language plpgsql volatile security definer set search_path = public as $$
+begin
+  if session_user not in ('postgres', 'supabase_admin') then raise exception 'solo_inicializacion' using errcode = '42501'; end if;
+  return public._definir_aportes(p_valor);
+end $$;
+
+create or replace function public.admin_definir_aportes(p_valor jsonb) returns boolean
+language plpgsql volatile security definer set search_path = public as $$
+begin
+  if not public._es_gestor() then raise exception 'no_autorizado' using errcode = '42501'; end if;
+  return public._definir_aportes(p_valor);
+end $$;
+
+revoke all on function public._definir_aportes(jsonb), public.init_definir_aportes(jsonb) from public, anon, authenticated;
 revoke all on function public.dedicatorias_config(), public.dedicatoria_enviar(text,text,text,text,text[],text), public.dedicatorias_publicas(), public.aportes_publicos() from public;
 grant execute on function public.dedicatorias_config(), public.dedicatoria_enviar(text,text,text,text,text[],text), public.dedicatorias_publicas(), public.aportes_publicos() to anon, authenticated;
 revoke all on function public.admin_dedicatorias(), public.admin_dedicatoria_estado(uuid,text), public.admin_dedicatoria_eliminar(uuid), public.admin_ajustes(), public.admin_definir_aportes(jsonb) from public, anon;
@@ -699,7 +739,7 @@ notify pgrst, 'reload schema';
 -- revocar un enlace lo elimina y deja de funcionar de inmediato.
 
 create or replace function public._admin_id() returns text
-language sql stable as $$ select coalesce((select email from public.administradores where user_id = auth.uid()), current_user); $$;
+language sql stable as $$ select coalesce((select email from public.administradores where user_id = auth.uid()), 'desconocido'); $$;
 
 create or replace function public._bitacora(p_accion text, p_detalle jsonb) returns void
 language sql volatile security definer set search_path = public as $$
@@ -978,7 +1018,7 @@ insert into public.graduandos(id, nombre, apellido) values ('mendez-francia', 'D
   on conflict (id) do update set nombre = excluded.nombre, apellido = excluded.apellido;
 insert into public.graduandos(id, nombre, apellido) values ('hernandez-oriana', 'Dra. Oriana Hernández', 'Hernández')
   on conflict (id) do update set nombre = excluded.nombre, apellido = excluded.apellido;
-select public.admin_sincronizar_padrinos();
+select public._sincronizar_padrinos();
 -- Renombrado seguro: el nombre oficial se propaga a todos los registros vinculados (mismo id, mismas respuestas, sin duplicados).
 update public.invitados i set nombre = p.nombre from public.padrinos p where i.padrino_id = p.id and i.nombre <> p.nombre;
 commit;

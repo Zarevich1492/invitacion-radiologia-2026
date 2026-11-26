@@ -74,14 +74,14 @@ begin
   -- Aportes
   execute 'set local role anon';
   perform public._ok('aportes inactivos por defecto: sin datos', public.aportes_publicos() = '{"activo": false}'::jsonb);
-  begin perform public.admin_definir_aportes('{"activo":true}'); perform public._ok('anon NO configura aportes', false);
+  begin perform public.init_definir_aportes('{"activo":true}'); perform public._ok('anon NO configura aportes', false);
   exception when insufficient_privilege then perform public._ok('anon NO configura aportes', true); end;
   execute 'reset role';
-  perform public.admin_definir_aportes('{"activo":true,"banco":"Banco de prueba","codigo":"0000","titular":"Titular Prueba","cedula":"1","telefono":"04120000000","intro":"i","gracias":"g"}');
+  perform public.init_definir_aportes('{"activo":true,"banco":"Banco de prueba","codigo":"0000","titular":"Titular Prueba","cedula":"1","telefono":"04120000000","intro":"i","gracias":"g"}');
   execute 'set local role anon';
   perform public._ok('aportes activos exponen solo los datos configurados', public.aportes_publicos()->>'banco' = 'Banco de prueba' and (public.aportes_publicos()->>'activo')::boolean);
   execute 'reset role';
-  begin perform public.admin_definir_aportes('{"hack":1}'); perform public._ok('campos no previstos se rechazan', false);
+  begin perform public.init_definir_aportes('{"hack":1}'); perform public._ok('campos no previstos se rechazan', false);
   exception when others then perform public._ok('campos no previstos se rechazan', sqlerrm = 'campo_invalido'); end;
 end $$;
 select n, case when ok then '✔' else '✘' end as r, prueba, detalle from public._resultado order by n;

@@ -5,6 +5,11 @@ https://zarevich1492.github.io/invitacion-radiologia-2026/ (misma dirección sie
 Reversión: `git revert <commit>` o volver a una etiqueta: `git checkout -B main <etiqueta> && git push -f origin main`
 (solo con autorización expresa).
 
+## v2.12.1 · Corrección de seguridad de autorización administrativa (rama `acceso-por-codigo`)
+- `_es_gestor()` y `admin_sincronizar_padrinos()` usaban `current_user`, que en funciones SECURITY DEFINER es siempre el propietario: cualquier usuario autenticado habría pasado la comprobación (en `admin_sincronizar_padrinos` ya desde v2.8). Ahora solo `es_admin()` (tabla `administradores`).
+- La inicialización desde el SQL Editor se separó en `init_definir_codigo`, `init_definir_aportes` y `_sincronizar_padrinos` (sin permisos para API) y la autorización por RPC en `admin_*`.
+- Prueba específica `supabase/pruebas/seguridad_admin.sql` (86 comprobaciones; control negativo: 50/86 con la versión anterior).
+
 ## v2.12 · Cierre: acceso por contraseña, Otros invitados, dedicatorias/aportes visibles para todos, sin CAPTCHA (rama `acceso-por-codigo`; pendiente de publicar tras la migración SQL)
 - Cuatro contraseñas por categoría validadas en Supabase (hash bcrypt, sesiones de 12 h, límite de intentos, revocación); panel «Seguridad y accesos» para cambiarlas y revocar sesiones. «Otros invitados» de acceso libre.
 - Cloudflare Turnstile y toda verificación externa/telefónica **eliminados** (código, panel y SQL). Protección solo en servidor: validación, frecuencia, duplicados, saneamiento, topes y moderación obligatoria (aprobar, rechazar, ocultar, eliminar).

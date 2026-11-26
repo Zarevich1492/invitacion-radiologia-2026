@@ -119,20 +119,37 @@ begin
   return public._vista(v);
 end $$;
 
--- ---------- Administración (SQL Editor como postgres, o panel con sesión de administrador) ----------
+-- ---------- Administración ----------
+-- AUTORIZACIÓN: solo cuentas de la tabla «administradores» (JWT de Supabase Auth → auth.uid()).
+-- Nunca se usa current_user: dentro de una función SECURITY DEFINER vale siempre el propietario (postgres) y permitiría a cualquiera pasar.
 create or replace function public._es_gestor() returns boolean
-language sql stable as $$ select public.es_admin() or current_user in ('postgres','supabase_admin'); $$;
+language sql stable as $$ select public.es_admin(); $$;
 
-create or replace function public.admin_definir_codigo(p_grupo text, p_codigo text) returns boolean
+-- INICIALIZACIÓN (SQL Editor): funciones internas sin comprobación, SIN permisos para anon ni authenticated (no son invocables por API).
+create or replace function public._definir_codigo(p_grupo text, p_codigo text) returns boolean
 language plpgsql volatile security definer set search_path = public, extensions as $$
 begin
-  if not public._es_gestor() then raise exception 'no_autorizado' using errcode = '42501'; end if;
   if p_grupo not in ('padrinos','docentes','residentes','especialistas') then raise exception 'grupo_invalido' using errcode = 'P0001'; end if;
   if p_codigo is null or char_length(p_codigo) < 8 then raise exception 'codigo_demasiado_corto' using errcode = 'P0001'; end if;
   insert into public.codigos_acceso(grupo, hash) values (p_grupo, extensions.crypt(p_codigo, extensions.gen_salt('bf', 10)))
     on conflict (grupo) do update set hash = excluded.hash, actualizado = now();
   update public.sesiones_acceso set revocada = true where grupo = p_grupo and not revocada;   -- cambiar el código cierra las sesiones previas
   return true;
+end $$;
+
+create or replace function public.init_definir_codigo(p_grupo text, p_codigo text) returns boolean
+language plpgsql volatile security definer set search_path = public, extensions as $$
+begin
+  if session_user not in ('postgres', 'supabase_admin') then raise exception 'solo_inicializacion' using errcode = '42501'; end if;   -- defensa adicional: conexión directa del propietario
+  return public._definir_codigo(p_grupo, p_codigo);
+end $$;
+
+-- Vía RPC (panel): exige administrador
+create or replace function public.admin_definir_codigo(p_grupo text, p_codigo text) returns boolean
+language plpgsql volatile security definer set search_path = public, extensions as $$
+begin
+  if not public._es_gestor() then raise exception 'no_autorizado' using errcode = '42501'; end if;
+  return public._definir_codigo(p_grupo, p_codigo);
 end $$;
 
 create or replace function public.admin_revocar_sesiones(p_grupo text default null) returns int
@@ -159,6 +176,7 @@ revoke all on function public.acceso_validar(text,text), public.acceso_estado(te
   public.guardar_con_sesion(text,text,text,text,text,jsonb,text,text), public.mi_invitacion_sesion(text,text) from public;
 grant execute on function public.acceso_validar(text,text), public.acceso_estado(text), public.lista_nombres(text),
   public.guardar_con_sesion(text,text,text,text,text,jsonb,text,text), public.mi_invitacion_sesion(text,text) to anon, authenticated;
+revoke all on function public._definir_codigo(text,text), public.init_definir_codigo(text,text) from public, anon, authenticated;
 revoke all on function public.admin_definir_codigo(text,text), public.admin_revocar_sesiones(text), public.admin_estado_acceso() from public, anon;
 grant execute on function public.admin_definir_codigo(text,text), public.admin_revocar_sesiones(text), public.admin_estado_acceso() to authenticated;
 

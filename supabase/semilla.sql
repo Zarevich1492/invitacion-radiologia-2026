@@ -71,7 +71,7 @@ insert into public.graduandos(id, nombre, apellido) values ('mendez-francia', 'D
   on conflict (id) do update set nombre = excluded.nombre, apellido = excluded.apellido;
 insert into public.graduandos(id, nombre, apellido) values ('hernandez-oriana', 'Dra. Oriana Hernández', 'Hernández')
   on conflict (id) do update set nombre = excluded.nombre, apellido = excluded.apellido;
-select public.admin_sincronizar_padrinos();
+select public._sincronizar_padrinos();
 -- Renombrado seguro: el nombre oficial se propaga a todos los registros vinculados (mismo id, mismas respuestas, sin duplicados).
 update public.invitados i set nombre = p.nombre from public.padrinos p where i.padrino_id = p.id and i.nombre <> p.nombre;
 commit;

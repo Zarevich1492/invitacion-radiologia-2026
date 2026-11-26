@@ -344,18 +344,26 @@ begin
   return v_id;
 end $$;
 
--- Sincroniza el registro oficial (uno por padrino activo). Se ejecuta al añadir padrinos.
-create or replace function public.admin_sincronizar_padrinos() returns int
+-- Sincroniza el registro oficial (uno por padrino activo).
+-- · _sincronizar_padrinos(): lógica interna SIN comprobación; nadie del API puede ejecutarla (solo el propietario: SQL Editor/semilla).
+-- · admin_sincronizar_padrinos(): vía RPC, exige una cuenta de la tabla «administradores».
+create or replace function public._sincronizar_padrinos() returns int
 language plpgsql volatile security definer set search_path = public as $$
 declare n int;
 begin
-  if not public.es_admin() and current_user not in ('postgres','supabase_admin') then raise exception 'no_autorizado' using errcode = '42501'; end if;
   insert into public.invitados(categoria, padrino_id, nombre, origen, verificado)
   select 'padrino', p.id, p.nombre, 'oficial', false from public.padrinos p
   where p.activo and not exists (select 1 from public.invitados i where i.padrino_id = p.id and i.origen = 'oficial');
   get diagnostics n = row_count;
   update public.invitados i set nombre = p.nombre from public.padrinos p where i.padrino_id = p.id and i.origen = 'oficial' and i.nombre <> p.nombre;
   return n;
+end $$;
+
+create or replace function public.admin_sincronizar_padrinos() returns int
+language plpgsql volatile security definer set search_path = public as $$
+begin
+  if not public.es_admin() then raise exception 'no_autorizado' using errcode = '42501'; end if;
+  return public._sincronizar_padrinos();
 end $$;
 
 -- Eliminación de registros personales tras el evento (conserva catálogos y padrinos oficiales sin respuestas).
@@ -379,4 +387,4 @@ revoke all on function public.invitacion_config(), public.mi_invitacion(text), p
 grant execute on function public.invitacion_config(), public.mi_invitacion(text), public.guardar_confirmacion(text,text,text,text,jsonb,text,text), public.informar_omision(text,text) to anon, authenticated;
 revoke all on function public.admin_generar_enlace(uuid), public.admin_crear_invitado(text,text), public.admin_sincronizar_padrinos(), public.admin_eliminar_registros(text) from public, anon;
 grant execute on function public.admin_generar_enlace(uuid), public.admin_crear_invitado(text,text), public.admin_sincronizar_padrinos(), public.admin_eliminar_registros(text) to authenticated;
-revoke all on function public._hash(text), public._nuevo_token(), public._habilitadas(text,boolean), public._actividades_de(public.invitados), public._override_de(public.invitados), public._vista(public.invitados) from public, anon, authenticated;
+revoke all on function public._sincronizar_padrinos(), public._hash(text), public._nuevo_token(), public._habilitadas(text,boolean), public._actividades_de(public.invitados), public._override_de(public.invitados), public._vista(public.invitados) from public, anon, authenticated;

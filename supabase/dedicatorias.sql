@@ -124,11 +124,10 @@ begin
   return jsonb_build_object('aportes', coalesce((select valor from public.ajustes where clave = 'aportes'), '{}'));
 end $$;
 
-create or replace function public.admin_definir_aportes(p_valor jsonb) returns boolean
+create or replace function public._definir_aportes(p_valor jsonb) returns boolean
 language plpgsql volatile security definer set search_path = public as $$
 declare k text;
 begin
-  if not public._es_gestor() then raise exception 'no_autorizado' using errcode = '42501'; end if;
   if jsonb_typeof(p_valor) <> 'object' then raise exception 'valor_invalido' using errcode = 'P0001'; end if;
   for k in select jsonb_object_keys(p_valor) loop
     if k not in ('activo','intro','gracias','banco','codigo','titular','cedula','telefono') then raise exception 'campo_invalido' using errcode = 'P0001'; end if;
@@ -137,6 +136,21 @@ begin
   return true;
 end $$;
 
+create or replace function public.init_definir_aportes(p_valor jsonb) returns boolean
+language plpgsql volatile security definer set search_path = public as $$
+begin
+  if session_user not in ('postgres', 'supabase_admin') then raise exception 'solo_inicializacion' using errcode = '42501'; end if;
+  return public._definir_aportes(p_valor);
+end $$;
+
+create or replace function public.admin_definir_aportes(p_valor jsonb) returns boolean
+language plpgsql volatile security definer set search_path = public as $$
+begin
+  if not public._es_gestor() then raise exception 'no_autorizado' using errcode = '42501'; end if;
+  return public._definir_aportes(p_valor);
+end $$;
+
+revoke all on function public._definir_aportes(jsonb), public.init_definir_aportes(jsonb) from public, anon, authenticated;
 revoke all on function public.dedicatorias_config(), public.dedicatoria_enviar(text,text,text,text,text[],text), public.dedicatorias_publicas(), public.aportes_publicos() from public;
 grant execute on function public.dedicatorias_config(), public.dedicatoria_enviar(text,text,text,text,text[],text), public.dedicatorias_publicas(), public.aportes_publicos() to anon, authenticated;
 revoke all on function public.admin_dedicatorias(), public.admin_dedicatoria_estado(uuid,text), public.admin_dedicatoria_eliminar(uuid), public.admin_ajustes(), public.admin_definir_aportes(jsonb) from public, anon;
